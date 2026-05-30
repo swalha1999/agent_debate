@@ -7,7 +7,17 @@ name = "agent_debate_cli"
 version = "1.00"
 description = "agent_debate CLI — Typer surface over the SDK (skeleton)."
 requires-python = ">=3.12"
-dependencies = []
+# Intra-workspace dependencies (TASKS.md 0.3): the CLI surface is a thin shell
+# over the ``core`` SDK and logs through the shared ``log`` package (PRD §5.1).
+dependencies = [
+    "agent_debate_core",
+    "agent_debate_log",
+]
+
+# Resolve the dependencies above to local workspace members, not PyPI.
+[tool.uv.sources]
+agent_debate_core = { workspace = true }
+agent_debate_log = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

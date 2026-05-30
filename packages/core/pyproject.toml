@@ -7,7 +7,15 @@ name = "agent_debate_core"
 version = "1.00"
 description = "agent_debate SDK — the debate engine and agents (skeleton)."
 requires-python = ">=3.12"
-dependencies = []
+# Intra-workspace dependency (TASKS.md 0.3): the SDK logs through the shared
+# LOG package (PRD §5.1 — "LOG is a shared dependency used by every package").
+dependencies = [
+    "agent_debate_log",
+]
+
+# Resolve the dependency above to the local workspace member, not PyPI.
+[tool.uv.sources]
+agent_debate_log = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,12 @@
+{
+  "task_id": "0.3",
+  "title": "Wire intra-workspace dependencies",
+  "date": "2026-05-30",
+  "model": "claude-opus-4-8",
+  "prompt": "In each package pyproject.toml, add the intra-workspace dependencies using uv workspace sources: api/cli/ui/core depend on agent_debate_log; api/cli/ui depend on agent_debate_core. Verify imports resolve across packages.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  }
+}

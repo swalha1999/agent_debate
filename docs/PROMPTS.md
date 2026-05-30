@@ -77,5 +77,19 @@ outcome/decision it produced.
   into the shared venv. Intra-package wiring (core/log deps) is left to task 0.3.
   TDD: `tests/test_packages.py` parametrizes over the five packages (import + name).
 
+### 0.3 — Wire intra-workspace dependencies (2026-05-30)
+- **Prompt:** "In each package pyproject.toml, add the intra-workspace dependencies
+  using uv workspace sources: api/cli/ui/core depend on agent_debate_log;
+  api/cli/ui depend on agent_debate_core. Verify imports resolve across packages."
+- **Context:** The five 0.2 skeletons each declared `dependencies = []`; the
+  dependency graph (PRD §5.1: core→log, surfaces→core+log) was not yet wired.
+- **Decision/outcome:** Each package now declares its intra-workspace deps under
+  `[project].dependencies` plus a local `[tool.uv.sources] … { workspace = true }`
+  so they resolve to local members, not PyPI. To prove the edges resolve at
+  runtime (not just on paper), each base package exposes `LIBRARY_VERSION` and
+  each dependent re-exports `<dep>_version` by importing across the edge. TDD:
+  `tests/test_cross_package_imports.py` asserts both the declared graph and that
+  the re-exports equal the source `LIBRARY_VERSION`. Coverage 100%.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

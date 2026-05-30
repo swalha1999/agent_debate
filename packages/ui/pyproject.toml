@@ -7,7 +7,18 @@ name = "agent_debate_ui"
 version = "1.00"
 description = "agent_debate UI — web frontend over the API (skeleton)."
 requires-python = ">=3.12"
-dependencies = []
+# Intra-workspace dependencies (TASKS.md 0.3): the UI surface consumes the
+# ``api`` surface; it also depends directly on ``core`` and the shared ``log``
+# package for shared models and logging (PRD §5.1).
+dependencies = [
+    "agent_debate_core",
+    "agent_debate_log",
+]
+
+# Resolve the dependencies above to local workspace members, not PyPI.
+[tool.uv.sources]
+agent_debate_core = { workspace = true }
+agent_debate_log = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

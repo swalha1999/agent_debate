@@ -5,4 +5,8 @@ the log schema and sinks. LOG is depended on by every other package. Only the
 empty package shell exists for now; later tasks add the real modules.
 """
 
-__all__: list[str] = []
+#: Package version surface, also used to prove cross-package imports resolve
+#: (TASKS.md 0.3). Kept in sync with ``pyproject.toml`` ``[project].version``.
+LIBRARY_VERSION = "1.00"
+
+__all__ = ["LIBRARY_VERSION"]
