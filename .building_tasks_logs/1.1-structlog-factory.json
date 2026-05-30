@@ -1,0 +1,18 @@
+{
+  "task_id": "1.1",
+  "title": "structlog setup factory (two sinks + idempotency)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "In packages/log, add a configure() factory that sets up structlog with two sinks: a human-readable console renderer and a JSONL file writer to runs/<run_id>.jsonl. Make it idempotent.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 56637
+  },
+  "usage": {
+    "tool_uses": 49,
+    "duration_ms": 259902,
+    "summary": "49 tool uses · 56.6k tokens · 4m 20s"
+  },
+  "note": "TDD: wrote packages/log/tests/test_configure.py FIRST (6 cases: JSONL file created under runs_dir for the run_id; missing runs_dir is created; an emitted event lands as a valid JSON object carrying event/event_type/round; console sink renders to stdout via capsys; configure twice for one run does not duplicate JSONL lines [idempotency]; default runs_dir='runs' relative to cwd). Watched red (ImportError: cannot import 'configure'), then implemented. Added structlog>=25.5,<26 to packages/log pyproject [project].dependencies and ran `uv lock`/`uv sync` (resolved structlog 25.5.0). Module split: configure() factory + helpers live in packages/log/src/agent_debate/log/_setup.py (61 code lines, <=150), re-exported with DEFAULT_RUNS_DIR from agent_debate.log __init__. Sinks: a terminal _DualSinkRenderer processor fans every event to BOTH a per-run JSONL file (<runs_dir>/<run_id>.jsonl, append, flushed) and structlog's ConsoleRenderer on stdout. No hard-coded path: DEFAULT_RUNS_DIR='runs' constant + parameterizable runs_dir; JSONL path = <runs_dir>/<run_id>.jsonl; dir created if missing. Idempotency: open file handles cached by resolved path (_OPEN_SINKS) so repeat configure() reuses one handle and re-applies the same config without duplicating sinks or erroring. .gitignore: ignore generated runs/*.jsonl + runs/*.md but keep runs/.gitkeep tracked (curated sample runs per PRD §12.5 added later with `git add -f`). No external API calls in this task, so the API gatekeeper (Epic 13) is N/A. Scope kept to the factory only; event schema / get_logger / redaction are tasks 1.2-1.5. Added a focused unit test for the bytes-returning JSON renderer branch -> 100% coverage on _setup.py. Gates green locally: ruff check, ruff format --check, mypy (strict, 29 files), pytest --cov (99 passed, 100% total), check_line_limit.py, secret_scan.py."
+}
