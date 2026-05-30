@@ -29,6 +29,20 @@ DEFAULT_MAX_RETRIES = 2
 #: Selects the ``SearchProvider`` plug-in; DuckDuckGo needs no key (PRD §7).
 DEFAULT_SEARCH_BACKEND = "duckduckgo"
 
+#: Connective phrase the ``build_argument`` skill uses to introduce its rebuttal
+#: when an opponent point is supplied (anti-sycophancy: the debater must rebut,
+#: not concede — ``docs/prds/anti-sycophancy.md`` §2). Kept here, not inlined.
+REBUTTAL_LEAD_IN = "The opponent argued: "
+
+#: Suffix appended after the quoted opponent point in the rebuttal link, steering
+#: the debater to answer rather than parrot it (anti-sycophancy §3).
+REBUTTAL_LEAD_OUT = " — this does not hold, because:"
+
+#: Template the ``build_argument`` skill uses to phrase the closing line; ``{side}``
+#: is the assigned stance and ``{claim}`` the central claim. Single source so the
+#: conclusion wording is never duplicated inline.
+CONCLUSION_TEMPLATE = "Therefore, the {side} side maintains that {claim}"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -40,6 +54,7 @@ PROVIDER_KEY_ENV_VARS: dict[str, str] = {
 }
 
 __all__ = [
+    "CONCLUSION_TEMPLATE",
     "DEFAULT_CONTROLLER_MODEL",
     "DEFAULT_DEBATER_MODEL",
     "DEFAULT_MAX_RETRIES",
@@ -48,4 +63,6 @@ __all__ = [
     "DEFAULT_SEARCH_BACKEND",
     "DEFAULT_TURN_TIMEOUT_S",
     "PROVIDER_KEY_ENV_VARS",
+    "REBUTTAL_LEAD_IN",
+    "REBUTTAL_LEAD_OUT",
 ]
