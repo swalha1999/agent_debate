@@ -1,0 +1,18 @@
+{
+  "task_id": "13.7",
+  "title": "Gatekeeper tests — Epic-13 acceptance + §7 edge-case pass (limit→queue, drain, retries-to-max, backpressure, concurrent_max saturation)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write tests: exceeding a limit queues (no drop); the queue drains; retries stop at max_retries; backpressure when full; concurrent_max saturation behaves.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 87738
+  },
+  "usage": {
+    "tool_uses": 49,
+    "duration_ms": 288503,
+    "summary": "49 tool uses · 87.7k tokens · 4m 49s"
+  },
+  "note": "Epic-13 acceptance/edge-case test pass (docs/prds/api-gatekeeper.md §6 acceptance + §7 edges), mirroring how 1.5/2.5 consolidated their epics. The gatekeeper (13.1-13.5) was already feature-complete with per-task suites at 100% coverage; this task exercises the behaviours END-TO-END THROUGH THE PUBLIC ApiGatekeeper API rather than re-testing internals. TEST-ONLY deliverable: no source change was needed (gatekeeper already correct at 100%). Added packages/core/tests/test_gatekeeper_acceptance.py (5 tests: limit->queue no-drop; drain on injected window reset; retries stop exactly at max_retries then raise; QueueFullError backpressure at queue_max_depth; concurrent_max saturation never exceeds cap with over-cap nested call enqueued) and packages/core/tests/test_gatekeeper_edges.py (8 tests: §7 sustained overflow + multi-window FIFO drain with depth>1 released one window at a time; repeated transient failures logging every retry AND the terminal error outcome; concurrent saturation->drain; config hot-values-out-of-range via parametrized ServiceLimits zero-rejection for requests_per_minute/requests_per_hour/concurrent_max/queue_max_depth plus negative retry_after_seconds). Shared packages/core/tests/_gatekeeper_acceptance_helpers.py (FakeClock injectable clock + config/gatekeeper builders + JSONL reader; non-test_ unique basename imported by bare name under pytest prepend mode). TDD red-first on genuinely NET-NEW assertions: (1) the multi-window FIFO drain edge probed with a deliberately-reordered ['a','c','b','d'] expectation -> observed RED, then asserted the real FIFO order -> GREEN; (2) ServiceLimits direct-model out-of-range validation (the existing test_rate_limit_config.py only covered requests_per_minute=0 via the loader; the new parametrized + negative-retry tests add concurrent_max/queue_max_depth/requests_per_hour zero and negative retry_after_seconds rejection). Determinism via injected time_fn/sleep_fn (no real sleeping); log assertions read the tmp runs_dir JSONL. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean (66 files); mypy = Success no issues in 66 source files; pytest --cov = 250 passed, 100% total coverage (>=85 required); check_line_limit.py passed (all files <=150 code lines, helpers/acceptance/edges all under); secret_scan.py passed. docs/PROMPTS.md entry added."
+}
