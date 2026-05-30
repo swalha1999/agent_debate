@@ -1,0 +1,18 @@
+{
+  "task_id": "0.4",
+  "title": "Pin Python and lock deps",
+  "date": "2026-05-30",
+  "model": "claude-opus-4-8",
+  "prompt": "Set requires-python >=3.12 across packages. Run uv lock to produce uv.lock and commit it. Verify `uv sync` is clean and reproducible from scratch.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "usage to be filled by main loop from harness report. All five packages + root pyproject.toml already declared requires-python = \">=3.12\" (from tasks 0.1-0.3); verified consistent, no edits needed there. The real change was adding a top-level .python-version pinning 3.12 so a fresh `uv sync` selects the same interpreter everywhere (previously the venv resolved to the host 3.14). Ran `uv lock` (CPython 3.12.13): uv.lock already declared requires-python = \">=3.12\" and the resolution was unchanged, so the committed lock matched and needed no content change. Reproducibility verified: `uv lock --check` passes, `uv sync --frozen` checks clean, and the venv now runs Python 3.12.13. TDD: added tests/test_python_pin.py (asserts every pyproject declares >=3.12, .python-version pins 3.12, and uv.lock exists/non-empty/declares >=3.12); watched test_python_version_file_pins_312 fail before adding .python-version, then green. Gates: uv sync (green), ruff check (pass), ruff format --check (pass), uv run mypy (clean, 10 files), uv run pytest --cov (25 passed, 100% coverage). Line-limit gate (scripts/check_line_limit.py) skipped: that script does not exist yet (task 0.10); test_python_pin.py is 70 lines, well under 150. No external API calls / LOG usage / hard-coded config relevant to this config-only task. No cost table exists in the repo to add a token row to."
+}
