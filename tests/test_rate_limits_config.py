@@ -28,6 +28,7 @@ REQUIRED_KEYS = (
     "concurrent_max",
     "retry_after_seconds",
     "max_retries",
+    "queue_max_depth",
 )
 
 # Exact shape mandated by docs/prds/api-gatekeeper.md §4 — the file must match.
@@ -38,6 +39,7 @@ EXPECTED_SERVICES = {
         "concurrent_max": 5,
         "retry_after_seconds": 30,
         "max_retries": 3,
+        "queue_max_depth": 100,
     },
     "anthropic": {
         "requests_per_minute": 30,
@@ -45,6 +47,7 @@ EXPECTED_SERVICES = {
         "concurrent_max": 5,
         "retry_after_seconds": 30,
         "max_retries": 3,
+        "queue_max_depth": 100,
     },
     "search": {
         "requests_per_minute": 20,
@@ -52,6 +55,7 @@ EXPECTED_SERVICES = {
         "concurrent_max": 3,
         "retry_after_seconds": 15,
         "max_retries": 2,
+        "queue_max_depth": 100,
     },
 }
 

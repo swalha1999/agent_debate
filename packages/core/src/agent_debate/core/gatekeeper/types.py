@@ -31,14 +31,12 @@ class QueueStatus(BaseModel):
     """Snapshot of the overflow queue's depth and counters (sub-PRD §3/§5).
 
     Attributes:
-        depth: Number of requests currently waiting in the FIFO queue. Always
-            ``0`` in task 13.2 (no queue yet); populated by 13.3.
-        max_depth: Configured maximum queue depth, or ``None`` when unbounded /
-            not yet wired (13.3 fills this from config).
-        enqueued_total: Lifetime count of requests that overflowed into the
-            queue (0 until 13.3).
-        drained_total: Lifetime count of queued requests later executed (0 until
-            13.3).
+        depth: Number of requests currently waiting in the FIFO queue (real as
+            of task 13.3).
+        max_depth: Configured maximum queue depth (``queue_max_depth`` from
+            config), or ``None`` when unbounded / not yet wired.
+        enqueued_total: Lifetime count of requests that overflowed into the queue.
+        drained_total: Lifetime count of queued requests later executed.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")

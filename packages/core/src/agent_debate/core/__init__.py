@@ -14,6 +14,7 @@ from agent_debate.core._version import __version__
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
     ApiGatekeeper,
+    QueueFullError,
     QueueStatus,
     RateLimitConfig,
     RateLimitExceededError,
@@ -38,6 +39,7 @@ __all__ = [
     "LIBRARY_VERSION",
     "ApiGatekeeper",
     "MissingApiKeyError",
+    "QueueFullError",
     "QueueStatus",
     "RateLimitConfig",
     "RateLimitExceededError",

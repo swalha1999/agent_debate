@@ -5,12 +5,15 @@ through :meth:`ApiGatekeeper.execute`, which **checks rate limits before running
 the call**, executes it, and **logs every call** (service, latency, outcome) via
 the LOG package (``agent_debate.log``).
 
-Scope (task 13.2): a straightforward *check → run → log* pipeline. The limit
-check uses the in-process sliding-window :class:`._limiter._RateLimiter`; when a
-window is exhausted it raises :class:`.errors.RateLimitExceededError` *before*
-the callable runs. The FIFO overflow queue (13.3) and retry/concurrency refinements
-(13.4) hook in at the marked seam in :meth:`execute`; :meth:`get_queue_status`
-returns an empty :class:`.types.QueueStatus` until 13.5 fills it.
+Scope: a *check → run-or-enqueue → log* pipeline. The limit check uses the
+in-process sliding-window :class:`._limiter._RateLimiter`; when a window is
+exhausted the call is **enqueued** into a bounded per-service FIFO overflow queue
+(:class:`._queue._OverflowQueue`, task 13.3) instead of being dropped or crashed.
+A genuinely **full** queue raises :class:`.errors.QueueFullError` (backpressure).
+:meth:`drain` runs queued calls in FIFO order as the rate windows reset (the
+injectable clock makes "a window reset" deterministic in tests). Retry /
+concurrency refinements (13.4) and the full :meth:`get_queue_status` (13.5) hook
+in at the marked seams.
 
 No limit values are hard-coded: thresholds come from the injected
 :class:`RateLimitConfig`. The only literals are the logging ``agent`` label and
@@ -25,8 +28,9 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from agent_debate.core.gatekeeper._limiter import _RateLimiter
-from agent_debate.core.gatekeeper.config import DEFAULT_SERVICE, RateLimitConfig
-from agent_debate.core.gatekeeper.errors import RateLimitExceededError
+from agent_debate.core.gatekeeper._queue import PendingCall, _OverflowQueue
+from agent_debate.core.gatekeeper.config import DEFAULT_SERVICE, RateLimitConfig, ServiceLimits
+from agent_debate.core.gatekeeper.errors import QueueFullError
 from agent_debate.core.gatekeeper.types import (
     OUTCOME_ERROR,
     OUTCOME_SUCCESS,
@@ -44,6 +48,10 @@ _LOG_AGENT = "gatekeeper"
 #: external call maps cleanly to the LOG schema's ``tool_call`` kind (PRD §5.8).
 _LOG_EVENT_TYPE = "tool_call"
 
+#: ``event_type`` for queue lifecycle events (enqueue/drain/backpressure). These
+#: are gatekeeper-internal control events, mapping to the LOG ``system`` kind.
+_LOG_QUEUE_EVENT_TYPE = "system"
+
 #: Milliseconds per second — a unit conversion for latency, not a magic number.
 _MS_PER_SECOND = 1000.0
 
@@ -52,9 +60,12 @@ class ApiGatekeeper:
     """Centralized manager every external API call passes through (sub-PRD §3).
 
     Args:
-        config: Parsed rate-limit config; per-service ceilings come from here.
+        config: Parsed rate-limit config; per-service ceilings + queue depth come
+            from here.
         run_id: Debate run id used as logging context for every emitted event.
         runs_dir: Directory holding the per-run JSONL sink (LOG package).
+        time_fn: Monotonic clock for the sliding-window limiter; injectable so
+            tests can advance a fake clock to reset windows and exercise drain.
     """
 
     def __init__(
@@ -63,11 +74,15 @@ class ApiGatekeeper:
         *,
         run_id: str,
         runs_dir: Path | str = DEFAULT_RUNS_DIR,
+        time_fn: Callable[[], float] = time.monotonic,
     ) -> None:
         self._config = config
         self._run_id = run_id
         self._runs_dir = runs_dir
-        self._limiter = _RateLimiter()
+        self._limiter = _RateLimiter(time_fn=time_fn)
+        # One bounded FIFO overflow queue per service (depth from that service's
+        # config). Built lazily so unconfigured services inherit default depth.
+        self._queues: dict[str, _OverflowQueue] = {}
 
     def execute(
         self,
@@ -75,14 +90,16 @@ class ApiGatekeeper:
         *args: Any,
         service: str = DEFAULT_SERVICE,
         **kwargs: Any,
-    ) -> _T:
-        """Check limits, run ``api_call(*args, **kwargs)``, and log the call.
+    ) -> _T | None:
+        """Run ``api_call`` now if within limits, else enqueue it (FIFO).
 
-        The rate limit for ``service`` (falling back to the ``default`` service)
-        is checked *before* the callable runs; an exhausted window raises
-        :class:`RateLimitExceededError` and the callable never executes. On success
-        the result is returned; on failure the exception is re-raised. Either
-        way one event is logged with ``service``, ``latency_ms`` and ``outcome``.
+        The rate limit for ``service`` (falling back to ``default``) is checked
+        first. If a window is exhausted the call is **enqueued** into the bounded
+        per-service overflow queue and ``None`` is returned (it runs later via
+        :meth:`drain`) — overflow is never dropped or crashed (sub-PRD §5). Only
+        a **full** queue raises :class:`QueueFullError` (backpressure). When the
+        call runs (now or on drain) one event is logged with ``service``,
+        ``latency_ms`` and ``outcome``.
 
         Args:
             api_call: The external call to run (no real network in tests).
@@ -91,11 +108,75 @@ class ApiGatekeeper:
             **kwargs: Keyword arguments forwarded to ``api_call``.
 
         Returns:
-            Whatever ``api_call`` returns.
+            The callable's result when it ran immediately, else ``None`` (queued).
         """
         limits = self._config.get_service_limits(service)
-        self._check_limits(service, limits)
+        if self._limiter.check(service, limits) is not None:
+            self._enqueue(service, limits, PendingCall(service, api_call, args, kwargs))
+            return None
+        self._limiter.record(service)
+        return self._run(service, api_call, args, kwargs)
 
+    def drain(self) -> int:
+        """Run queued calls now within their rate windows, in FIFO order.
+
+        Walks each service's overflow queue oldest-first, running a pending call
+        only while that service's window has room (re-checking after each, so a
+        single window's freed capacity is honoured exactly). Returns the number
+        of queued calls executed. Intended to be invoked as windows reset (e.g.
+        after the injectable clock advances).
+        """
+        drained = 0
+        for service, queue in self._queues.items():
+            limits = self._config.get_service_limits(service)
+            while queue.depth and self._limiter.check(service, limits) is None:
+                pending = queue.dequeue()
+                self._limiter.record(service)
+                self._log_queue_event(service, "drain")
+                self._run(service, pending.api_call, pending.args, pending.kwargs)
+                drained += 1
+        return drained
+
+    def get_queue_status(self, service: str = DEFAULT_SERVICE) -> QueueStatus:
+        """Return the overflow queue snapshot for ``service`` (depth + stats).
+
+        Reports real depth, the configured ``max_depth`` and lifetime
+        enqueued/drained counters for the named service's FIFO queue (sub-PRD
+        §3). Full multi-service reporting is task 13.5.
+        """
+        queue = self._queue_for(service)
+        return QueueStatus(
+            depth=queue.depth,
+            max_depth=queue.max_depth,
+            enqueued_total=queue.enqueued_total,
+            drained_total=queue.drained_total,
+        )
+
+    def _enqueue(self, service: str, limits: ServiceLimits, pending: PendingCall) -> None:
+        """Enqueue an overflowing call, or raise :class:`QueueFullError`."""
+        queue = self._queue_for(service)
+        if not queue.enqueue(pending):
+            self._log_queue_event(service, "backpressure")
+            raise QueueFullError(service, limits.queue_max_depth)
+        self._log_queue_event(service, "enqueue")
+
+    def _queue_for(self, service: str) -> _OverflowQueue:
+        """Return (lazily creating) the bounded FIFO queue for ``service``."""
+        queue = self._queues.get(service)
+        if queue is None:
+            limits = self._config.get_service_limits(service)
+            queue = _OverflowQueue(limits.queue_max_depth)
+            self._queues[service] = queue
+        return queue
+
+    def _run(
+        self,
+        service: str,
+        api_call: Callable[..., _T],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> _T:
+        """Invoke ``api_call`` once, logging service/latency/outcome either way."""
         start = time.monotonic()
         try:
             result = api_call(*args, **kwargs)
@@ -104,22 +185,6 @@ class ApiGatekeeper:
             raise
         self._log_call(service, start, OUTCOME_SUCCESS)
         return result
-
-    def get_queue_status(self) -> QueueStatus:
-        """Return the overflow queue snapshot (empty until task 13.3/13.5)."""
-        return QueueStatus()
-
-    def _check_limits(self, service: str, limits: Any) -> None:
-        """Admit the request or raise on an exhausted window.
-
-        Seam for tasks 13.3/13.4: today an exhausted window raises
-        :class:`RateLimitExceededError`; later the overflow queue/backpressure
-        and concurrency control hook in here instead of raising.
-        """
-        exhausted = self._limiter.check(service, limits)
-        if exhausted is not None:
-            raise RateLimitExceededError(service, exhausted)
-        self._limiter.record(service)
 
     def _log_call(self, service: str, start: float, outcome: CallOutcome) -> None:
         """Emit one structured event with service, latency_ms and outcome."""
@@ -131,6 +196,21 @@ class ApiGatekeeper:
             round=0,
             payload={"service": service, "outcome": outcome},
             latency_ms=latency_ms,
+            runs_dir=self._runs_dir,
+        )
+
+    def _log_queue_event(self, service: str, queue_event: str) -> None:
+        """Emit one event for a queue lifecycle transition (sub-PRD §5).
+
+        ``queue_event`` is one of ``"enqueue"`` / ``"drain"`` / ``"backpressure"``
+        so overflow pressure and backpressure are observable in the run log.
+        """
+        log_event(
+            run_id=self._run_id,
+            agent=_LOG_AGENT,
+            event_type=_LOG_QUEUE_EVENT_TYPE,
+            round=0,
+            payload={"service": service, "queue_event": queue_event},
             runs_dir=self._runs_dir,
         )
 

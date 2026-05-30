@@ -29,7 +29,6 @@ from agent_debate.core.gatekeeper import (
     ApiGatekeeper,
     QueueStatus,
     RateLimitConfig,
-    RateLimitExceededError,
 )
 
 
@@ -57,6 +56,7 @@ def _config(
                     "concurrent_max": concurrent_max,
                     "retry_after_seconds": 30,
                     "max_retries": 3,
+                    "queue_max_depth": 100,
                 }
             },
         }
@@ -103,8 +103,13 @@ def test_raising_call_logs_error_and_propagates(tmp_path: Path) -> None:
     assert records[0]["payload"]["service"] == "default"
 
 
-def test_rate_limit_checked_before_execution(tmp_path: Path) -> None:
-    """Exceeding requests_per_minute is caught *before* the callable runs."""
+def test_rate_limit_enqueues_instead_of_running(tmp_path: Path) -> None:
+    """Exceeding requests_per_minute enqueues the call (FIFO) — never crashes.
+
+    Task 13.3 replaced the old "raise ``RateLimitExceededError`` on overflow"
+    behaviour with the sub-PRD §5 overflow queue: a limit-hit call is deferred
+    into the FIFO queue (so the callable does *not* run now) instead of raising.
+    """
     gk = ApiGatekeeper(
         _config(requests_per_minute=1, requests_per_hour=100),
         run_id="run-rl",
@@ -117,11 +122,12 @@ def test_rate_limit_checked_before_execution(tmp_path: Path) -> None:
         return len(calls)
 
     assert gk.execute(record, service="default") == 1
-    with pytest.raises(RateLimitExceededError, match="default"):
-        gk.execute(record, service="default")
+    # Overflow is queued, not dropped/crashed: returns None and runs later.
+    assert gk.execute(record, service="default") is None
 
-    # The second callable never ran: the limit check blocked it pre-execution.
+    # The second callable was deferred, not run, and sits in the FIFO queue.
     assert calls == [1]
+    assert gk.get_queue_status().depth == 1
 
 
 def test_rate_limit_uses_config_values_not_hardcoded(tmp_path: Path) -> None:
@@ -132,9 +138,10 @@ def test_rate_limit_uses_config_values_not_hardcoded(tmp_path: Path) -> None:
         runs_dir=tmp_path,
     )
     for _ in range(3):
-        gk.execute(lambda: None, service="default")
-    with pytest.raises(RateLimitExceededError):
-        gk.execute(lambda: None, service="default")
+        assert gk.execute(lambda: None, service="default") is None or True
+    # The 4th call overflows the per-minute window and is enqueued (not raised).
+    assert gk.execute(lambda: None, service="default") is None
+    assert gk.get_queue_status().depth == 1
 
 
 def test_unconfigured_service_falls_back_to_default(tmp_path: Path) -> None:
