@@ -11,11 +11,15 @@ runtime (TASKS.md 0.3, issue #3).
 :func:`configure` (TASKS.md 1.1) is the structlog setup factory: it wires the
 two sinks from PRD §5.8 — a pretty console renderer and a per-run JSONL file —
 and is idempotent. It is the foundation the event-schema/helper tasks build on.
+
+:class:`LogEvent` (TASKS.md 1.2) is the typed Pydantic v2 schema every record
+conforms to; :data:`EVENT_TYPES` is the strict allowed ``event_type`` set.
 """
 
 from __future__ import annotations
 
 from agent_debate.log._setup import DEFAULT_RUNS_DIR, configure
+from agent_debate.log.event import EVENT_TYPES, EventType, LogEvent
 
 #: Version of the LOG surface; re-exported by dependents to prove the edge.
 LIBRARY_VERSION = "1.00"
@@ -23,4 +27,12 @@ LIBRARY_VERSION = "1.00"
 #: Public alias used by dependents that re-export this package's version.
 log_version = LIBRARY_VERSION
 
-__all__ = ["DEFAULT_RUNS_DIR", "LIBRARY_VERSION", "configure", "log_version"]
+__all__ = [
+    "DEFAULT_RUNS_DIR",
+    "EVENT_TYPES",
+    "LIBRARY_VERSION",
+    "EventType",
+    "LogEvent",
+    "configure",
+    "log_version",
+]

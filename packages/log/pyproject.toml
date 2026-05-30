@@ -13,9 +13,10 @@ version = "1.00"
 description = "agent_debate LOG — structured logging and cost accounting (skeleton)."
 requires-python = ">=3.12"
 # structlog is the structured-logging engine behind LOG's two sinks (PRD §5.8):
-# a pretty console renderer + a per-run JSONL file. Pinned to a current stable
-# release; the exact resolved version is frozen in uv.lock.
-dependencies = ["structlog>=25.5,<26"]
+# a pretty console renderer + a per-run JSONL file. pydantic v2 backs the typed
+# event schema (LogEvent, TASKS.md 1.2). Both pinned to current stable releases;
+# the exact resolved versions are frozen in uv.lock.
+dependencies = ["structlog>=25.5,<26", "pydantic>=2.9,<3"]
 
 [build-system]
 requires = ["hatchling"]

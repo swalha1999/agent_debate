@@ -333,5 +333,27 @@ outcome/decision it produced.
   structlog processor fanning out to file + console, with per-run file handles
   cached for idempotent re-configuration.*
 
+### 1.2 — Event schema model (2026-05-31)
+- **Prompt:** "Add a Pydantic model LogEvent with fields run_id, ts, round,
+  agent, event_type (Literal of message|tool_call|nudge|timeout|retry|verdict|
+  system), payload, tokens, latency_ms. Validate event_type."
+- **Context:** Closes issue #17. Builds directly on the 1.1 JSONL sink: gives the
+  LOG package a typed shape (PRD §5.8) for every record the
+  `runs/<run_id>.jsonl` sink emits. Scoped to the model + serialisation only —
+  the `get_logger`/`log_event` helpers are task 1.3.
+- **Decision/outcome (Pydantic v2 schema with a single-source-of-truth event-type
+  set — significant, sets the LOG record contract):** added `pydantic>=2.9,<3`
+  (resolved 2.13.4) to packages/log and relocked. TDD red-first
+  (`tests/test_event.py`). `LogEvent` (in `event.py`) uses `extra="forbid"`, a
+  strict `Literal` `event_type` so unknown values raise `ValidationError`, a
+  `default_factory` UTC `ts`, a structured `payload` dict, and optional
+  `tokens`/`latency_ms`. The allowed kinds live once as an `EVENT_TYPES` tuple
+  kept in lock-step with the `EventType` `Literal` (a contract test guards the
+  match) — no scattered inline list. `to_jsonl()` wraps `model_dump_json()` to a
+  single newline-free line that round-trips back through `model_validate`,
+  matching the 1.1 sink format. Pattern set: *LOG records are typed `LogEvent`
+  Pydantic models; the allowed event-type set is one exported constant, and
+  serialisation is a one-line JSONL string coherent with the per-run sink.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
