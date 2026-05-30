@@ -7,10 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 62121
   },
   "usage": {
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 45,
+    "duration_ms": 331933,
+    "summary": "45 tool uses · 62.1k tokens · 5m 32s"
   },
   "note": "Adds the runtime config model for agent_debate (Closes #21). TDD red-first: wrote packages/core/tests/test_settings.py first and watched it fail (ImportError: cannot import name 'Settings'), then implemented. Defaults live once in packages/core/src/agent_debate/core/constants.py (DEFAULT_* — single source of truth per guideline §7.2, no scattered literals); settings.py references them, so file split keeps both well under the 150-line gate. Settings is a pydantic_settings.BaseSettings with SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore', case_sensitive=False) and NO env prefix (PRD §7 vars are bare names like ROUNDS/DEBATER_MODEL). Fields map 1:1 to PRD §7; PRO_MODEL/CON_MODEL bind via alias='PRO_MODEL'/'CON_MODEL' onto pro_model_override/con_model_override. REQUIRED-KEY handling: ANTHROPIC_API_KEY is typed Optional[str]=None so importing/instantiating Settings never explodes during test collection or in key-free packages — strict 'fail fast with a clear error when the key is missing' validation is deliberately deferred to task 2.3 (noted inline). PER-SIDE FALLBACK implemented here as computed properties: pro_model returns pro_model_override or debater_model; con_model returns con_model_override or debater_model. Also added get_settings() (functools.lru_cache singleton) that logs a 'settings_loaded' debug event via the LOG package (get_logger) — no external API calls in this task, so the API gatekeeper (Epic 13) is N/A. Re-exported Settings + get_settings from agent_debate.core __init__. Added pydantic>=2.9,<3 + pydantic-settings>=2.5,<3 to packages/core deps and ran uv lock (resolved pydantic-settings 2.14.1 + python-dotenv 1.2.2). Tests use monkeypatch (env injection + chdir to an isolated tmp dir so no ambient .env leaks); the .env test writes a real .env into that cwd; avoided pydantic-settings' runtime-only _env_file kwarg because mypy strict flags it as an unknown call-arg. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . = clean; mypy = no issues in 40 source files; pytest --cov = 154 passed, 100% total coverage (Required 85.0% reached); check_line_limit.py exits 0; secret_scan.py exits 0 (only clearly-fake dummy tokens, tests/ excluded by the scanner). .env.example already listed every PRD §7 var, confirming field-name parity."
 }
