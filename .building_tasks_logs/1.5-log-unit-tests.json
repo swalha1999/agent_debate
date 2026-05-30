@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 70270
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 37,
+    "duration_ms": 209725,
+    "summary": "37 tool uses · 70.3k tokens · 3m 30s"
   },
   "note": "Epic-1 acceptance/integration test pass for the LOG package. The package (1.1 configure / 1.2 LogEvent / 1.3 helpers / 1.4 redaction) was already feature-complete at 100% line+branch coverage with per-module unit suites, so this task added consolidated acceptance tests through the PUBLIC API (agent_debate.log) plus genuine edge-case tests — NOT duplicates of the existing internal unit tests. Added packages/log/tests/test_log_acceptance.py (3 tests, the three acceptance areas end-to-end via log_event -> on-disk runs/<run_id>.jsonl): (a) an event is written and round-trips — net-new vs prior tests, it RECONSTRUCTS a LogEvent from the raw on-disk structlog line (mapping structlog 'timestamp' -> model 'ts', dropping the renderer 'event'/'level' wrapper keys) and asserts field-equality with the emitted model; (b) an invalid event_type raises ValidationError AND leaves no JSONL file behind; (c) a fake sk-ant-… key under api_key (and embedded in a note string) is absent from the file while ***REDACTED*** is present and payload.api_key == REDACTED. The runs dir name is read from DEFAULT_RUNS_DIR (no hard-coded 'runs' literal). Added packages/log/tests/test_log_edge_cases.py (5 tests closing real gaps the unit suites left open): multiple events APPENDED to one <run_id>.jsonl in emission order (prior tests emit a single event each); the EXACTLY-at-MAX_VALUE_LEN truncation boundary (==len passes through untouched; prior suite only covered > and small); empty payload round-trip via the public API; a bound round propagating then being CLEARED within one disk flow (asserting the post-clear failed emit adds no further line); idempotent get_logger keeping a single sink across repeated calls INTERLEAVED with writes. TDD red-first on a genuine gap: the truncation marker TRUNCATED_SUFFIX was not part of the public surface — the edge test imported it from agent_debate.log and went red (ImportError: cannot import name 'TRUNCATED_SUFFIX'), then it was exported from agent_debate.log/__init__.py (__all__ + import) to go green. Net-new vs already-covered: the 8 new tests are integration/edge assertions not previously made (on-disk LogEvent reconstruction, append/order, ==length boundary, empty payload, propagate-then-clear single-flow, single source DEFAULT_RUNS_DIR); the only production change was promoting the already-public-in-spirit TRUNCATED_SUFFIX constant to the package's __all__. No external API calls -> API gatekeeper (Epic 13) N/A; all I/O flows through the LOG package's own sink. Each test file is <=150 code lines (line-limit gate LIVE). Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . = 37 files already formatted; mypy = no issues in 37 source files; pytest --cov = 145 passed, 100% total coverage (Required 85.0% reached); check_line_limit.py exits 0; secret_scan.py exits 0 (tests/ excluded; the fake key is a clearly-fake in-test literal). docs/PROMPTS.md entry added (1.5)."
 }
