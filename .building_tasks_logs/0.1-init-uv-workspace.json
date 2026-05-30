@@ -1,0 +1,13 @@
+{
+  "task_id": "0.1",
+  "title": "Init uv workspace",
+  "date": "2026-05-30",
+  "model": "claude-opus-4-8",
+  "prompt": "Create a root pyproject.toml that defines a uv workspace with [tool.uv.workspace] members = [\"packages/*\"]. Set the project name, python requirement >=3.12, and shared dev-deps (ruff, mypy, pytest, pytest-cov). Verify `uv sync` resolves.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0
+  },
+  "note": "Token counts not available from the harness for this run; recorded as 0. First task in the repo: packages/, LOG package, API gatekeeper, line-limit script and coverage tooling do not exist yet (later tasks), so those gates were skipped. Implemented the workspace root as a minimal package so `uv sync` resolves cleanly with an empty packages/* glob."
+}

@@ -1,0 +1,9 @@
+# Minimal ignores for the workspace scaffold (task 0.1).
+# Task 0.7 expands this (.env, caches, etc.).
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/

@@ -1,0 +1,57 @@
+# Root of the `agent_debate` uv workspace.
+#
+# This is the single source of truth for shared tooling and the workspace layout
+# (PRD §5.1). The five package surfaces live under `packages/*` and are added by
+# later tasks (0.2+). The root itself is a minimal package so `uv sync` resolves
+# cleanly while `packages/*` is still empty, and so shared dev tooling installs in
+# one place. Ruff/mypy/coverage config here is intentionally minimal — tasks 0.5
+# and 0.9 flesh it out.
+
+[project]
+name = "agent-debate-workspace"
+version = "1.00"
+description = "Workspace root for agent_debate — a multi-agent debate system."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_debate_workspace"]
+
+# --- Shared tooling stubs (expanded by tasks 0.5 / 0.9) -----------------------
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# `scripts/` holds one-off build-time generators (e.g. issue creation), not
+# shipped code; full linting of them is deferred to task 0.5.
+extend-exclude = ["scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.report]
+# Coverage threshold is enforced once there is code to cover (task 0.9).
+fail_under = 0
