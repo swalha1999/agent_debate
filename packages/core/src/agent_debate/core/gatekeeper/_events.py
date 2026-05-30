@@ -16,8 +16,11 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from agent_debate.core.gatekeeper.types import CallOutcome
+from agent_debate.core.gatekeeper.types import CallOutcome, GatekeeperStatus
 from agent_debate.log import log_event
+
+#: ``queue_event`` tag on the on-demand queue-status snapshot event (13.5).
+_STATUS_EVENT = "status"
 
 #: ``agent`` label stamped on gatekeeper log events (a name, not a limit value).
 _LOG_AGENT = "gatekeeper"
@@ -96,6 +99,24 @@ class _GatekeeperLog:
             event_type=_LOG_QUEUE_EVENT_TYPE,
             round=0,
             payload={"service": service, "queue_event": queue_event},
+            runs_dir=self._runs_dir,
+        )
+
+    def status(self, status: GatekeeperStatus) -> None:
+        """Emit one ``system`` event carrying the full queue-status snapshot.
+
+        Flattens the aggregate snapshot (depth + stats, per-service + totals)
+        into the event payload so the run log is a self-contained, readable
+        record of queue pressure on demand (sub-PRD §3/§6).
+        """
+        payload = status.model_dump()
+        payload["queue_event"] = _STATUS_EVENT
+        log_event(
+            run_id=self._run_id,
+            agent=_LOG_AGENT,
+            event_type=_LOG_QUEUE_EVENT_TYPE,
+            round=0,
+            payload=payload,
             runs_dir=self._runs_dir,
         )
 

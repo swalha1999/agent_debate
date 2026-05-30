@@ -42,8 +42,8 @@ class _OverflowQueue:
 
     Bounded by ``max_depth`` (from config). :meth:`enqueue` appends in arrival
     order and returns ``False`` (backpressure) when full rather than dropping;
-    :meth:`dequeue` pops the oldest entry. Lifetime ``enqueued_total`` and
-    ``drained_total`` counters back :class:`QueueStatus`.
+    :meth:`dequeue` pops the oldest entry. Lifetime ``enqueued_total``,
+    ``drained_total`` and ``backpressure_total`` counters back :class:`QueueStatus`.
     """
 
     def __init__(self, max_depth: int) -> None:
@@ -51,6 +51,7 @@ class _OverflowQueue:
         self._items: deque[PendingCall] = deque()
         self._enqueued_total = 0
         self._drained_total = 0
+        self._backpressure_total = 0
 
     @property
     def max_depth(self) -> int:
@@ -76,6 +77,15 @@ class _OverflowQueue:
     def drained_total(self) -> int:
         """Lifetime count of queued calls later dequeued for execution."""
         return self._drained_total
+
+    @property
+    def backpressure_total(self) -> int:
+        """Lifetime count of calls rejected because the queue was full."""
+        return self._backpressure_total
+
+    def record_backpressure(self) -> None:
+        """Count one call rejected by a full queue (backpressure signal)."""
+        self._backpressure_total += 1
 
     def enqueue(self, pending: PendingCall) -> bool:
         """Append ``pending`` in FIFO order; return ``False`` if the queue is full.

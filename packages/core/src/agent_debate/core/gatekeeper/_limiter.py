@@ -81,6 +81,10 @@ class _RateLimiter:
         """
         return self._inflight[service] >= limits.concurrent_max
 
+    def in_flight(self, service: str) -> int:
+        """Return ``service``'s live in-flight count (for status snapshots)."""
+        return self._inflight[service]
+
     def acquire(self, service: str) -> None:
         """Mark one more call as in flight for ``service`` (concurrency counter)."""
         self._inflight[service] += 1

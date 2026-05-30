@@ -33,7 +33,12 @@ from agent_debate.core.gatekeeper._queue import PendingCall, _OverflowQueue
 from agent_debate.core.gatekeeper._retry import run_with_retry
 from agent_debate.core.gatekeeper.config import DEFAULT_SERVICE, RateLimitConfig, ServiceLimits
 from agent_debate.core.gatekeeper.errors import QueueFullError
-from agent_debate.core.gatekeeper.types import OUTCOME_ERROR, OUTCOME_SUCCESS, QueueStatus
+from agent_debate.core.gatekeeper.types import (
+    OUTCOME_ERROR,
+    OUTCOME_SUCCESS,
+    GatekeeperStatus,
+    QueueStatus,
+)
 from agent_debate.log import DEFAULT_RUNS_DIR
 
 _T = TypeVar("_T")
@@ -129,11 +134,11 @@ class ApiGatekeeper:
         return drained
 
     def get_queue_status(self, service: str = DEFAULT_SERVICE) -> QueueStatus:
-        """Return the overflow queue snapshot for ``service`` (depth + stats).
+        """Return the complete overflow-queue snapshot for ``service``.
 
-        Reports real depth, the configured ``max_depth`` and lifetime
-        enqueued/drained counters for the named service's FIFO queue (sub-PRD
-        §3). Full multi-service reporting is task 13.5.
+        Reports live depth, configured ``max_depth``, lifetime
+        enqueued/drained/backpressure counters and the live in-flight count for
+        the named service — all from real state, none hard-coded (sub-PRD §3/§6).
         """
         queue = self._queue_for(service)
         return QueueStatus(
@@ -141,12 +146,35 @@ class ApiGatekeeper:
             max_depth=queue.max_depth,
             enqueued_total=queue.enqueued_total,
             drained_total=queue.drained_total,
+            backpressure_total=queue.backpressure_total,
+            in_flight=self._limiter.in_flight(service),
         )
+
+    def get_status(self) -> GatekeeperStatus:
+        """Return the whole-gatekeeper snapshot: per-service queues + aggregates.
+
+        Covers every service that has a live queue (i.e. has seen overflow);
+        each entry is a full :class:`QueueStatus`. JSON-serializable so the
+        UI/API/SSE layers (Epic 11) can consume it unchanged.
+        """
+        services = {name: self.get_queue_status(name) for name in self._queues}
+        return GatekeeperStatus.from_services(services)
+
+    def log_queue_status(self) -> GatekeeperStatus:
+        """Snapshot the gatekeeper status and log it as one observable event.
+
+        Surfaces depth + stats to ``runs/<run_id>.jsonl`` on demand (so it never
+        spams) and returns the same snapshot for the caller (sub-PRD §3/§6).
+        """
+        status = self.get_status()
+        self._log.status(status)
+        return status
 
     def _enqueue(self, service: str, limits: ServiceLimits, pending: PendingCall) -> None:
         """Enqueue an overflowing call, or raise :class:`QueueFullError`."""
         queue = self._queue_for(service)
         if not queue.enqueue(pending):
+            queue.record_backpressure()
             self._log.queue_event(service, "backpressure")
             raise QueueFullError(service, limits.queue_max_depth)
         self._log.queue_event(service, "enqueue")
