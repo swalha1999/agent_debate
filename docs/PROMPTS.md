@@ -55,5 +55,16 @@ outcome/decision it produced.
 
 ## Implementation phase
 
+### 0.1 — Init uv workspace (2026-05-30)
+- **Prompt:** "Create a root pyproject.toml that defines a uv workspace with
+  `[tool.uv.workspace] members = ["packages/*"]` … python >=3.12 … shared dev-deps
+  (ruff, mypy, pytest, pytest-cov). Verify `uv sync` resolves."
+- **Context:** First implementation task; `packages/` is still empty.
+- **Decision/outcome:** Root `pyproject.toml` declares the workspace and shared dev
+  group. To make `uv sync` resolve cleanly against an empty `packages/*` glob, the
+  root is itself a minimal package (`src/agent_debate_workspace`). Added ruff/mypy/
+  coverage stubs (fleshed out by tasks 0.5 / 0.9). TDD: `tests/test_workspace.py`
+  asserts the workspace contract.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
