@@ -12,7 +12,9 @@ The required gates, in pipeline order:
 #. ``ruff check .`` — 0-violation lint gate (PRD §7.1);
 #. ``ruff format --check .`` — formatting gate;
 #. ``mypy`` — strict-ish type gate;
-#. ``pytest --cov`` with ``--cov-fail-under=85`` — tests + ≥85% coverage (§6.2);
+#. ``pytest --cov`` — tests + ≥85% coverage; the threshold is config-driven via
+   ``[tool.coverage.report].fail_under`` in ``pyproject.toml`` (task 0.9), so CI
+   carries no hard-coded number that could diverge from config (§6.2);
 #. a 150-line-per-file check (script lands in task 0.10);
 #. a secret scan (lands in task 0.11).
 
@@ -33,13 +35,16 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 
-#: Gate command fragments that must appear, in this exact pipeline order.
+#: Gate command fragments that must appear, in this exact pipeline order. The
+#: coverage step is config-driven: ``pytest --cov`` enforces the ≥85% threshold
+#: from ``[tool.coverage.report].fail_under`` in pyproject (task 0.9), so no
+#: hard-coded ``--cov-fail-under`` number lives in the workflow.
 ORDERED_GATE_FRAGMENTS = (
     "uv sync",
     "ruff check .",
     "ruff format --check .",
     "mypy",
-    "--cov-fail-under=85",
+    "pytest --cov",
     "check_line_limit.py",
     "secret",
 )
