@@ -1,0 +1,18 @@
+{
+  "task_id": "0.6",
+  "title": "Add pytest + a trivial test per package",
+  "date": "2026-05-30",
+  "model": "claude-opus-4-8",
+  "prompt": "Configure pytest (and pytest-cov) at the root. Add tests/ per package with one trivial passing test (e.g. asserts __version__ importable). Ensure `uv run pytest` is green.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 52078
+  },
+  "usage": {
+    "tool_uses": 46,
+    "duration_ms": 224261,
+    "summary": "46 tool uses · 52.1k tokens · 3m 44s"
+  },
+  "note": "Gave each of the five surfaces its own tests/ dir with one trivial smoke test (packages/<pkg>/tests/test_<pkg>_smoke.py) that asserts the package imports cleanly and exposes a non-empty string LIBRARY_VERSION. A dedicated __version__ at 1.00 is task 0.13, so we test against the LIBRARY_VERSION each package already exposes rather than over-building. TDD: confirmed pytest collected 0 nodes under packages/ before touching config (red), then added the discovery config (green). Pytest config (root pyproject [tool.pytest.ini_options]): testpaths now lists tests + all five packages/<pkg>/tests so `uv run pytest` collects root + per-package tests deterministically regardless of invocation dir. Key gotcha: I first named all five files test_smoke.py, which collided under pytest's default prepend import mode (import file mismatch) and under mypy (Duplicate module named 'test_smoke'). Tried --import-mode=importlib but the cleaner, more robust fix was unique basenames (test_<pkg>_smoke.py), which works in default prepend mode with no __init__.py (preserving the PEP 420 namespace) and resolves the mypy collision too. mypy: added each packages/<pkg>/tests dir to both mypy_path (as its own base) and files so the new test files stay type-checked (task 0.5 includes tests). Gates: uv sync clean; ruff check . = All checks passed; ruff format --check . = 16 files already formatted; uv run mypy = no issues in 16 source files; uv run pytest --cov = 34 passed (29 root + 5 per-package), 100% coverage (>= 85%). Confirmed all five per-package tests collected. Skipped the line-limit gate (scripts/check_line_limit.py, task 0.10) — not built yet; the new test files are ~25 lines each, well under 150. No external API calls / LOG usage / hard-coded config relevant to this config + smoke-test task."
+}
