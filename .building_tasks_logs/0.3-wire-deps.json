@@ -7,7 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 59791
   },
-  "note": "Token counts not surfaced by the harness for this run; recorded as null. Moved packages/<pkg>/src/agent_debate_<pkg>/ -> packages/<pkg>/src/agent_debate/<pkg>/ (git mv, history preserved) for all five; no __init__.py at the agent_debate/ namespace level (PEP 420). Each pyproject.toml wheel target set to src/agent_debate. Deps wired via [tool.uv.sources] workspace=true: core->log; api/cli/ui->core+log. log exposes LIBRARY_VERSION/log_version; core re-exports log_version; api/cli/ui re-export core_version+log_version across the edges. Root pyproject mypy block gained namespace_packages/explicit_package_bases/mypy_path + files so a bare `uv run mypy` resolves agent_debate.<pkg>. Tests: test_packages.py updated to agent_debate.<pkg> + namespace assertions; new test_cross_package_imports.py. Gates: uv sync (green), ruff check (pass), ruff format --check (pass), uv run mypy (clean), pytest --cov (pass). Verified fresh `python -c \"import agent_debate.core, agent_debate.log\"` works (namespace merges). Line-limit gate (scripts/check_line_limit.py) skipped: script does not exist yet (task 0.10); all touched files are well under 150 lines."
+  "usage": {
+    "tool_uses": 51,
+    "duration_ms": 248289,
+    "summary": "51 tool uses · 59.8k tokens · 4m 8s"
+  },
+  "note": "Token usage from the build harness: 59,791 total tokens over 51 tool uses in ~4m 8s (input/output not separately surfaced, recorded as null). Moved packages/<pkg>/src/agent_debate_<pkg>/ -> packages/<pkg>/src/agent_debate/<pkg>/ (git mv, history preserved) for all five; no __init__.py at the agent_debate/ namespace level (PEP 420). Each pyproject.toml wheel target set to src/agent_debate. Deps wired via [tool.uv.sources] workspace=true: core->log; api/cli/ui->core+log. log exposes LIBRARY_VERSION/log_version; core re-exports log_version; api/cli/ui re-export core_version+log_version across the edges. Root pyproject mypy block gained namespace_packages/explicit_package_bases/mypy_path + files so a bare `uv run mypy` resolves agent_debate.<pkg>. Tests: test_packages.py updated to agent_debate.<pkg> + namespace assertions; new test_cross_package_imports.py. Gates: uv sync (green), ruff check (pass), ruff format --check (pass), uv run mypy (clean), pytest --cov (pass). Verified fresh `python -c \"import agent_debate.core, agent_debate.log\"` works (namespace merges). Line-limit gate (scripts/check_line_limit.py) skipped: script does not exist yet (task 0.10); all touched files are well under 150 lines."
 }
