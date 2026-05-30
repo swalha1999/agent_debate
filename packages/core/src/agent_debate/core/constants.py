@@ -43,6 +43,11 @@ REBUTTAL_LEAD_OUT = " — this does not hold, because:"
 #: conclusion wording is never duplicated inline.
 CONCLUSION_TEMPLATE = "Therefore, the {side} side maintains that {claim}"
 
+#: Delimiters the ``analyze_opponent_argument`` skill splits the opponent's last
+#: message on to extract its key claims (one per sentence). Kept here, not inlined,
+#: so the parsing rule lives in one place (guideline §7.2).
+CLAIM_SPLIT_DELIMITERS = ".!?"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -54,6 +59,7 @@ PROVIDER_KEY_ENV_VARS: dict[str, str] = {
 }
 
 __all__ = [
+    "CLAIM_SPLIT_DELIMITERS",
     "CONCLUSION_TEMPLATE",
     "DEFAULT_CONTROLLER_MODEL",
     "DEFAULT_DEBATER_MODEL",

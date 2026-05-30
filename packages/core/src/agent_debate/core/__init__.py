@@ -39,6 +39,9 @@ from agent_debate.core.skills import (
     Argument,
     ArgumentRequest,
     DebateSide,
+    OpponentAnalysis,
+    OpponentAnalysisRequest,
+    analyze_opponent_argument,
     build_argument,
 )
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
@@ -62,6 +65,8 @@ __all__ = [
     "DebateSide",
     "DuckDuckGoSearchProvider",
     "MissingApiKeyError",
+    "OpponentAnalysis",
+    "OpponentAnalysisRequest",
     "QueueFullError",
     "QueueStatus",
     "RateLimitConfig",
@@ -75,6 +80,7 @@ __all__ = [
     "TavilySearchProvider",
     "UnknownSearchBackendError",
     "__version__",
+    "analyze_opponent_argument",
     "available_search_backends",
     "build_argument",
     "core_version",

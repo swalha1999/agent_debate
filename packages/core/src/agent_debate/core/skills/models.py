@@ -103,4 +103,60 @@ class Argument(BaseModel):
     conclusion: str
 
 
-__all__ = ["Argument", "ArgumentRequest", "DebateSide"]
+class OpponentAnalysisRequest(BaseModel):
+    """Validated input for :func:`analyze_opponent_argument` (issue #34).
+
+    Attributes:
+        side: The analysing agent's assigned stance; any other value is rejected.
+        opponent_message: The opponent's last message; must be non-empty after
+            trimming, since there is nothing to dissect otherwise.
+        weaknesses: Optional weaknesses/assumptions the agent (LLM) wants to flag;
+            blanks are dropped on validation. When present, they are prioritised
+            as the rebuttal target (anti-sycophancy: target and rebut, never
+            concede — ``docs/prds/anti-sycophancy.md`` §2).
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    side: DebateSide
+    opponent_message: str = Field(min_length=1)
+    weaknesses: list[str] = Field(default_factory=list)
+
+    @field_validator("opponent_message")
+    @classmethod
+    def _message_non_empty(cls, value: str) -> str:
+        return _strip_non_empty(value)
+
+    @field_validator("weaknesses")
+    @classmethod
+    def _weaknesses_clean(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()]
+
+
+class OpponentAnalysis(BaseModel):
+    """A structured dissection of the opponent's last message (issue #34).
+
+    Attributes:
+        side: The analysing agent's stance (carried through for composition).
+        claims: The opponent's key claims extracted from its message.
+        weaknesses: The identified weaknesses/assumptions to exploit (as flagged).
+        rebuttal_target: The single prioritised point to attack next — the chosen
+            strongest weakness, or the opponent's lead claim when none were flagged.
+            Always non-empty so the agent rebuts rather than concedes.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    side: DebateSide
+    claims: list[str]
+    weaknesses: list[str]
+    rebuttal_target: str
+
+
+__all__ = [
+    "Argument",
+    "ArgumentRequest",
+    "DebateSide",
+    "OpponentAnalysis",
+    "OpponentAnalysisRequest",
+]
