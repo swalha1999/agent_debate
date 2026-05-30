@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 49339
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 33,
+    "duration_ms": 192270,
+    "summary": "33 tool uses · 49.3k tokens · 3m 12s"
   },
   "note": "TDD: wrote packages/log/tests/test_event.py FIRST (10 cases via parametrize: every allowed event_type constructs [7 kinds]; EVENT_TYPES tuple matches the seven PRD §5.8 kinds in order; an invalid event_type raises ValidationError; required fields run_id/round/agent/event_type enforced; optional tokens/latency_ms default to None; ts defaults to a timestamp; to_jsonl() is single-line and round-trips via model_validate to an equal model; structured payload survives the JSONL round-trip). Watched red (ImportError: cannot import 'EVENT_TYPES'/'LogEvent'), then implemented. Model lives in packages/log/src/agent_debate/log/event.py (~38 code lines, <=150): Pydantic v2 LogEvent with model_config extra='forbid'; fields run_id:str, ts:datetime (default_factory _utc_now -> UTC now), round:int, agent:str, event_type:EventType (strict Literal of the 7 kinds), payload:dict[str,Any] (default_factory dict), tokens:int|None=None, latency_ms:float|None=None. No-hardcoding: the allowed set is a single source of truth EVENT_TYPES tuple + an EventType Literal kept in lock-step (a mismatch is caught by test_event_types_constant_matches_prd). Serialisation: to_jsonl() wraps model_dump_json() -> one newline-free JSON line for the runs/<run_id>.jsonl sink from 1.1, round-trippable back to an equal model. Re-exported LogEvent, EventType, EVENT_TYPES from agent_debate.log __init__ (__all__ updated). Added pydantic>=2.9,<3 to packages/log [project].dependencies and ran uv lock/uv sync (resolved pydantic 2.13.4 + pydantic-core 2.46.4 + annotated-types + typing-inspection). Scope kept to model + serialisation only; get_logger/log_event helper is task 1.3 (no over-build, but the JSONL format is coherent with the existing 1.1 sink). No external API calls -> API gatekeeper (Epic 13) N/A. Gates green locally: ruff check (fixed one UP rule: datetime.timezone.utc -> datetime.UTC), ruff format --check, mypy (strict, 31 files), pytest --cov (116 passed, 100% total, event.py 100%), check_line_limit.py, secret_scan.py."
 }
