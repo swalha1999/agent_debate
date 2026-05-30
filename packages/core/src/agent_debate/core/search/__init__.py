@@ -21,6 +21,7 @@ from agent_debate.core.search.base import (
     SearchProvider,
     SearchResult,
 )
+from agent_debate.core.search.duckduckgo import DuckDuckGoSearchProvider
 from agent_debate.core.search.errors import UnknownSearchBackendError
 from agent_debate.core.search.registry import (
     available_search_backends,
@@ -30,6 +31,7 @@ from agent_debate.core.search.registry import (
 
 __all__ = [
     "DEFAULT_MAX_RESULTS",
+    "DuckDuckGoSearchProvider",
     "SearchProvider",
     "SearchResult",
     "UnknownSearchBackendError",

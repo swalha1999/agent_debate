@@ -21,6 +21,11 @@ dependencies = [
     # objects so swapping providers is a config-only change. `[anthropic]` pulls
     # in the default-provider client (PRD §7 default = anthropic).
     "pydantic-ai-slim[anthropic]>=1.0,<2",
+    # Default web-search vendor (PRD §5.5, search sub-PRD §4): the maintained
+    # successor to ``duckduckgo-search``. Free, needs no API key. Imported as
+    # ``from ddgs import DDGS``; ``DDGS().text(query, max_results=...)`` returns
+    # dicts with ``title`` / ``href`` / ``body`` keys mapped to ``SearchResult``.
+    "ddgs>=9",
 ]
 
 [tool.uv.sources]

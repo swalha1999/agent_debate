@@ -801,5 +801,43 @@ outcome/decision it produced.
   credentials by constructor-signature introspection; make the not-found error
   enumerate the valid options.*
 
+### Task 3.3 — DuckDuckGoSearchProvider (Epic 3, issue #28)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Implement DuckDuckGoSearchProvider using ddgs. Map raw
+  results to SearchResult. No API key needed." (+ repo standards: TDD red-first,
+  ≤150 code lines/file, ruff 0 + mypy clean, no hard-coded values, external calls
+  via the API gatekeeper, log via LOG, coverage ≥85%.)
+- **Context:** Epic 3's third task — the **default** search vendor on top of the
+  3.1 interface + 3.2 registry. DuckDuckGo is the config default
+  (`SEARCH_BACKEND=duckduckgo`) precisely because it is free and needs **no API
+  key**, so a fresh install searches out of the box.
+- **Outcome / pattern set:** Added `ddgs>=9` to `packages/core` deps and relocked
+  (`uv lock` → ddgs 9.14.4) — the maintained successor to `duckduckgo-search`,
+  imported `from ddgs import DDGS`. Verified the installed API rather than
+  trusting docs: `DDGS().text(query, **kwargs) -> list[dict[str, Any]]` with keys
+  `title`/`href`/`body`, and ddgs ships `py.typed`, so it is **typed** and needed
+  **no** mypy ignore/override. `search/duckduckgo.py` maps each raw dict via
+  `.get(key, "")` (missing keys → `""`, no crash; empty payload → `[]`, sub-PRD §6
+  graceful handling). The single live `DDGS().text(...)` hop is isolated in a
+  static `_fetch()` — a clear seam left for the API-gatekeeper wrapping in task
+  13.6 — so the eventual rate-limit wiring is a one-spot change. No-hard-coded-
+  values: `max_results` default = `DEFAULT_MAX_RESULTS`; the name `"duckduckgo"`
+  is a single source `DUCKDUCKGO_BACKEND = constants.DEFAULT_SEARCH_BACKEND`,
+  reused as both the class `name` and the `@register_search_provider` key, so the
+  factory resolves the config default to this provider with zero factory edits.
+  Re-exported from `search/__init__` (importing the subpackage triggers
+  registration) and `agent_debate.core`. TDD red-first: `test_duckduckgo.py`
+  (8 tests) **always monkeypatches a `_SpyDDGS` stand-in for the `DDGS` class**, so
+  no test path touches the network — it asserts field mapping, default + explicit
+  `max_results` pass-through, missing-key tolerance, empty → `[]`, name == key,
+  Protocol conformance, and the factory default. Watched it fail
+  (`ModuleNotFoundError`), then implemented to green. Gates: ruff/format clean,
+  mypy clean (74 files), 274 passed, 100% coverage, line-limit + secret-scan pass.
+  *Pattern: verify a new dependency's real return shape + typing from the installed
+  package before mapping; isolate the one external call in a tiny seam method for
+  later gatekeeper wrapping; mock the vendor client class in tests so the suite
+  never hits the network.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
