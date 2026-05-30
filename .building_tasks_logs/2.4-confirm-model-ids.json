@@ -1,0 +1,18 @@
+{
+  "task_id": "2.4",
+  "title": "Confirm Anthropic model IDs",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Determine the exact available Anthropic model IDs for debaters and controller, set them as defaults, and document in .env.example with comments.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Confirms/pins the current Anthropic model IDs (Closes #24). The existing defaults already matched the confirmed IDs: constants.DEFAULT_DEBATER_MODEL == 'anthropic:claude-sonnet-4-6' (Sonnet 4.6, balanced) and constants.DEFAULT_CONTROLLER_MODEL == 'anthropic:claude-opus-4-8' (Opus 4.8, most capable) — no drift, so constants.py was left unchanged (it remains the single source of truth per PRD §7.2). Deliverable was (1) a TDD red-first pinning test packages/core/tests/test_model_ids.py and (2) clearer per-model documentation in .env.example. The test pins the exact IDs (DEBATER/CONTROLLER), asserts they are well-formed 'anthropic:claude-...' strings, asserts Settings() defaults equal the pinned IDs, asserts .env.example documents the same IDs plus the Haiku alternative 'anthropic:claude-haiku-4-5-20251001', and confirms each default string constructs offline via resolve_model (dummy ANTHROPIC_API_KEY injected via monkeypatch — no network call). The test was watched RED first: test_env_example_documents_pinned_ids failed because the Haiku alternative ID was not yet documented; adding the per-model comment block (explaining each model, when to use it, and the pydantic-ai 'anthropic:' provider:model convention) to .env.example turned it GREEN. No live API call was made; IDs are the known-good, confirmed values. Gates green locally: ruff check, ruff format --check, mypy, pytest --cov (>=85), check_line_limit.py, secret_scan.py. The 0.7 test_env_example.py contract test still passes after edits."
+}
