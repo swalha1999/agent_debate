@@ -7,21 +7,24 @@
         "requests_per_hour": 500,
         "concurrent_max": 5,
         "retry_after_seconds": 30,
-        "max_retries": 3
+        "max_retries": 3,
+        "queue_max_depth": 100
       },
       "anthropic": {
         "requests_per_minute": 30,
         "requests_per_hour": 500,
         "concurrent_max": 5,
         "retry_after_seconds": 30,
-        "max_retries": 3
+        "max_retries": 3,
+        "queue_max_depth": 100
       },
       "search": {
         "requests_per_minute": 20,
         "requests_per_hour": 300,
         "concurrent_max": 3,
         "retry_after_seconds": 15,
-        "max_retries": 2
+        "max_retries": 2,
+        "queue_max_depth": 100
       }
     }
   }

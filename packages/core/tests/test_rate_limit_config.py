@@ -52,6 +52,7 @@ def test_default_service_int_fields_match_file() -> None:
     assert limits.concurrent_max == expected["concurrent_max"]
     assert limits.retry_after_seconds == expected["retry_after_seconds"]
     assert limits.max_retries == expected["max_retries"]
+    assert limits.queue_max_depth == expected["queue_max_depth"]
 
 
 def test_get_service_limits_returns_named_service() -> None:
@@ -98,6 +99,7 @@ def test_explicit_path_with_custom_values(tmp_path: Path) -> None:
                     "concurrent_max": 1,
                     "retry_after_seconds": 13,
                     "max_retries": 0,
+                    "queue_max_depth": 9,
                 }
             },
         }
@@ -108,6 +110,7 @@ def test_explicit_path_with_custom_values(tmp_path: Path) -> None:
     limits = config.get_service_limits("default")
     assert limits.requests_per_minute == 7
     assert limits.max_retries == 0
+    assert limits.queue_max_depth == 9
 
 
 def test_service_limits_rejects_negative_rate(tmp_path: Path) -> None:

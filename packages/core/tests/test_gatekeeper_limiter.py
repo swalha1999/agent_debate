@@ -42,6 +42,7 @@ def _limits(*, per_minute: int, per_hour: int) -> ServiceLimits:
         concurrent_max=5,
         retry_after_seconds=30,
         max_retries=3,
+        queue_max_depth=100,
     )
 
 

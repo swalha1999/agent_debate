@@ -21,13 +21,14 @@ from agent_debate.core.gatekeeper.config import (
     ServiceLimits,
     load_rate_limit_config,
 )
-from agent_debate.core.gatekeeper.errors import RateLimitExceededError
+from agent_debate.core.gatekeeper.errors import QueueFullError, RateLimitExceededError
 from agent_debate.core.gatekeeper.types import QueueStatus
 
 __all__ = [
     "DEFAULT_SERVICE",
     "RATE_LIMITS_FILENAME",
     "ApiGatekeeper",
+    "QueueFullError",
     "QueueStatus",
     "RateLimitConfig",
     "RateLimitExceededError",

@@ -605,5 +605,36 @@ outcome/decision it produced.
   1000ms) and identifier labels. TDD red-first (ImportError: no `ApiGatekeeper`),
   then green; all gates green, 100% coverage.
 
+### 2026-05-31 — 13.3 FIFO overflow queue (enqueue, backpressure, drain)
+
+- **Prompt (verbatim):** "Add a FIFO overflow queue with max depth from config:
+  when a limit is hit, enqueue instead of dropping; signal backpressure when
+  full; drain as rate windows reset." (plus the repo-standard checklist: TDD,
+  150-line cap, ruff/mypy clean, no hard-coded values, gatekeeper for external
+  calls, LOG package, coverage >= 85%.)
+- **Context:** Third task of Epic 13 (`docs/prds/api-gatekeeper.md` §5). It
+  replaces 13.2's "raise `RateLimitExceededError` on overflow" seam with the
+  sub-PRD overflow queue: overflow is **queued, never dropped or crashed**.
+- **Decision/pattern set:** `execute(api_call, *args, service, **kwargs)` now
+  returns `_T | None` — it runs the call immediately when the window has room,
+  else **enqueues** it into a bounded per-service FIFO queue and returns `None`
+  (the call runs later via `drain()`). Only a **full** queue (depth ==
+  `queue_max_depth`) raises the new `QueueFullError` — the backpressure signal.
+  `drain()` walks each service's queue oldest-first, running calls while the
+  window has room (FIFO preserved across resets). Added a per-service
+  `queue_max_depth` field to `config/rate_limits.json` + `ServiceLimits` (value
+  **only** in JSON, default 100); no depth literal in Python. New module
+  `gatekeeper/_queue.py` (`_OverflowQueue` + `PendingCall`) holds the bounded
+  deque + lifetime enqueue/drain counters that back a now-**real** `QueueStatus`
+  (depth/max_depth/enqueued_total/drained_total). The limiter clock is injectable
+  through the gatekeeper (`time_fn`) so a test advances the fake clock to reset a
+  window then drains deterministically. Queue lifecycle events (enqueue / drain /
+  backpressure) log via the LOG package (`event_type="system"`). Updated the two
+  config shape tests (0.14 `tests/test_rate_limits_config.py`, 13.1
+  `packages/core/tests/test_rate_limit_config.py`) for the additive field (kept
+  version `"1.00"`) and rewrote the two 13.2 raise-on-overflow execute tests to
+  assert **enqueue** instead. TDD red-first (ImportError: no `QueueFullError`),
+  then green; all gates green, 100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

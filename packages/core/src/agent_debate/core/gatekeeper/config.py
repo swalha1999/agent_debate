@@ -40,9 +40,11 @@ _REPO_ROOT = Path(__file__).resolve().parents[6]
 class ServiceLimits(BaseModel):
     """Per-service rate limits — every value comes from the config file.
 
-    All five fields are required (no default *values*, so nothing bakes the
-    numbers into code). Throughput fields must be positive; ``max_retries`` may
-    be ``0`` (no retries) so it is only required non-negative.
+    All fields are required (no default *values*, so nothing bakes the numbers
+    into code). Throughput fields must be positive; ``max_retries`` may be ``0``
+    (no retries) so it is only required non-negative. ``queue_max_depth`` bounds
+    the FIFO overflow queue (task 13.3) and must be positive (a zero-depth queue
+    could never absorb overflow).
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -52,6 +54,7 @@ class ServiceLimits(BaseModel):
     concurrent_max: int = Field(gt=0)
     retry_after_seconds: int = Field(gt=0)
     max_retries: int = Field(ge=0)
+    queue_max_depth: int = Field(gt=0)
 
 
 class RateLimitConfig(BaseModel):
