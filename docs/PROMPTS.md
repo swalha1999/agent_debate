@@ -257,5 +257,29 @@ outcome/decision it produced.
   56 passed, 100% coverage; `python scripts/check_line_limit.py` exits 0 on the
   current tree — the line-limit gate is now LIVE in CI.
 
+### 0.11 — Secret-scan check in CI (2026-05-31)
+- **Prompt:** "Add a secret scan to CI (e.g. gitleaks action, or a regex script
+  for sk-…, api keys, tokens). Ensure it scans the diff/tree and fails on a hit.
+  Confirm .env.example exists and contains only placeholders."
+- **Context:** Closes issue #11. PRD §7.4 mandates **no secrets in the repo**
+  and a CI gate that fails on a committed credential. ci.yml (0.8) already
+  carried a forward-compatible guard (`if [ -f scripts/secret_scan.py ]`) that
+  activates the gate the moment the script lands — no workflow edit required. A
+  GitGuardian check also runs externally on PRs; this task adds our OWN
+  self-contained in-repo scanner so the gate does not depend on a third party.
+- **Decision/outcome (self-contained regex scanner + named config — significant):**
+  built `scripts/secret_scan.py` with single named `PATTERNS` (anthropic /
+  openai `sk-` tokens, AWS `AKIA…`, PEM private-key headers) and an `ALLOWLIST`
+  of placeholder tokens (`your-`, `-here`, `xxxx`, …) so the `.env.example`
+  template never trips the gate — no scattered magic regex (§7.2). `scan_text()`
+  is filesystem-independent + importable so it is unit-tested on in-memory
+  strings; `find_secrets()`/`main()` walk the tree skipping `EXCLUDED_DIRS`
+  (`.git`/`.venv`/caches **and** `tests/`, whose fixtures plant clearly-fake
+  pattern-matching strings on purpose) so the live scan stays clean. TDD:
+  `tests/test_secret_scan.py` written first (14 cases), watched red, then green.
+  Added the script to mypy `files` (mirrors 0.10). Gates green: ruff/format/mypy
+  clean (23 files), 70 passed, 100% coverage; `python scripts/secret_scan.py`
+  exits 0 on the current tree — the secret-scan gate is now LIVE in CI.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

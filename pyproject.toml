@@ -124,9 +124,10 @@ files = [
     "packages/api/tests",
     "packages/cli/tests",
     "packages/ui/tests",
-    # Real build-time tooling is type-checked (task 0.10); the data-heavy
+    # Real build-time tooling is type-checked (tasks 0.10, 0.11); the data-heavy
     # one-off `scripts/create_issues.py` generator stays out of scope.
     "scripts/check_line_limit.py",
+    "scripts/secret_scan.py",
 ]
 
 [tool.pytest.ini_options]
