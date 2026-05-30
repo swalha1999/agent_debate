@@ -1,0 +1,18 @@
+{
+  "task_id": "2.2",
+  "title": "Model resolver (Pydantic AI, PRD §4)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a resolver mapping DEBATER_MODEL/CONTROLLER_MODEL/PRO_MODEL/CON_MODEL strings to Pydantic AI model instances. PRO/CON fall back to DEBATER_MODEL. Anthropic default; any provider via model string.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 58780
+  },
+  "usage": {
+    "tool_uses": 39,
+    "duration_ms": 241075,
+    "summary": "39 tool uses · 58.8k tokens · 4m 1s"
+  },
+  "note": "Adds the LLM provider resolver for agent_debate (Closes #22). TDD red-first: wrote packages/core/tests/test_models.py first and watched it fail (ImportError: cannot import name 'ResolvedModels'), then implemented packages/core/src/agent_debate/core/models.py. resolve_model(model_string) wraps Pydantic AI's pydantic_ai.models.infer_model so the provider is chosen ENTIRELY by the 'provider:model' string — Anthropic is the PRD §7 default (encoded in the default string, not hard-coded), so swapping providers is a config-only change. resolve_models(settings) returns a frozen ResolvedModels dataclass (debater/controller/pro/con) and reuses the task-2.1 Settings.pro_model/con_model computed properties so the PRO/CON -> DEBATER fallback lives in exactly one place. A clearly invalid string fails loudly (infer_model raises ValueError 'Unknown provider' / UserError), never a silent broken model — full strict required-key validation remains task 2.3. Construction is OFFLINE: no network call is made; the Anthropic client only reads ANTHROPIC_API_KEY at build time, so tests inject a dummy key via monkeypatch (no real key needed) and assert on resolved model.system/model_name rather than calling the API. The 'zero code change to swap' acceptance is proven by test_env_swaps_debater_with_zero_code_changes, which flips DEBATER_MODEL via monkeypatch.setenv and asserts the resolved model_name changes with no code edit. Actual provider calls in the app will route through the Epic 13 API gatekeeper, which drives these resolved models (noted in the module docstring). Dep added to packages/core: pydantic-ai-slim[anthropic]>=1.0,<2 (uv lock resolved 1.104.0; the [anthropic] extra ships the default-provider client); uv sync clean. Re-exported ResolvedModels/resolve_model/resolve_models from agent_debate.core __init__. Gates green locally: uv sync clean; ruff check . = All checks passed (one import-order fix applied); ruff format --check . = clean; mypy = no issues in 43 source files; pytest --cov = 170 passed, 100% total coverage (Required 85.0% reached); check_line_limit.py exits 0; secret_scan.py exits 0."
+}

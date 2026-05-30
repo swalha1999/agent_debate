@@ -11,6 +11,7 @@ importing across the edge, proving the dependency resolves at runtime.
 from __future__ import annotations
 
 from agent_debate.core._version import __version__
+from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.log import log_version
 
@@ -24,9 +25,12 @@ core_version = __version__
 
 __all__ = [
     "LIBRARY_VERSION",
+    "ResolvedModels",
     "Settings",
     "__version__",
     "core_version",
     "get_settings",
     "log_version",
+    "resolve_model",
+    "resolve_models",
 ]

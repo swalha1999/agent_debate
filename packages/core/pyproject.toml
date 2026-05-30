@@ -13,7 +13,15 @@ name = "agent_debate_core"
 version = "1.00"
 description = "agent_debate SDK — the debate engine and agents (skeleton)."
 requires-python = ">=3.12"
-dependencies = ["agent_debate_log", "pydantic>=2.9,<3", "pydantic-settings>=2.5,<3"]
+dependencies = [
+    "agent_debate_log",
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.5,<3",
+    # LLM provider abstraction (PRD §4): map "provider:model" strings to model
+    # objects so swapping providers is a config-only change. `[anthropic]` pulls
+    # in the default-provider client (PRD §7 default = anthropic).
+    "pydantic-ai-slim[anthropic]>=1.0,<2",
+]
 
 [tool.uv.sources]
 agent_debate_log = { workspace = true }
