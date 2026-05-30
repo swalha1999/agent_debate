@@ -551,6 +551,31 @@ outcome/decision it produced.
   reverting (GREEN). No production code changed. Coverage stayed 100%; all gates
   green (ruff, ruff-format, mypy, pytest --cov ≥85, line-limit, secret-scan).
 
+### 3.6 — Search tests (Epic 3 acceptance pass) (2026-05-31)
+
+- **Prompt:** "Write tests: registry returns the configured provider; DDG mapping
+  shape; empty/error path returns []; swapping to the stub needs no engine change
+  (mock network)."
+- **Context:** Closes issue #31. Epic 3 search (3.1–3.5) was already implemented
+  with ~100% unit coverage by the per-task suites. This is the Epic-3 *acceptance*
+  pass (mirrors 1.5/2.5/13.7): one consolidated module exercising the sub-PRD §7
+  criteria END-TO-END through the public `agent_debate.core` API rather than
+  re-testing internals.
+- **Decision/outcome (acceptance composition, honest about overlap):**
+  `tests/test_search_acceptance.py` drives `create_search_provider` →
+  concrete vendor → `ResilientSearchProvider` as one flow: DDG mapped-shape via a
+  monkeypatched `DDGS`, registry returns the configured provider, the one-line
+  `duckduckgo`↔`tavily` swap through the *same* factory call, and the empty/error
+  paths returning `[]`. Net-new value is the **composition** — wrapping the
+  *factory* provider in the resilient layer with the **real** `search`
+  `ServiceLimits` loaded from `config/rate_limits.json` (not hard-coded), proving a
+  vendor crash degrades to `[]` instead of escaping into a debate. TDD red-first
+  demonstrated on that assertion: briefly asserting `pytest.raises(ConnectionError)`
+  (RED — the layer degrades, never raises), then reverting to `== []` (GREEN). No
+  production code changed (search package was already gap-free). Total coverage
+  99%; all gates green (ruff, ruff-format, mypy, pytest --cov ≥85, line-limit,
+  secret-scan).
+
 ### 2026-05-31 — 13.1 RateLimitConfig loader (Epic 13 opens)
 
 - **Prompt (verbatim):** "Implement RateLimitConfig that loads
