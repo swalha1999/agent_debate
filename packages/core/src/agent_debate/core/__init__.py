@@ -25,6 +25,7 @@ from agent_debate.core.models import ResolvedModels, resolve_model, resolve_mode
 from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
     DuckDuckGoSearchProvider,
+    ResilientSearchProvider,
     SearchProvider,
     SearchResult,
     UnknownSearchBackendError,
@@ -55,6 +56,7 @@ __all__ = [
     "QueueStatus",
     "RateLimitConfig",
     "RateLimitExceededError",
+    "ResilientSearchProvider",
     "ResolvedModels",
     "SearchProvider",
     "SearchResult",
