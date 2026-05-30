@@ -667,5 +667,32 @@ outcome/decision it produced.
   to 70 code lines. TDD red-first (new retry + concurrency tests, watched fail),
   then green; all gates green, 100% coverage, no existing tests changed.
 
+### 2026-05-31 — 13.5 get_queue_status (complete depth+stats, surfaced to logs)
+
+- **Prompt:** "Implement get_queue_status() returning queue depth and stats;
+  surface to logs and the UI." (plus the repo-standard checklist: TDD, 150-line
+  cap, ruff/mypy clean, no hard-coded values, gatekeeper for external calls, LOG
+  package, coverage >= 85%.)
+- **Context:** Fifth task of Epic 13 (`docs/prds/api-gatekeeper.md` §3/§6:
+  `get_queue_status()` reports depth + stats). 13.2 left an empty seam, 13.3 made
+  depth real; this makes the snapshot **complete, accurate and observable**.
+- **Decision/pattern set:** Two-level typed schema. Per-service `QueueStatus`
+  (frozen Pydantic) gains `backpressure_total` + `in_flight` alongside
+  `depth`/`max_depth`/`enqueued_total`/`drained_total`. New `GatekeeperStatus`
+  aggregate model (`services: dict[str, QueueStatus]` + `total_*` sums) with a
+  `from_services()` classmethod — JSON-serializable (`model_dump_json`) so the
+  Epic 11 UI/API/SSE can consume one object unchanged. **No hard-coded values:**
+  `max_depth` from config; `backpressure_total` from a new
+  `_OverflowQueue.record_backpressure()` counter (wired in `_enqueue` on a
+  full-queue rejection); `in_flight` from a new `_RateLimiter.in_flight()` reader
+  over the existing `_inflight` seam. `get_queue_status()` returns the full
+  per-service status; new `get_status()` aggregates across live queues; new
+  `log_queue_status()` snapshots + emits **one** `system` event tagged
+  `queue_event="status"` (on-demand, never spams) and returns the snapshot. New
+  `_GatekeeperLog.status()` emitter flattens the snapshot into the LOG payload.
+  TDD red-first (new `test_gatekeeper_status.py`, watched fail on missing
+  `GatekeeperStatus`), then green; existing gatekeeper tests untouched (additive);
+  all gates green, 100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
