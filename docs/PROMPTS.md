@@ -160,5 +160,26 @@ outcome/decision it produced.
   `tests/` dir was added to mypy `files` + `mypy_path` so the new tests stay
   type-checked. Gates green: ruff/format/mypy clean, 34 passed, 100% coverage.
 
+### 0.7 — Add .gitignore and .env.example (2026-05-30)
+- **Prompt:** "Create .gitignore (.venv, __pycache__, *.pyc, .env, .ruff_cache,
+  .mypy_cache, .pytest_cache). Create .env.example with every variable from
+  PRD §7 (ANTHROPIC_API_KEY, DEBATER_MODEL, CONTROLLER_MODEL, PRO_MODEL,
+  CON_MODEL, ROUNDS, MAX_WORDS, TURN_TIMEOUT_S, MAX_RETRIES, SEARCH_BACKEND,
+  SEARCH_API_KEY) with safe placeholder values and comments."
+- **Context:** Builds on the 0.1–0.6 workspace; closes issue #7. A minimal
+  `.gitignore` already existed from 0.1; this task expands it (adds `.env` and
+  the remaining caches) and adds the `.env.example` template.
+- **Decision/outcome:** `.env.example` mirrors PRD §7 exactly — all 11 vars,
+  each with a one-line comment and the PRD's default as a SAFE placeholder
+  (`ANTHROPIC_API_KEY=your-anthropic-api-key-here`, optional `PRO_MODEL`/
+  `CON_MODEL`/`SEARCH_API_KEY` left empty). TDD: `tests/test_env_example.py`
+  parses `KEY=value` lines and asserts every PRD §7 var is present, that the
+  secret keys carry placeholders (rejects a live `sk-ant-…`), and that
+  `.gitignore` ignores `.env` (the secret file) but NOT `.env.example` (the
+  committed template) — watched it fail (5 red) before adding the files.
+  The PRD §7 list is mirrored as a maintained constant in the test; no vars
+  beyond the indicative set. Gates green: ruff/format/mypy clean, 39 passed,
+  100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -1,9 +1,20 @@
-# Minimal ignores for the workspace scaffold (task 0.1).
-# Task 0.7 expands this (.env, caches, etc.).
-.venv/
+# Python bytecode / build artifacts
 __pycache__/
 *.pyc
-.pytest_cache/
-.coverage
-.mypy_cache/
+*.pyo
+
+# Virtual environment
+.venv/
+
+# Secrets / local environment — NEVER commit real .env (see .env.example)
+.env
+
+# Tool caches
 .ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Coverage output
+.coverage
+.coverage.*
+htmlcov/
