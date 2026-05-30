@@ -6,10 +6,12 @@ defined here; concrete vendors live behind it and are chosen by config
 (``SEARCH_BACKEND``), so the search vendor is replaceable with one config change —
 no engine/agent/skill edits.
 
-Task 3.1 ships the *interface* only (:class:`SearchResult`, :class:`SearchProvider`
-and the :data:`DEFAULT_MAX_RESULTS` default). The provider registry (task 3.2) and
-the default ``DuckDuckGoSearchProvider`` (task 3.3) build on this surface; the
-re-exports below are the subpackage's public surface.
+Task 3.1 ships the *interface* (:class:`SearchResult`, :class:`SearchProvider`,
+:data:`DEFAULT_MAX_RESULTS`); task 3.2 adds the **registry + factory**
+(:func:`register_search_provider`, :func:`create_search_provider`,
+:func:`available_search_backends`) that selects the active provider from
+``SEARCH_BACKEND``. The default ``DuckDuckGoSearchProvider`` (task 3.3) registers
+on top. The re-exports below are the subpackage's public surface.
 """
 
 from __future__ import annotations
@@ -19,5 +21,19 @@ from agent_debate.core.search.base import (
     SearchProvider,
     SearchResult,
 )
+from agent_debate.core.search.errors import UnknownSearchBackendError
+from agent_debate.core.search.registry import (
+    available_search_backends,
+    create_search_provider,
+    register_search_provider,
+)
 
-__all__ = ["DEFAULT_MAX_RESULTS", "SearchProvider", "SearchResult"]
+__all__ = [
+    "DEFAULT_MAX_RESULTS",
+    "SearchProvider",
+    "SearchResult",
+    "UnknownSearchBackendError",
+    "available_search_backends",
+    "create_search_provider",
+    "register_search_provider",
+]

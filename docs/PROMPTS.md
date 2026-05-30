@@ -763,5 +763,43 @@ outcome/decision it produced.
   constant); concrete providers and the registry land on top without reshaping
   the contract.*
 
+### Task 3.2 — Provider registry + factory (Epic 3, issue #27)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Add a registry mapping names to SearchProvider classes
+  and a factory that returns the provider for SEARCH_BACKEND. Swapping backends
+  must be a one-line config change." (+ repo standards: TDD red-first, ≤150
+  code lines/file, ruff 0 + mypy clean, no hard-coded values, external calls via
+  the API gatekeeper, log via LOG, coverage ≥85%.)
+- **Context:** Epic 3's second task. The 3.1 interface (`SearchProvider`
+  Protocol + `SearchResult`) exists; no concrete vendor yet (DuckDuckGo is 3.3).
+  This adds the selection mechanism that makes the vendor swappable by config.
+- **Outcome / pattern set:** `search/registry.py` holds a module-level
+  `_REGISTRY: dict[name -> SearchProvider class]`, a `register_search_provider(name)`
+  **class decorator** that records (and returns unchanged) a provider class, and
+  a `create_search_provider(settings)` **factory** that resolves
+  `settings.search_backend` via a *pure registry lookup* — no concrete class is
+  ever named in the factory, so adding a backend never edits selection code.
+  That is the whole "one-line config change" guarantee: a new vendor is
+  selectable the instant it is decorated, and switching is just changing
+  `SEARCH_BACKEND`. `SEARCH_API_KEY` is threaded only into providers whose
+  constructor exposes an `api_key` parameter (an `inspect.signature` check), so
+  keyless providers (DuckDuckGo) construct with no args while keyed ones (Tavily,
+  …) get the key — no per-vendor branching. Unknown backends raise
+  `UnknownSearchBackendError` (in `search/errors.py`), a `LookupError` whose
+  message names the bad key *and* lists the available backends — actionable, not
+  a bare `KeyError`. Duplicate registration fails loudly (`ValueError`) instead
+  of silently shadowing. The factory makes **no network call** — it only
+  *constructs*; the provider's `search` is what later routes through the Epic 13
+  gatekeeper. TDD red-first: `test_search_registry.py` (9 tests incl. the
+  one-line-swap proof — same code path, two `SEARCH_BACKEND` values, two
+  provider types — an autouse fixture snapshots/restores `_REGISTRY`), watched it
+  fail (`ImportError`), then implemented to green. Gates: ruff/format clean, mypy
+  clean (72 files), 266 passed, 100% coverage, line-limit + secret-scan pass.
+  *Pattern: select plug-ins by a decorator-populated name→class registry + a
+  config-keyed lookup factory (never branch on concrete classes); thread optional
+  credentials by constructor-signature introspection; make the not-found error
+  enumerate the valid options.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
