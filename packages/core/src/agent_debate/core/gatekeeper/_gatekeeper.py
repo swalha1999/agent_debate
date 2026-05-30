@@ -27,33 +27,16 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
+from agent_debate.core.gatekeeper._events import _GatekeeperLog
 from agent_debate.core.gatekeeper._limiter import _RateLimiter
 from agent_debate.core.gatekeeper._queue import PendingCall, _OverflowQueue
+from agent_debate.core.gatekeeper._retry import run_with_retry
 from agent_debate.core.gatekeeper.config import DEFAULT_SERVICE, RateLimitConfig, ServiceLimits
 from agent_debate.core.gatekeeper.errors import QueueFullError
-from agent_debate.core.gatekeeper.types import (
-    OUTCOME_ERROR,
-    OUTCOME_SUCCESS,
-    CallOutcome,
-    QueueStatus,
-)
-from agent_debate.log import DEFAULT_RUNS_DIR, log_event
+from agent_debate.core.gatekeeper.types import OUTCOME_ERROR, OUTCOME_SUCCESS, QueueStatus
+from agent_debate.log import DEFAULT_RUNS_DIR
 
 _T = TypeVar("_T")
-
-#: ``agent`` label stamped on gatekeeper log events (a name, not a limit value).
-_LOG_AGENT = "gatekeeper"
-
-#: ``event_type`` for an external API call routed through the gatekeeper. An
-#: external call maps cleanly to the LOG schema's ``tool_call`` kind (PRD §5.8).
-_LOG_EVENT_TYPE = "tool_call"
-
-#: ``event_type`` for queue lifecycle events (enqueue/drain/backpressure). These
-#: are gatekeeper-internal control events, mapping to the LOG ``system`` kind.
-_LOG_QUEUE_EVENT_TYPE = "system"
-
-#: Milliseconds per second — a unit conversion for latency, not a magic number.
-_MS_PER_SECOND = 1000.0
 
 
 class ApiGatekeeper:
@@ -66,6 +49,8 @@ class ApiGatekeeper:
         runs_dir: Directory holding the per-run JSONL sink (LOG package).
         time_fn: Monotonic clock for the sliding-window limiter; injectable so
             tests can advance a fake clock to reset windows and exercise drain.
+        sleep_fn: Backoff sleep seam used between retries of a transient failure
+            (task 13.4); injectable so tests capture delays without real waiting.
     """
 
     def __init__(
@@ -75,11 +60,12 @@ class ApiGatekeeper:
         run_id: str,
         runs_dir: Path | str = DEFAULT_RUNS_DIR,
         time_fn: Callable[[], float] = time.monotonic,
+        sleep_fn: Callable[[float], None] = time.sleep,
     ) -> None:
         self._config = config
-        self._run_id = run_id
-        self._runs_dir = runs_dir
+        self._log = _GatekeeperLog(run_id, runs_dir)
         self._limiter = _RateLimiter(time_fn=time_fn)
+        self._sleep_fn = sleep_fn
         # One bounded FIFO overflow queue per service (depth from that service's
         # config). Built lazily so unconfigured services inherit default depth.
         self._queues: dict[str, _OverflowQueue] = {}
@@ -111,11 +97,16 @@ class ApiGatekeeper:
             The callable's result when it ran immediately, else ``None`` (queued).
         """
         limits = self._config.get_service_limits(service)
-        if self._limiter.check(service, limits) is not None:
+        # Overflow when EITHER the rate window is exhausted OR the service is at
+        # its concurrency cap: both back-pressure into the same FIFO queue rather
+        # than dropping the call or exceeding ``concurrent_max`` (sub-PRD §4/§5).
+        if self._limiter.check(service, limits) is not None or self._limiter.at_concurrency_cap(
+            service, limits
+        ):
             self._enqueue(service, limits, PendingCall(service, api_call, args, kwargs))
             return None
         self._limiter.record(service)
-        return self._run(service, api_call, args, kwargs)
+        return self._run(service, limits, api_call, args, kwargs)
 
     def drain(self) -> int:
         """Run queued calls now within their rate windows, in FIFO order.
@@ -132,8 +123,8 @@ class ApiGatekeeper:
             while queue.depth and self._limiter.check(service, limits) is None:
                 pending = queue.dequeue()
                 self._limiter.record(service)
-                self._log_queue_event(service, "drain")
-                self._run(service, pending.api_call, pending.args, pending.kwargs)
+                self._log.queue_event(service, "drain")
+                self._run(service, limits, pending.api_call, pending.args, pending.kwargs)
                 drained += 1
         return drained
 
@@ -156,9 +147,9 @@ class ApiGatekeeper:
         """Enqueue an overflowing call, or raise :class:`QueueFullError`."""
         queue = self._queue_for(service)
         if not queue.enqueue(pending):
-            self._log_queue_event(service, "backpressure")
+            self._log.queue_event(service, "backpressure")
             raise QueueFullError(service, limits.queue_max_depth)
-        self._log_queue_event(service, "enqueue")
+        self._log.queue_event(service, "enqueue")
 
     def _queue_for(self, service: str) -> _OverflowQueue:
         """Return (lazily creating) the bounded FIFO queue for ``service``."""
@@ -172,6 +163,33 @@ class ApiGatekeeper:
     def _run(
         self,
         service: str,
+        limits: ServiceLimits,
+        api_call: Callable[..., _T],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> _T:
+        """Run ``api_call`` under the concurrency slot, retrying transient errors.
+
+        The in-flight slot is held for the whole retry sequence (so a retrying
+        call still counts against ``concurrent_max``) and always released. Each
+        attempt logs service/latency/outcome; each scheduled retry logs a
+        ``retry`` event with the backoff delay (sub-PRD §6/§7).
+        """
+        self._limiter.acquire(service)
+        try:
+            return run_with_retry(
+                lambda: self._attempt(service, api_call, args, kwargs),
+                max_retries=limits.max_retries,
+                retry_after_seconds=limits.retry_after_seconds,
+                sleep_fn=self._sleep_fn,
+                on_retry=lambda n, delay, exc: self._log.retry(service, n, delay, exc),
+            )
+        finally:
+            self._limiter.release(service)
+
+    def _attempt(
+        self,
+        service: str,
         api_call: Callable[..., _T],
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
@@ -181,38 +199,10 @@ class ApiGatekeeper:
         try:
             result = api_call(*args, **kwargs)
         except BaseException:
-            self._log_call(service, start, OUTCOME_ERROR)
+            self._log.call(service, start, OUTCOME_ERROR)
             raise
-        self._log_call(service, start, OUTCOME_SUCCESS)
+        self._log.call(service, start, OUTCOME_SUCCESS)
         return result
-
-    def _log_call(self, service: str, start: float, outcome: CallOutcome) -> None:
-        """Emit one structured event with service, latency_ms and outcome."""
-        latency_ms = (time.monotonic() - start) * _MS_PER_SECOND
-        log_event(
-            run_id=self._run_id,
-            agent=_LOG_AGENT,
-            event_type=_LOG_EVENT_TYPE,
-            round=0,
-            payload={"service": service, "outcome": outcome},
-            latency_ms=latency_ms,
-            runs_dir=self._runs_dir,
-        )
-
-    def _log_queue_event(self, service: str, queue_event: str) -> None:
-        """Emit one event for a queue lifecycle transition (sub-PRD §5).
-
-        ``queue_event`` is one of ``"enqueue"`` / ``"drain"`` / ``"backpressure"``
-        so overflow pressure and backpressure are observable in the run log.
-        """
-        log_event(
-            run_id=self._run_id,
-            agent=_LOG_AGENT,
-            event_type=_LOG_QUEUE_EVENT_TYPE,
-            round=0,
-            payload={"service": service, "queue_event": queue_event},
-            runs_dir=self._runs_dir,
-        )
 
 
 __all__ = ["ApiGatekeeper"]
