@@ -29,6 +29,16 @@ DEFAULT_MAX_RETRIES = 2
 #: Selects the ``SearchProvider`` plug-in; DuckDuckGo needs no key (PRD §7).
 DEFAULT_SEARCH_BACKEND = "duckduckgo"
 
+#: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
+#: variable that must hold that provider's API key. The single source of truth
+#: for startup key validation (task 2.3) — extend this dict to cover a new
+#: provider. Providers absent from this map are treated leniently (not blocked),
+#: because their key requirements are not yet modelled here.
+PROVIDER_KEY_ENV_VARS: dict[str, str] = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+}
+
 __all__ = [
     "DEFAULT_CONTROLLER_MODEL",
     "DEFAULT_DEBATER_MODEL",
@@ -37,4 +47,5 @@ __all__ = [
     "DEFAULT_ROUNDS",
     "DEFAULT_SEARCH_BACKEND",
     "DEFAULT_TURN_TIMEOUT_S",
+    "PROVIDER_KEY_ENV_VARS",
 ]

@@ -1,0 +1,18 @@
+{
+  "task_id": "2.3",
+  "title": "Validate required keys",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "On startup, validate that the active provider's key (e.g. ANTHROPIC_API_KEY) is present; raise a clear, actionable error if not.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Adds explicit, friendly startup required-key validation (Closes #23). TDD red-first: wrote packages/core/tests/test_validation.py first and watched it fail (ImportError: cannot import name 'MissingApiKeyError'), then implemented packages/core/src/agent_debate/core/validation.py. validate_required_keys(settings) derives the active provider prefixes from the role model strings (DEBATER_MODEL/CONTROLLER_MODEL/PRO_MODEL/CON_MODEL — the part before ':'), looks each up in the new constants.PROVIDER_KEY_ENV_VARS mapping (anthropic -> ANTHROPIC_API_KEY, openai -> OPENAI_API_KEY; single source of truth, extensible) and raises a single MissingApiKeyError(RuntimeError) naming every missing/blank var plus an actionable hint ('Set <vars> ... copy .env.example to .env and fill in your key.'). Providers absent from the map are lenient (not blocked). resolve_models() now calls validate_required_keys(settings) BEFORE constructing any model, so operators see our friendly error instead of the deep Pydantic AI / SDK UserError that eager Anthropic client construction would otherwise raise. Blank/whitespace keys count as missing. MissingApiKeyError + validate_required_keys re-exported from agent_debate.core. Logs via the LOG package (get_logger('validation').error) on failure; no run_id required. Existing test_models.py keeps passing because it monkeypatches a dummy ANTHROPIC_API_KEY. Gates green locally: uv sync clean; ruff check . = All checks passed (combined a nested if per SIM102); ruff format --check . clean; mypy = no issues in 45 source files; pytest --cov = 177 passed, 100% total coverage (Required 85.0% reached); check_line_limit.py exit 0 (validation.py is 32 code lines); secret_scan.py exit 0."
+}

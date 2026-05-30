@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agent_debate.core.settings import Settings
+from agent_debate.core.validation import validate_required_keys
 from agent_debate.log import get_logger
 from pydantic_ai.models import Model, infer_model
 
@@ -67,7 +68,13 @@ def resolve_models(settings: Settings) -> ResolvedModels:
     ``CON_MODEL`` fall back to ``DEBATER_MODEL`` via the settings' computed
     :pyattr:`Settings.pro_model` / :pyattr:`Settings.con_model` properties, so
     the fallback rule is defined in one place only.
+
+    Required-key validation (task 2.3) runs *first*, so a missing provider key
+    surfaces a clear :class:`~agent_debate.core.validation.MissingApiKeyError`
+    naming the env var — never the deep Pydantic AI / SDK ``UserError`` that the
+    eager client construction below would otherwise raise.
     """
+    validate_required_keys(settings)
     resolved = ResolvedModels(
         debater=resolve_model(settings.debater_model),
         controller=resolve_model(settings.controller_model),

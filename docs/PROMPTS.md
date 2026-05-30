@@ -483,6 +483,26 @@ outcome/decision it produced.
   `pydantic-ai-slim[anthropic]>=1.0,<2` (resolved 1.104.0); the `[anthropic]`
   extra ships the default-provider client.
 
+### 2.3 — Validate required keys (PRD §7) (2026-05-31)
+
+- **Prompt:** "On startup, validate that the active provider's key (e.g.
+  ANTHROPIC_API_KEY) is present; raise a clear, actionable error if not."
+- **Context:** Closes issue #23. Task 2.1 keeps `ANTHROPIC_API_KEY` optional so
+  imports never explode, and task 2.2 builds the provider client eagerly — which
+  with no key raises a deep Pydantic AI / SDK `UserError`. This task fires first
+  with a friendly message.
+- **Decision/outcome (friendly error precedes the SDK error, config-driven
+  mapping):** `core/validation.py` adds `validate_required_keys(settings)`, which
+  derives the active provider prefixes from the role model strings
+  (`DEBATER_MODEL`/`CONTROLLER_MODEL`/`PRO_MODEL`/`CON_MODEL` — the part before
+  `:`), looks each up in the new `constants.PROVIDER_KEY_ENV_VARS` mapping
+  (`anthropic → ANTHROPIC_API_KEY`, `openai → OPENAI_API_KEY`; single source of
+  truth, extensible), and raises one `MissingApiKeyError` naming every
+  missing/blank var plus an actionable hint ("copy .env.example to .env and fill
+  in your key"). Unmapped providers are lenient. `resolve_models()` calls it
+  **before** constructing any model, so operators see our message instead of the
+  SDK stack trace. Logged via the LOG package on failure; no run_id needed.
+
 ### 0.14 — config/rate_limits.json (versioned 1.00)
 
 - **Prompt:** "Create config/rate_limits.json with version "1.00" and services
