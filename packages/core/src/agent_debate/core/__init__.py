@@ -34,6 +34,14 @@ from agent_debate.core.search import (
     create_search_provider,
     register_search_provider,
 )
+from agent_debate.core.security import (
+    DEFAULT_MAX_UNTRUSTED_LEN,
+    INJECTION_PATTERNS,
+    NEUTRALISED_MARKER,
+    SecurityGatekeeper,
+    normalise_text,
+    sanitize_untrusted_text,
+)
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.core.skills import (
     Argument,
@@ -65,8 +73,11 @@ core_version = __version__
 
 __all__ = [
     "DEFAULT_MAX_RESULTS",
+    "DEFAULT_MAX_UNTRUSTED_LEN",
     "DEFAULT_SERVICE",
+    "INJECTION_PATTERNS",
     "LIBRARY_VERSION",
+    "NEUTRALISED_MARKER",
     "ApiGatekeeper",
     "Argument",
     "ArgumentRequest",
@@ -85,6 +96,7 @@ __all__ = [
     "ResolvedModels",
     "SearchProvider",
     "SearchResult",
+    "SecurityGatekeeper",
     "ServiceLimits",
     "Settings",
     "TavilySearchProvider",
@@ -101,7 +113,9 @@ __all__ = [
     "create_search_provider",
     "get_settings",
     "load_rate_limit_config",
+    "normalise_text",
     "nudge",
+    "sanitize_untrusted_text",
     "register_search_provider",
     "log_version",
     "render_verdict",

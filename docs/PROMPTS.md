@@ -1010,5 +1010,31 @@ outcome/decision it produced.
   arguments, and the verdict model is deliberately shaped to carry no controller
   stance — only debate-derived fields.*
 
+### 7.1 — Security sanitisation gatekeeper (PRD §5.7)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/7.1-secgate-sanitise.json`.
+- **Why it mattered:** establishes the *security* gatekeeper — deliberately a
+  separate subpackage (`core/security/`) from the *API/rate-limit* gatekeeper
+  (`core/gatekeeper/`, Epic 13). The two are easy to conflate; keeping them apart
+  is the load-bearing decision Epic 7 (7.2–7.5) and the `web_search` skill (4.1)
+  build on.
+- **Outcome / pattern set:** Added `security/` with `constants.py` (`DEFAULT_MAX_
+  UNTRUSTED_LEN`, `NEUTRALISED_MARKER`, `INJECTION_PATTERNS` — all named, no inline
+  magic), `normalise.py` (NFKC + zero-width/control strip + whitespace collapse)
+  and `sanitiser.py` (`sanitize_untrusted_text` + `SecurityGatekeeper`), re-exported
+  from `agent_debate.core.security` and `agent_debate.core`. Strategy is
+  **normalise → neutralise → cap**: normalise first so disguised keywords (fullwidth,
+  zero-width-split) reassemble *before* the injection-pattern pass redacts them with
+  an inert marker; cap last to bound payload/token blast radius. Pure text — no
+  network (4.1's search results flow through it); when something is neutralised and a
+  `run_id` is bound, an observable `system` event is logged via LOG. TDD red-first:
+  `test_security_sanitiser.py` (14 tests) failed on `ModuleNotFoundError`, then green.
+  Gates: ruff/format clean, mypy clean (94 files), 351 passed, 100% on the new module,
+  line-limit + secret-scan pass.
+  *Pattern: untrusted text is data, never instructions — fold it to a canonical
+  form, redact the known injection phrasings to a visibly-inert marker, then
+  length-cap; thresholds/patterns live in one named `constants.py`, overridable per
+  call.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
