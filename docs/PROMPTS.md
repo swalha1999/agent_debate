@@ -281,5 +281,32 @@ outcome/decision it produced.
   clean (23 files), 70 passed, 100% coverage; `python scripts/secret_scan.py`
   exits 0 on the current tree — the secret-scan gate is now LIVE in CI.
 
+### 0.15 — Branch protection requires CI (2026-05-31)
+- **Prompt:** "Configure branch protection on main so the CI workflow must pass
+  before merge (via GitHub settings or `gh api`). Document the rule in the
+  README/CONTRIBUTING."
+- **Context:** Closes issue #15. Caps Epic 0 — every prior gate (lint, format,
+  mypy, coverage, line-limit, secret-scan) only *runs* in CI; this makes a green
+  CI **mandatory to merge**. The wrinkle: an autonomous loop running as the admin
+  owner merges one PR at a time via `gh pr merge --merge`, so the protection
+  must gate non-admins without blocking that loop.
+- **Decision/outcome (server-side gate + reproducible script + doc-contract test —
+  significant):** queried the real check-run name (`gh api .../commits/main/check-runs`)
+  → **"Quality gates"** (the `name:` of the `quality-gates` job), and made that the
+  single `required_status_checks` context. Tuned to keep the loop alive:
+  `strict=false` (no up-to-date requirement → no rebase friction),
+  `enforce_admins=false`, `required_pull_request_reviews=null`, `restrictions=null`.
+  Applied via `gh api -X PUT .../branches/main/protection` and verified by reading
+  the endpoint back. Made it reproducible with a committed
+  `scripts/setup_branch_protection.sh` that derives owner/repo from `gh repo view`
+  (no hard-coded slug) and builds the payload from one named `REQUIRED_CHECK_NAME`
+  constant via `jq`. Since the live `gh api` call can't run in CI without an admin
+  token, TDD targets the **doc + script contract** (`tests/test_branch_protection_doc.py`,
+  written red-first): the README documents the rule and names the check; the script
+  exists, is executable, references the check, keeps admins un-enforced + reviews
+  null, and carries no secrets. Pattern set: *protection is configuration-as-code
+  (script in repo) + a contract test guarding its documented invariants*, not a
+  one-off click in the GitHub UI.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

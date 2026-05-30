@@ -1,0 +1,16 @@
+{
+  "task_id": "0.15",
+  "title": "Branch protection requires CI (issue #15)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Configure branch protection on main so the CI workflow must pass before merge (via GitHub settings or `gh api`). Document the rule in the README/CONTRIBUTING.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Queried the real CI check-run name via `gh api repos/swalha1999/agent_debate/commits/main/check-runs` -> 'Quality gates' (the name: of the quality-gates job in .github/workflows/ci.yml). TDD: wrote tests/test_branch_protection_doc.py FIRST (10 assertions on the doc + script contract — README documents branch protection, names the 'Quality gates' check, states no direct pushes; setup script exists, is executable, references the check, keeps enforce_admins=false + required_pull_request_reviews=null, no hard-coded owner/repo, no secrets; constant matches workflow name; script not world-writable), watched 9 fail / 1 pass (red), then added scripts/setup_branch_protection.sh + a README 'Branch protection' subsection to go green (one test was corrected after to match the jq-built payload, still red->green). Applied protection via the script (gh api -X PUT .../branches/main/protection) with required_status_checks.contexts=['Quality gates'], strict=false, enforce_admins=false, required_pull_request_reviews=null, restrictions=null, allow_force_pushes/deletions=false — verified by re-reading the protection endpoint. Constraints respected so the autonomous admin merge loop keeps working: admins are NOT enforced and NO approvals are required. The live gh-api call can't run in CI without an admin token, so the test guards the documented + reproducible contract instead (rationale in the test docstring). setup_branch_protection.sh is a documented shell script (not Python); it makes no external API call from app code — it shells out to `gh`, the operator's own authenticated CLI — so the API gatekeeper (Epic 13) and LOG package are N/A, and the 150-line code limit (packages/**) does not apply. No secrets committed; owner/repo derived from `gh repo view`. Gates green locally: ruff, ruff format, mypy, pytest --cov (>=85), check_line_limit, secret_scan."
+}
