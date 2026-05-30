@@ -13,7 +13,7 @@ name = "agent_debate_core"
 version = "1.00"
 description = "agent_debate SDK — the debate engine and agents (skeleton)."
 requires-python = ">=3.12"
-dependencies = ["agent_debate_log"]
+dependencies = ["agent_debate_log", "pydantic>=2.9,<3", "pydantic-settings>=2.5,<3"]
 
 [tool.uv.sources]
 agent_debate_log = { workspace = true }
