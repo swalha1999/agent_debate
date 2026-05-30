@@ -11,6 +11,12 @@ importing across the edge, proving the dependency resolves at runtime.
 from __future__ import annotations
 
 from agent_debate.core._version import __version__
+from agent_debate.core.gatekeeper import (
+    DEFAULT_SERVICE,
+    RateLimitConfig,
+    ServiceLimits,
+    load_rate_limit_config,
+)
 from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
@@ -25,13 +31,17 @@ LIBRARY_VERSION = __version__
 core_version = __version__
 
 __all__ = [
+    "DEFAULT_SERVICE",
     "LIBRARY_VERSION",
     "MissingApiKeyError",
+    "RateLimitConfig",
     "ResolvedModels",
+    "ServiceLimits",
     "Settings",
     "__version__",
     "core_version",
     "get_settings",
+    "load_rate_limit_config",
     "log_version",
     "resolve_model",
     "resolve_models",
