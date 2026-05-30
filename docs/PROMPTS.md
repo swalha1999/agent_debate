@@ -181,5 +181,32 @@ outcome/decision it produced.
   beyond the indicative set. Gates green: ruff/format/mypy clean, 39 passed,
   100% coverage.
 
+### 0.8 — CI quality gates, set up EARLY (2026-05-30)
+- **Prompt:** "Create .github/workflows/ci.yml that, on push and pull_request,
+  runs (in order, failing the build on any failure): uv sync; ruff check .;
+  ruff format --check .; mypy; pytest --cov with fail_under=85; the 150-line
+  check script (task 0.10); the secret scan (task 0.11). Use the official
+  astral-sh/setup-uv action."
+- **Context:** Builds on the 0.1–0.7 scaffold; closes issue #8. PRD §9 mandates
+  CI gates be established *before* feature work. The 150-line check (0.10), the
+  secret scan (0.11), and the `fail_under=85` pyproject config (0.9) are all
+  LATER tasks — yet the scaffold pipeline must be GREEN today.
+- **Decision/outcome (forward-compatible no-op pattern — significant):** the
+  150-line and secret-scan steps are wired as **skip-if-absent shell guards**
+  (`if [ -f scripts/check_line_limit.py ]; then uv run …; else echo "pending
+  task 0.10"; fi`, same for `scripts/secret_scan.py` / "pending task 0.11").
+  This keeps the scaffold green NOW and makes each gate **activate
+  automatically** the moment 0.10/0.11 commit their script — no edit to
+  `ci.yml`. Coverage's 85% threshold is enforced **now**, directly in the CI
+  step (`pytest --cov --cov-fail-under=85`), rather than waiting on 0.9's
+  pyproject `fail_under` (current coverage is 100%, so green). uv is provisioned
+  via the official `astral-sh/setup-uv@v5`, Python pinned to 3.12 to match
+  `.python-version`. TDD: `tests/test_ci_workflow.py` (string assertions —
+  pyyaml is not a workspace dep) checks the file exists, triggers on
+  push+pull_request, uses setup-uv, pins 3.12, lists every gate fragment **in
+  order**, and that the two future gates are forward-compatible; watched 7 fail
+  before adding `ci.yml`. Gates green: ruff/format/mypy clean, 46 passed, 100%
+  coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
