@@ -153,10 +153,150 @@ class OpponentAnalysis(BaseModel):
     rebuttal_target: str
 
 
+class DriftRequest(BaseModel):
+    """Validated input for :func:`assess_drift` (issue #35).
+
+    Attributes:
+        message: The agent's latest message; must be non-empty after trimming.
+        side: The agent's assigned side (``pro``/``con``); a bad value is rejected.
+        signals: Optional drift heuristics the controller LLM flagged; blanks are
+            dropped on validation.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    message: str = Field(min_length=1)
+    side: DebateSide
+    signals: list[str] = Field(default_factory=list)
+
+    @field_validator("message")
+    @classmethod
+    def _message_non_empty(cls, value: str) -> str:
+        return _strip_non_empty(value)
+
+    @field_validator("signals")
+    @classmethod
+    def _signals_clean(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()]
+
+
+class DriftAssessment(BaseModel):
+    """Result of :func:`assess_drift` (anti-sycophancy §3, issue #35).
+
+    Attributes:
+        captured: ``True`` if the agent is adopting the opponent's framing/conclusion,
+            conceding the core claim, hedging away from its side, or restating the
+            opponent without rebuttal; ``False`` when it still defends its side.
+        reason: A short human-readable explanation for the classification.
+        confidence: Calibrated confidence in the classification, in ``[0, 1]``.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    captured: bool
+    reason: str = Field(min_length=1)
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class NudgeMessage(BaseModel):
+    """A private controller correction for a captured agent (anti-sycophancy §4).
+
+    Per §2.4/§4 the nudge is logged and surfaced in the UI but **does not** count as
+    a debate turn — :attr:`is_debate_turn` is always ``False``.
+
+    Attributes:
+        target: The side/agent being corrected.
+        reason: Why the nudge was issued (the drift reason).
+        correction: The private correction text re-anchoring the agent's side.
+        is_debate_turn: Always ``False`` — a nudge never consumes a debate turn.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    target: DebateSide
+    reason: str = Field(min_length=1)
+    correction: str = Field(min_length=1)
+    is_debate_turn: bool = False
+
+
+class TranscriptTurn(BaseModel):
+    """One turn in the transcript fed to :func:`render_verdict` (issue #35).
+
+    Attributes:
+        side: The side that produced the turn.
+        text: The turn's message text (non-empty after trimming).
+        score: An optional per-turn score the controller LLM assigns; the baseline
+            tallies these per side to derive the winner. Defaults to ``0.0``.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    side: DebateSide
+    text: str = Field(min_length=1)
+    score: float = 0.0
+
+    @field_validator("text")
+    @classmethod
+    def _text_non_empty(cls, value: str) -> str:
+        return _strip_non_empty(value)
+
+
+class VerdictRequest(BaseModel):
+    """Validated input for :func:`render_verdict` (issue #35).
+
+    Attributes:
+        turns: The structured transcript; at least one turn is required.
+        winner: An optional controller-supplied outcome (``pro``/``con``/``tie``).
+            When given it is used verbatim; otherwise the winner is tallied from the
+            per-turn ``score`` totals. The controller never encodes a *pre-held*
+            stance — only a debate-derived judgement (anti-sycophancy §4).
+        rationale: An optional controller-supplied rationale; a tally-based rationale
+            is generated when omitted.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    turns: list[TranscriptTurn] = Field(min_length=1)
+    winner: DebateSide | str | None = None
+    rationale: str | None = None
+
+    @field_validator("rationale")
+    @classmethod
+    def _rationale_non_empty(cls, value: str | None) -> str | None:
+        return None if value is None else _strip_non_empty(value)
+
+
+class Verdict(BaseModel):
+    """The structured outcome produced by :func:`render_verdict` (issue #35).
+
+    The controller **never reveals its own stance** (PRD §5.3): the verdict carries
+    only debate-derived fields — the winning side (or a ``tie``), a rationale, and
+    the per-side score tally — never a pre-held controller opinion.
+
+    Attributes:
+        winner: The winning :class:`DebateSide`, or the tie label when neither side
+            outscored the other.
+        rationale: The debate-derived justification for the outcome.
+        scores: The per-side score totals the outcome was derived from.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    winner: DebateSide | str
+    rationale: str = Field(min_length=1)
+    scores: dict[DebateSide, float]
+
+
 __all__ = [
     "Argument",
     "ArgumentRequest",
     "DebateSide",
+    "DriftAssessment",
+    "DriftRequest",
+    "NudgeMessage",
     "OpponentAnalysis",
     "OpponentAnalysisRequest",
+    "TranscriptTurn",
+    "Verdict",
+    "VerdictRequest",
 ]

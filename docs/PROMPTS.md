@@ -977,5 +977,38 @@ outcome/decision it produced.
   its models and two re-export lines; keep skills composable (one skill's output is
   a ready input for another) without coupling their models.*
 
+### Task 4.4 — Controller skills: assess_drift / nudge / render_verdict (Epic 4, issue #35)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Implement controller skills: assess_drift(message, side)
+  -> {captured, reason, confidence}; nudge(agent, reason) -> private correction;
+  render_verdict(transcript) -> structured verdict. See docs/prds/anti-sycophancy.md."
+  (+ repo standards: TDD red-first, ≤150 code lines/file, ruff 0 + mypy clean, no
+  hard-coded values, external calls via the API gatekeeper, log via LOG, coverage ≥85%.)
+- **Context:** The **controller's** three skills (PRD §5.3,
+  `docs/prds/anti-sycophancy.md` §2–§4), reusing the pure/deterministic structuring
+  shape set by `build_argument` (4.2) and `analyze_opponent` (4.3).
+- **Outcome / pattern set:** Added `skills/controller.py` (the three functions) plus
+  five models in `skills/models.py` (`DriftRequest`, `DriftAssessment`,
+  `NudgeMessage`, `TranscriptTurn`, `VerdictRequest`, `Verdict`), re-exported from
+  `agent_debate.core.skills` and `agent_debate.core`; concession phrases, confidence
+  weights, and reason/correction/rationale/tie templates are named constants in
+  `constants.py`. **`assess_drift`** returns `{captured, reason, confidence∈[0,1]}` —
+  caller-supplied `signals` (controller-LLM heuristics) force capture, else a
+  concession-phrase scan; deepened by Epic 8.1. **`nudge`** returns a private
+  `NudgeMessage` with `is_debate_turn=False` (anti-sycophancy §2.4/§4: logged +
+  surfaced, never a turn). **`render_verdict`** derives `winner`/`scores`/`rationale`
+  from the transcript (LLM-supplied `VerdictRequest` verbatim, else a per-side score
+  tally with a tie on equal) and exposes **only** debate-derived fields — never a
+  pre-held controller stance (PRD §5.3), asserted by a dumped-keys test; deepened by
+  Epic 8.3. Same pure/no-network shape (gatekeeper N/A). TDD red-first:
+  `test_controller_skills.py` (20 tests) failed on `ImportError`, then to green.
+  Gates: ruff/format clean, mypy clean (89 files), 336 passed, 100% on the new
+  module (99.81% total), line-limit + secret-scan pass.
+  *Pattern: a controller skill is the same validated-input → typed-output structuring
+  helper as a debater skill; judgement (drift signals, the winner) arrives as
+  arguments, and the verdict model is deliberately shaped to carry no controller
+  stance — only debate-derived fields.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

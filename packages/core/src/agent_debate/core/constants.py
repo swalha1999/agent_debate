@@ -48,6 +48,57 @@ CONCLUSION_TEMPLATE = "Therefore, the {side} side maintains that {claim}"
 #: so the parsing rule lives in one place (guideline §7.2).
 CLAIM_SPLIT_DELIMITERS = ".!?"
 
+#: Concession/agreement phrases the deterministic baseline of ``assess_drift``
+#: scans the message text for (lower-cased substring match). Their presence is a
+#: drift signal: the agent is adopting the opponent's conclusion or conceding the
+#: core claim rather than rebutting (anti-sycophancy §3). Kept here, not inlined,
+#: so Epic 8 (8.1) can extend the detector from one source of truth.
+DRIFT_CONCESSION_PHRASES: tuple[str, ...] = (
+    "you're right",
+    "you are right",
+    "i agree",
+    "i concede",
+    "i was wrong",
+    "fair point",
+    "good point",
+    "i accept that",
+    "the opponent has the stronger",
+    "i can't argue with that",
+)
+
+#: Confidence assigned by ``assess_drift`` when the controller LLM supplies explicit
+#: drift ``signals`` (a strong, caller-asserted indication) — anti-sycophancy §3.
+DRIFT_SIGNAL_CONFIDENCE = 0.9
+
+#: Confidence assigned when the deterministic concession-phrase heuristic fires.
+DRIFT_PHRASE_CONFIDENCE = 0.6
+
+#: Confidence assigned when no drift signal fires (the agent looks on-side). Low,
+#: because the baseline is intentionally shallow until Epic 8 (8.1) deepens it.
+DRIFT_CLEAR_CONFIDENCE = 0.1
+
+#: Reason text emitted by ``assess_drift`` for each outcome (single source of truth).
+DRIFT_REASON_SIGNALS = "Controller flagged drift signals: {signals}."
+DRIFT_REASON_PHRASE = "Message contains a concession/agreement phrase: {phrase!r}."
+DRIFT_REASON_CLEAR = "No concession or drift signal detected; agent appears on-side."
+
+#: Template for the private correction text a ``nudge`` carries (anti-sycophancy §4).
+#: ``{side}`` is the captured agent's side and ``{reason}`` the drift reason. The
+#: nudge re-anchors the side and is logged + surfaced but never a debate turn.
+NUDGE_CORRECTION_TEMPLATE = (
+    "Private correction for the {side} side: {reason} "
+    "Hold your assigned side and rebut the opponent — do not concede."
+)
+
+#: The outcome label ``render_verdict`` uses when neither side outscores the other
+#: (anti-sycophancy §4: the controller declares a debate-derived outcome, never a
+#: pre-held stance). Kept here so the literal is defined once.
+VERDICT_TIE = "tie"
+
+#: Rationale template ``render_verdict`` uses for a score-tallied verdict; ``{winner}``
+#: is the derived outcome and ``{pro}``/``{con}`` the per-side totals.
+VERDICT_RATIONALE_TEMPLATE = "Verdict {winner}: tallied from the transcript (pro={pro}, con={con})."
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -68,7 +119,17 @@ __all__ = [
     "DEFAULT_ROUNDS",
     "DEFAULT_SEARCH_BACKEND",
     "DEFAULT_TURN_TIMEOUT_S",
+    "DRIFT_CLEAR_CONFIDENCE",
+    "DRIFT_CONCESSION_PHRASES",
+    "DRIFT_PHRASE_CONFIDENCE",
+    "DRIFT_REASON_CLEAR",
+    "DRIFT_REASON_PHRASE",
+    "DRIFT_REASON_SIGNALS",
+    "DRIFT_SIGNAL_CONFIDENCE",
+    "NUDGE_CORRECTION_TEMPLATE",
     "PROVIDER_KEY_ENV_VARS",
     "REBUTTAL_LEAD_IN",
     "REBUTTAL_LEAD_OUT",
+    "VERDICT_RATIONALE_TEMPLATE",
+    "VERDICT_TIE",
 ]
