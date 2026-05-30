@@ -546,5 +546,32 @@ outcome/decision it produced.
   reverting (GREEN). No production code changed. Coverage stayed 100%; all gates
   green (ruff, ruff-format, mypy, pytest --cov ≥85, line-limit, secret-scan).
 
+### 2026-05-31 — 13.1 RateLimitConfig loader (Epic 13 opens)
+
+- **Prompt (verbatim):** "Implement RateLimitConfig that loads
+  config/rate_limits.json (per-service limits). No limit is hard-coded. See
+  docs/prds/api-gatekeeper.md." (+ repo standards: TDD, ≤150 lines/file, ruff/mypy
+  clean, no hard-coded values, gatekeeper-routed calls, LOG package, ≥85% cov.)
+- **Context:** First task of **Epic 13**, the API gatekeeper
+  (`docs/prds/api-gatekeeper.md`) — the single chokepoint every external
+  LLM/search call must pass through. Task 0.14 had shipped the *data file*
+  (`config/rate_limits.json`, shape locked by `tests/test_rate_limits_config.py`);
+  this task ships the *loader + models* that read it, with clean room for
+  `execute` (13.2), the FIFO overflow queue (13.3), retry + concurrency (13.4)
+  and `get_queue_status` (13.5).
+- **Decision/pattern set (a gatekeeper SUBPACKAGE + config-only-from-file):**
+  Chose `agent_debate.core.gatekeeper/` as a subpackage (`__init__.py` re-exports
+  + `config.py`) rather than a flat module, so Epic 13's later pieces grow there
+  without any file crossing the 150-line cap. `ServiceLimits` (frozen,
+  `extra="forbid"`, five required int fields, `gt=0` throughput / `ge=0`
+  max_retries) carries **no default VALUES** — the "0 hard-coded limits"
+  guideline (§5.2) is enforced structurally: the only literals in Python are the
+  file *name* and the fallback service *key* `"default"`; every number comes from
+  the file (proven by a tmp-file test loading custom values). `get_service_limits`
+  falls back to the `default` service per sub-PRD §4. Loader resolves the
+  repo-root path cwd-independently and raises clear `FileNotFoundError` /
+  `ValueError`. TDD red-first (ModuleNotFound on the new subpackage), then green;
+  all gates green, 100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
