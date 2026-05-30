@@ -573,5 +573,37 @@ outcome/decision it produced.
   `ValueError`. TDD red-first (ModuleNotFound on the new subpackage), then green;
   all gates green, 100% coverage.
 
+### 2026-05-31 — 13.2 ApiGatekeeper.execute (check → run → log)
+
+- **Prompt (verbatim):** "Implement ApiGatekeeper.execute(api_call, *args,
+  **kwargs): check rate limits before running, execute, and log every call
+  (service, latency, outcome)." (+ repo standards: TDD, ≤150 lines/file,
+  ruff/mypy clean, no hard-coded values, gatekeeper-routed calls, LOG package,
+  ≥85% cov.)
+- **Context:** Second task of **Epic 13** (`docs/prds/api-gatekeeper.md`).
+  13.1 shipped the config surface; this task adds the **core class** every
+  external LLM/search call routes through. Scope kept tight per the sub-PRD: a
+  simple in-process limit *check* + execute + log now; the FIFO overflow queue
+  (13.3), retry/concurrency (13.4) and full `get_queue_status` (13.5) hook in at
+  marked seams later.
+- **Decision/pattern set (split + clean seams):** Split the class across the
+  gatekeeper subpackage to stay well under 150 lines and give later tasks clean
+  homes — `_gatekeeper.py` (the `ApiGatekeeper` class), `_limiter.py` (a
+  per-service sliding-window `_RateLimiter` with an **injectable clock** so the
+  per-minute/per-hour windows + pruning are deterministically testable),
+  `types.py` (`QueueStatus`, `CallOutcome`) and `errors.py`
+  (`RateLimitExceededError`, `Error` suffix for ruff N818). `execute(api_call,
+  *args, service="default", **kwargs)` picks the service's `ServiceLimits`
+  (default fallback), calls `_check_limits` **before** running (an exhausted
+  window raises `RateLimitExceededError`; this is the seam 13.3 swaps for FIFO
+  enqueue/backpressure), times the call with `time.monotonic`, and logs **one**
+  structured event via the LOG package (`log_event`, `event_type="tool_call"`,
+  payload `{service, outcome}`, `latency_ms`) on both success and error (error is
+  logged then re-raised — retry is 13.4). The gatekeeper takes `run_id`/`runs_dir`
+  for logging context. **0 hard-coded limits:** all thresholds come from the
+  injected `RateLimitConfig`; the only literals are unit conversions (60s/3600s/
+  1000ms) and identifier labels. TDD red-first (ImportError: no `ApiGatekeeper`),
+  then green; all gates green, 100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
