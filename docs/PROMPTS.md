@@ -39,6 +39,11 @@ outcome/decision it produced.
 ### Pluggable search
 - **Prompt:** "make sure the search tool is a plug-in we can replace easily."
 - **Outcome:** `SearchProvider` interface + registry (PRD §5.5, `prds/search-plugin.md`).
+- **Prompt (3.5):** "Add a TavilySearchProvider stub (key via SEARCH_API_KEY) ...
+  to prove a one-line swap with no engine changes."
+- **Outcome:** `TavilySearchProvider` stub registered under `tavily`; flipping
+  `SEARCH_BACKEND=tavily` swaps vendors via the same factory, no engine edits
+  (sub-PRD §7 proof).
 
 ### Detailed tasks + build logging + sample runs
 - **Prompts:** "make GOOD and detailed tasks" · ".building_tasks_logs with prompt +
