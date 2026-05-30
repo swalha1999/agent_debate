@@ -694,5 +694,40 @@ outcome/decision it produced.
   `GatekeeperStatus`), then green; existing gatekeeper tests untouched (additive);
   all gates green, 100% coverage.
 
+### 2026-05-31 — 13.7 Gatekeeper acceptance + §7 edge tests (Epic-13 pass)
+
+- **Prompt:** "Write tests: exceeding a limit queues (no drop); the queue drains;
+  retries stop at max_retries; backpressure when full; concurrent_max saturation
+  behaves." (plus the repo-standard checklist: TDD, 150-line cap, ruff/mypy
+  clean, no hard-coded values, gatekeeper for external calls, LOG package,
+  coverage >= 85%.)
+- **Context:** Closes issue #96. The gatekeeper (13.1–13.5) was already
+  feature-complete with per-task suites at 100% coverage. This is the **Epic-13
+  acceptance/edge pass** (mirrors 1.5 / 2.5): prove the sub-PRD §6 behaviours and
+  §7 edges **end-to-end through the public `ApiGatekeeper` API**, not by
+  re-testing internals.
+- **Decision/pattern set (acceptance-through-public-API):** Added
+  `test_gatekeeper_acceptance.py` (the five §6 behaviours via
+  `execute`/`drain`/`get_queue_status`: limit→queue no-drop, drain on injected
+  window reset, retries-to-`max_retries`-then-raise, `QueueFullError`
+  backpressure at `queue_max_depth`, `concurrent_max` saturation never exceeding
+  the cap) and `test_gatekeeper_edges.py` (the §7 edges: **sustained overflow +
+  multi-window FIFO drain** with depth>1 released one window at a time, repeated
+  transient failures logging every retry **and** the terminal error, concurrent
+  saturation→drain, and **config hot-values out of range** rejected). Shared
+  `_gatekeeper_acceptance_helpers.py` (FakeClock + config/gatekeeper builders +
+  JSONL reader; non-`test_` unique basename, imported by bare name under
+  pytest's `prepend` mode). TDD red-first on a genuinely net-new assertion: the
+  multi-window FIFO drain (probed with a deliberately-reordered expectation →
+  red, then asserted the real `a,b,c,d,e` order → green) and `ServiceLimits`
+  direct-model out-of-range validation (existing suite only covered
+  `requests_per_minute=0` via the loader; the new parametrized test adds
+  `concurrent_max`/`queue_max_depth`/`requests_per_hour` zero + negative
+  `retry_after_seconds`). No source change needed — gatekeeper was already
+  correct at 100%; deliverable is test-only. All gates green, 250 passed, 100%
+  coverage. Pattern: *Epic acceptance tests compose the public API end-to-end and
+  assert the on-disk log artifact; net-new value comes from edges no per-task
+  test asserted, not from re-covering internals.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
