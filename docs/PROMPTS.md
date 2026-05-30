@@ -120,5 +120,26 @@ outcome/decision it produced.
   declares `>=3.12`, `.python-version` pins `3.12`, and `uv.lock` exists and
   declares `>=3.12` (watched the `.python-version` assertion fail first).
 
+### 0.5 — Add ruff + mypy config, 0 violations (2026-05-30)
+- **Prompt:** "Add [tool.ruff] (enable E,F,I,UP,B etc.) and [tool.mypy]
+  strict-ish config to the root pyproject. Ensure `ruff check .` and `ruff format
+  --check .` and `mypy` all pass on the skeleton."
+- **Context:** Builds on the 0.1–0.4 workspace; closes issue #5. Root already had
+  minimal ruff (`E,F,I`) + a working strict mypy namespace config from 0.3.
+- **Decision/outcome:** Expanded the lint gate to
+  `E,W,F,I,UP,B,SIM,C4,PIE,RET,N` and added `[tool.ruff.format]`
+  (`docstring-code-format`). Kept mypy `strict = true` but **spelled out** the
+  strict-ish flags (`disallow_untyped_defs`, `disallow_incomplete_defs`,
+  `warn_unused_ignores`, `warn_redundant_casts`, `warn_return_any`,
+  `no_implicit_optional`) so a later `strict = false` cannot silently relax the
+  contract; preserved the 0.3 namespace settings. The skeleton was already typed
+  and clean, so no source changes were needed. **`scripts/` stays excluded** from
+  ruff: `create_issues.py` is a 592-line one-off generator whose ~125 violations
+  are almost all `E501` from embedded prompt-string data tables that can't wrap
+  without mangling the data — excluding is the documented low-churn choice.
+  TDD: `tests/test_lint_config.py` asserts ruff selects `>= {E,F,I,UP,B}`,
+  declares a positive `line-length`, and mypy has the strict-ish + namespace
+  flags `True` (watched it fail before the config edit).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
