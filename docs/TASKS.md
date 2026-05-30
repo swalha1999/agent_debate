@@ -1,8 +1,9 @@
 # TASKS — Agent Debate
 
-**Status:** Draft v0.1 · **Last updated:** 2026-05-30
+**Status:** Draft v0.2 · **Last updated:** 2026-05-30
 **Owners:** `S` = swalha1999, `M` = Mhmdabad (claim items by putting your initial in the `Owner` slot).
 **Source of truth:** `PRD.md`. Each task traces back to a PRD requirement.
+**Workflow:** TDD (Red→Green→Refactor, §6.1) · ≤150 lines/file (§3.2) · ruff 0 / coverage ≥85% (§7.1, §6.2).
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked.
 Priority: **P0** = must-have for a working debate · **P1** = required for submission quality · **P2** = nice-to-have.
@@ -20,10 +21,14 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [ ] **0.5** Add `ruff` (lint+format) config and `mypy`/`pyright` config in root `pyproject.toml`. · P1 · dep: 0.1
 - [ ] **0.6** Add `pytest` + a trivial passing test per package so `uv run pytest` is green. · P1 · dep: 0.2
 - [ ] **0.7** Add `.gitignore` (`.venv`, `__pycache__`, `.env`, `runs/`, caches) and `.env.example` with every var from PRD §7. · P0 · dep: 0.1
-- [ ] **0.8** GitHub Actions CI: `uv sync` → `ruff check` → `mypy` → `pytest` on push/PR. · P1 · dep: 0.5, 0.6
-- [ ] **0.9** Root `README.md`: what it is, install (`uv sync`), quickstart, links to docs. · P1 · dep: 0.2
+- [ ] **0.8** GitHub Actions CI: `uv sync` → `ruff check` (0 violations) → `mypy` → `pytest --cov` (`fail_under=85`) → 150-line check → secret scan, on push/PR. · P1 · dep: 0.5, 0.6
+- [ ] **0.9** Root `README.md` per guideline §2.1: what it is, system requirements, step-by-step install (`uv sync`), usage, troubleshooting, links to docs. · P1 · dep: 0.2
+- [ ] **0.10** **Version module** `__version__` starting at **`1.00`** (guideline §8.1) in `packages/core`, re-exported by the SDK. · P0 · dep: 0.2
+- [ ] **0.11** `config/rate_limits.json` (versioned `1.00`) per guideline §5.2; loaded by config, never hard-coded. · P0 · dep: 2.1
+- [ ] **0.12** Coverage gate in `pyproject.toml` (`[tool.coverage.report] fail_under = 85`) + a **150-line-per-file** check script wired into CI (guideline §3.2, §6.2). · P1 · dep: 0.5
+- [ ] **0.13** Secret-scan check in CI; commit `.env.example`; assert 0 secrets in source (guideline §7.4). · P1 · dep: 0.8
 
-**Epic 0 acceptance:** fresh clone → `uv sync && uv run pytest && ruff check .` all pass; CI green.
+**Epic 0 acceptance:** fresh clone → `uv sync && uv run pytest --cov` (≥85%) `&& ruff check .` (0) all pass; version is `1.00`; rate-limit config loads; CI green.
 
 ---
 
@@ -74,7 +79,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 > Goal: each agent has >1 named skill, advertised in its system prompt. PRD §5.2.
 
-- [ ] **4.1** `web_search(query)` skill wrapping the active `SearchProvider`; results pass through gatekeeper before returning to the model. · P0 · dep: 3.3, 7.1
+- [ ] **4.1** `web_search(query)` skill wrapping the active `SearchProvider`; the call goes **through the API gatekeeper** (Epic 13) and results pass through the **security gatekeeper** (Epic 7) before returning to the model. · P0 · dep: 3.3, 7.1, 13.6
 - [ ] **4.2** `build_argument(...)` skill: structure a persuasive argument/rebuttal for the agent's side. · P0 · Owner: __
 - [ ] **4.3** `analyze_opponent_argument(...)` skill: dissect opponent's last message, surface weaknesses, decide what to rebut. · P0 · dep: 4.2
 - [ ] **4.4** Controller-only skills: `assess_drift(...)`, `nudge(...)`, `render_verdict(...)`. · P0 · dep: 4.3
@@ -122,7 +127,9 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 ## Epic 7 — Security gatekeeper (M5, but interface early)
 
-> Goal: sanitise everything crossing a trust boundary. PRD §5.6.
+> Goal: sanitise everything crossing a trust boundary. PRD §5.7.
+> NOTE: this is the **security/sanitization** gatekeeper. The **rate-limiting API
+> gatekeeper** is a separate, mandatory mechanism — see Epic 13.
 
 - [ ] **7.1** Gatekeeper module: sanitise/normalize untrusted text (topic, **search results**, model output) before it re-enters a prompt — anti prompt-injection. · P0 · Owner: __
 - [ ] **7.2** Input validation: topic length/charset caps; search query caps; reject control sequences. · P1 · dep: 7.1
@@ -193,23 +200,82 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 > Goal: meet the lecturer guidelines + the Improvements checklist.
 
-- [ ] **12.1** Tests for all PRD §8 acceptance criteria; coverage on the engine + gatekeeper. · P1 · Owner: __
+- [ ] **12.1** Tests for all PRD §11 acceptance criteria; coverage ≥85% on the engine + both gatekeepers. · P1 · Owner: __
 - [ ] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
-- [ ] **12.3** Cost report: document typical token usage per debate and how it scales with rounds/word-limit (PRD §8). · P1 · dep: 6.7
+- [ ] **12.3** Cost report: see Epic 15 (cost-breakdown table + budget). · P1 · dep: 15.2
 - [ ] **12.4** Architecture/decisions doc (or expand PRD §5) for a new team member. · P1
 - [ ] **12.5** **Generate sample debate runs and commit them to the repo** so the teacher can see real runs: save each run's transcript + verdict + token/cost totals under `runs/` (e.g. `runs/<run_id>.jsonl` plus a readable `runs/<run_id>.md`). Aim for a few varied topics. · P0 · Owner: __ · dep: 6.8, 8.3
 - [ ] **12.6** Add an `examples/` or `runs/README.md` index listing the saved debates (topic, who won, link) and link it from the root README. · P1 · dep: 12.5
 - [ ] **12.7** Final pass against `Improvements_to_keep_in_mind.md` — tick every box. · P0 · dep: all
 - [ ] **12.8** Final pass against the lecturer's `software_submission_guidelines-V3` PDF. · P0 · dep: all
 
-**Epic 12 acceptance:** every PRD §8 box checked; CI green; both guideline docs satisfied; **sample debate runs are committed to the repo** and indexed.
+**Epic 12 acceptance:** every PRD §11 box checked; CI green; both guideline docs satisfied; **sample debate runs are committed to the repo** and indexed.
 
 > 📌 **Reminder:** after the engine works (Epic 6) and the controller renders verdicts (Epic 8), don't forget to **run several debates and commit the saved runs** — this is the evidence the teacher will look at.
 
 ---
 
+## Epic 13 — API Gatekeeper (rate limiting & overflow) (M2) — guideline §5
+
+> Goal: a centralized chokepoint every external call passes through. PRD §5.6,
+> `prds/api-gatekeeper.md`. **Mandatory.** Distinct from the security gatekeeper (Epic 7).
+
+- [ ] **13.1** `RateLimitConfig` loader from `config/rate_limits.json` (versioned `1.00`); 0 hard-coded limits. · P0 · Owner: __ · dep: 0.11, 2.1
+- [ ] **13.2** `ApiGatekeeper.execute(api_call, …)`: check rate limits → run → log every call. · P0 · dep: 13.1
+- [ ] **13.3** FIFO **overflow queue** with max depth + **backpressure** when full + **drain** as windows reset (never drop/crash). · P0 · dep: 13.2
+- [ ] **13.4** Retry-with-backoff on transient failures per config; enforce `concurrent_max`. · P0 · dep: 13.2
+- [ ] **13.5** `get_queue_status()` → depth + stats; surface to logs/UI. · P1 · dep: 13.3
+- [ ] **13.6** **Route ALL LLM + search calls through the gatekeeper**; add a test asserting no bypass path exists. · P0 · dep: 13.2, 6.4, 3.3
+- [ ] **13.7** Tests: limit→queue (no drop), drain, retries to `max_retries`, backpressure, concurrent-max saturation. · P1 · dep: 13.3
+
+**Epic 13 acceptance:** every external call is gatekept; limits come from config; overflow queues and drains; no bypass; all covered by tests.
+
+---
+
+## Epic 14 — Research & results analysis (M5) — guideline §9
+
+> Goal: treat the debate system as an experiment with analysed, visualized results.
+
+- [ ] **14.1** Aggregate runs into a dataset (per-topic outcomes, drift/nudge counts, tokens, latency). · P1 · Owner: __ · dep: 12.5
+- [ ] **14.2** `notebooks/` analysis: who-wins distribution, agree-vs-disagree rate, drift frequency per side, tokens/latency per round. · P1 · dep: 14.1
+- [ ] **14.3** Visualizations (charts) saved to `runs/`/`notebooks/`; interpreted in prose (not just metrics). · P1 · dep: 14.2
+- [ ] **14.4** Optional parameter exploration: effect of `MAX_WORDS`/`ROUNDS`/model on quality + cost. · P2 · dep: 14.2
+
+**Epic 14 acceptance:** a results notebook with interpreted visualizations exists, evidencing the anti-sycophancy design and debate behaviour.
+
+---
+
+## Epic 15 — Costs & budget (M5) — guideline §11
+
+> Goal: explicit cost awareness, not just token logging.
+
+- [ ] **15.1** Price table per model (input/output $ per 1M tokens) in config. · P1 · Owner: __ · dep: 6.7
+- [ ] **15.2** **Cost-breakdown table** per run + aggregate (tokens × price → total, per model + overall). · P1 · dep: 15.1
+- [ ] **15.3** Budget cap (config) + over-budget **alert**; document cost vs. scale (rounds × word-limit). · P1 · dep: 15.1
+
+**Epic 15 acceptance:** every debate reports a cost breakdown; a budget cap triggers an alert; cost scaling is documented.
+
+---
+
+## Epic D — Planning docs (M0) — mostly DONE
+
+> Guideline §2 documentation. Tracks the doc deliverables.
+
+- [x] **D.1** `PRD.md` (with all guideline-mandated sections).
+- [x] **D.2** Dedicated sub-PRDs in `docs/prds/`: orchestration, anti-sycophancy, api-gatekeeper, search-plugin (§2.3).
+- [x] **D.3** `PROMPTS.md` Prompt Book (§8.3).
+- [x] **D.4** `Improvements_to_keep_in_mind.md` lessons checklist.
+- [x] **D.5** `.building_tasks_logs/` convention (per-task prompt + tokens).
+- [ ] **D.6** Keep all of the above updated as the build proceeds. · P1
+
+**Epic D acceptance:** the docs satisfy guideline §2 (README + /docs + per-mechanism PRDs) and stay current.
+
+---
+
 ## Suggested order (critical path)
 
-`Epic 0 → 1 → 2 → 3 → 4 → 7(7.1) → 5 → 6 → 8 → 9 → 10 → 11 → 12`
+`Epic 0 → 1 → 2 → 13 → 3 → 4 → 7(7.1) → 5 → 6 → 8 → 9 → 10 → 11 → 14/15 → 12`
 
-Parallelizable once Epic 6 exists: CLI (9), API (10), UI (11) can proceed in parallel; LOG (1) and search (3) can start right after the scaffold.
+- **Epic 13 (API gatekeeper) comes before search/skills/engine** — everything routes through it.
+- Parallelizable once Epic 6 exists: CLI (9), API (10), UI (11); LOG (1) and search (3) can start right after the scaffold.
+- Epics 14 (research) and 15 (costs) depend on real runs (12.5), so they come near the end.

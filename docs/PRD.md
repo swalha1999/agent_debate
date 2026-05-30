@@ -3,13 +3,19 @@
 **Project:** `agent_debate`
 **Course context:** Orchestration of AI Agents
 **Repository:** https://github.com/swalha1999/agent_debate
-**Status:** Draft v0.1
+**Status:** Draft v0.2
 **Last updated:** 2026-05-30
 **Owners:** swalha1999, Mhmdabad
 
 Companion docs:
 - `Improvements_to_keep_in_mind.md` — standing quality/lessons checklist
 - `software_submission_guidelines-V3.en.md` / `.md` — lecturer's required guidelines (authoritative)
+- `PROMPTS.md` — the **Prompt Book** (significant prompts that shaped the project; guideline §8.3)
+- `prds/` — **dedicated sub-PRDs** for each algorithm/mechanism (guideline §2.3):
+  - `prds/debate-orchestration.md` — the 10-vs-10 loop, timeout/retry, phases
+  - `prds/anti-sycophancy.md` — drift detection & "no agent controls the other"
+  - `prds/api-gatekeeper.md` — centralized rate-limited API gatekeeper
+  - `prds/search-plugin.md` — the pluggable `SearchProvider` interface
 
 ---
 
@@ -91,16 +97,25 @@ The repo is a **uv workspace** with these members (the five required surfaces):
 ```
 agent_debate/
 ├─ packages/
-│  ├─ core/        # SDK — the debate engine (agents, skills, controller, orchestration)
-│  ├─ log/         # LOG — structured logging setup, log schema, sinks
+│  ├─ core/        # SDK — engine, agents, skills, controller, API gatekeeper, search plug-ins, version (1.00)
+│  ├─ log/         # LOG — structured logging, cost accounting, log schema, sinks
 │  ├─ api/         # API — FastAPI app exposing run/stream/status endpoints
 │  ├─ cli/         # CLI — Typer app to launch & watch a debate from the terminal
 │  └─ ui/          # UI — web frontend that consumes the API (live transcript + verdict)
-├─ docs/           # PRD, guidelines, improvements checklist
-├─ tests/
-├─ pyproject.toml  # workspace root
+├─ config/         # rate_limits.json (versioned) + other non-secret config
+├─ docs/           # PRD, sub-PRDs (prds/), PROMPTS.md, guidelines, improvements checklist
+│  └─ prds/        # dedicated per-mechanism PRDs (guideline §2.3)
+├─ notebooks/      # results analysis + visualizations (guideline §9)
+├─ runs/           # saved debate runs (jsonl + md) committed for review (TASKS §12.5)
+├─ tests/          # TDD suite, ≥85% coverage
+├─ .building_tasks_logs/  # per-task build log (prompt + tokens)
+├─ pyproject.toml  # workspace root — single source of truth for deps
 └─ .env.example
 ```
+
+> Every code file ≤ 150 lines (guideline §3.2): the engine is split into small
+> single-responsibility modules (agents, skills, relay, loop, timeout, gatekeeper,
+> verdict, models, constants).
 
 - **SDK (`core`)** is the heart: it can be imported and driven programmatically
   (`from agent_debate import DebateEngine`). API/CLI/UI are thin shells over it.
@@ -205,7 +220,36 @@ class SearchProvider(Protocol):
   pluggable via Pydantic AI's model strings), keeping the system consistent and
   lock-in-free.
 
-### 5.6 Security gatekeeper
+### 5.6 API Gatekeeper (rate limiting + overflow queue) — guideline §5
+
+A **centralized API gatekeeper** through which **every** external call (LLM provider
+*and* search provider) must pass. No code makes a direct API call that bypasses it.
+This is separate from the security gatekeeper in §5.7.
+
+```python
+# packages/core/.../gatekeeper/api_gatekeeper.py
+class ApiGatekeeper:
+    def __init__(self, config: RateLimitConfig): ...
+    def execute(self, api_call, *args, **kwargs):
+        # 1) check rate limits before execution
+        # 2) queue (FIFO) if limit reached — never drop/crash
+        # 3) retry on transient failures (with backoff)
+        # 4) log every call
+        ...
+    def get_queue_status(self) -> QueueStatus: ...
+```
+
+- **No direct calls.** The LLM layer (Pydantic AI) and the `SearchProvider` plug-ins
+  are invoked *through* the gatekeeper.
+- **Rate limits from config, not code** — read from `config/rate_limits.json`
+  (`requests_per_minute`, `requests_per_hour`, `concurrent_max`, `retry_after_seconds`,
+  `max_retries`), versioned starting at `1.00`.
+- **Overflow → FIFO queue** with a max depth, **backpressure** when full, and a
+  **drain** mechanism that processes requests as rate windows reset. Never drop.
+- **Retries** on transient failures with backoff; **every call logged** for monitoring.
+- Detailed design: `prds/api-gatekeeper.md`.
+
+### 5.7 Security gatekeeper
 
 - All external text (user-supplied topic, **web-search results**, model output) passes
   through a **gatekeeper** that sanitises it before it re-enters a prompt — defends
@@ -217,7 +261,7 @@ class SearchProvider(Protocol):
   arbitrary code execution from model output.
 - Dependency pinning via `uv.lock`.
 
-### 5.7 Logging
+### 5.8 Logging
 
 - `structlog`-based, every event carries: `run_id`, `round`, `agent`, `event_type`
   (`message` | `tool_call` | `nudge` | `timeout` | `retry` | `verdict` | `system`),
@@ -253,7 +297,49 @@ class SearchProvider(Protocol):
 | `SEARCH_BACKEND` | Selects the `SearchProvider` plug-in (`duckduckgo`/`tavily`/…) — swap with one value | `duckduckgo` |
 | `SEARCH_API_KEY` | Key for backends that need one (ignored by DuckDuckGo) | — |
 
-## 8. Acceptance criteria
+Rate limits are **not** env vars — they live in `config/rate_limits.json` (guideline §5.2).
+
+## 8. Engineering & quality standards (guideline-mandated)
+
+These are hard requirements from the lecturer's guidelines; we adopt them explicitly.
+
+- **TDD — Red→Green→Refactor** (§6.1): write the failing test first, then the code.
+- **Test coverage ≥ 85%** (§6.2): `pyproject.toml` sets `fail_under = 85`; the suite
+  fails below threshold. Statement + branch + critical-path coverage.
+- **Max 150 lines per code file** (§3.2): split (helpers/mixins/constants/models)
+  rather than compress. Enforced by an automated check in CI.
+- **Ruff = 0 violations** (§7.1) + type checks (mypy/pyright).
+- **No hard-coded values** (§7.2): everything via config; constants in `constants.py`.
+- **SDK architecture, OOP, no duplication** (§4): all logic lives in the SDK; extract
+  on the 2nd copy.
+- **Package organization** (§14): `pyproject.toml` as single source of truth (no
+  `requirements.txt`), `__init__.py` exports, relative paths.
+- **Version control** (§8): a **version module starting at `1.00`**, semantic bumps,
+  meaningful commits, and the **Prompt Book** (`PROMPTS.md`).
+- **Parallel processing** (§15): debaters/searches run via async concurrency; the
+  gatekeeper enforces `concurrent_max`. Thread-safety documented for shared state.
+
+## 9. Research & results analysis (guideline §9)
+
+The debate system is also our experiment. We will produce a results notebook +
+visualizations (in `notebooks/` and `runs/`) covering:
+
+- **Who-wins distribution** across topics; agree-vs-disagree outcome rates.
+- **Drift / capture frequency** — how often the controller had to nudge each side
+  (direct evidence the anti-sycophancy design works).
+- **Token & latency per round**, per agent, per topic.
+- Optional parameter exploration: effect of `MAX_WORDS` / `ROUNDS` / model choice on
+  debate quality and cost.
+
+## 10. Costs & pricing (guideline §11)
+
+- **Cost-breakdown table** per run and aggregate: input/output tokens × price per
+  model → total cost (per model and overall).
+- **Budget management**: real-time token accounting in the LOG package, a configurable
+  budget cap, and an over-budget alert. Cost behaviour vs. scale (rounds × word limit)
+  documented.
+
+## 11. Acceptance criteria
 
 - [ ] A debate runs end-to-end: 10 Pro + 10 Con messages, alternating, each within the word limit.
 - [ ] Debaters demonstrably **rebut** the opponent's last message (not isolated monologues).
@@ -262,21 +348,27 @@ class SearchProvider(Protocol):
 - [ ] A turn that exceeds the timeout is killed and retried automatically.
 - [ ] Controller outputs a final **summary + agree/disagree result + who won** (no fact-checking).
 - [ ] All five surfaces (UI, CLI, API, SDK, LOG) work; logs capture every event with `run_id`.
-- [ ] No secrets in repo; `ruff`, type checks, and tests pass in CI.
-- [ ] Per-run cost (tokens) is logged and reported (cost awareness).
+- [ ] No secrets in repo; `ruff` = 0 violations, type checks pass, tests pass in CI.
+- [ ] **Every external call goes through the API gatekeeper**; rate limits come from `config/rate_limits.json`; overflow is queued (no drops/crash).
+- [ ] **Test coverage ≥ 85%** enforced (`fail_under = 85`); TDD followed.
+- [ ] **No code file exceeds 150 lines**; no hard-coded values; SDK-centred, no duplication.
+- [ ] A **version module starts at `1.00`**; the **Prompt Book** (`PROMPTS.md`) is maintained.
+- [ ] Dedicated **sub-PRDs** exist for orchestration, anti-sycophancy, the gatekeeper, and the search plug-in.
+- [ ] **Research notebook + visualizations** produced (who-wins, drift frequency, tokens/latency).
+- [ ] **Cost-breakdown table** (tokens × price → total) reported; budget cap + alert work.
 - [ ] **Sample debate runs are committed to the repo** (`runs/`) so the teacher can review real runs (transcript + verdict + token/cost). See TASKS.md §12.5.
 
-## 9. Open questions / future work
+## 12. Open questions / future work
 
 - Cross-provider defaults for stronger anti-sycophancy (currently opt-in).
 - Tavily as an alternative search backend behind the same interface.
 - Multi-topic tournament + Elo scoring of debaters.
 - Human-in-the-loop override of the controller's verdict.
 
-## 10. Milestones
+## 13. Milestones
 
-1. **M1 — Scaffold:** uv workspace, packages, config, LOG, CI/ruff. 
-2. **M2 — SDK core:** agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
+1. **M1 — Scaffold:** uv workspace, packages, config (+ `rate_limits.json`), version module `1.00`, LOG, CI (ruff/mypy/coverage-gate/150-line check).
+2. **M2 — SDK core:** API gatekeeper, agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
 3. **M3 — Controller:** drift detection, nudging, verdict.
 4. **M4 — Surfaces:** CLI → API → UI.
-5. **M5 — Hardening:** gatekeeper, tests (edge cases), cost reporting, docs.
+5. **M5 — Hardening & analysis:** security gatekeeper, tests (≥85%, edge cases), research notebook + visualizations, cost-breakdown report, docs, sample runs committed.
