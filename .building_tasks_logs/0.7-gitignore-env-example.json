@@ -7,10 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 40861
   },
   "usage": {
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 27,
+    "duration_ms": 140017,
+    "summary": "27 tool uses · 40.9k tokens · 2m 20s"
   },
   "note": "Expanded the minimal 0.1 .gitignore to the full set (added .env plus *.pyo, .coverage.*, htmlcov/) and added .env.example mirroring docs/PRD.md §7 verbatim — all 11 vars, one comment each, PRD defaults as SAFE placeholders (ANTHROPIC_API_KEY=your-anthropic-api-key-here; optional PRO_MODEL/CON_MODEL/SEARCH_API_KEY empty). Confirmed PRD §7 = the indicative set exactly; no extra vars. TDD: wrote tests/test_env_example.py first (parses KEY=value lines, asserts every PRD §7 var present, secret keys carry placeholders not a live sk-ant- token, and .gitignore ignores .env but not .env.example) — watched 5 fail (red), then added the files (green). PRD §7 list mirrored as a maintained constant in the test for drift detection. Gates: uv sync clean; ruff check . = All checks passed; ruff format --check . = 17 files formatted (formatted the new test once); uv run mypy = no issues in 17 source files; uv run pytest --cov = 39 passed, 100% coverage (>= 85%). Skipped line-limit gate (scripts/check_line_limit.py, task 0.10 — not built yet); the new test is ~115 lines, .env.example/.gitignore are data not code, all under 150. No external API call / LOG / runtime-config usage relevant to this hygiene-only task; verified no real secret committed."
 }
