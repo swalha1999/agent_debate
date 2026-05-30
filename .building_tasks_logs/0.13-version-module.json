@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 37840
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 27,
+    "duration_ms": 134411,
+    "summary": "27 tool uses · 37.8k tokens · 2m 14s"
   },
   "note": "TDD: wrote packages/core/tests/test_version.py FIRST with 4 assertions (`from agent_debate.core import __version__` importable and == '1.00'; __version__ is a MAJOR.MINOR numeric string via regex; the dedicated `_version` module exposes the canonical constant; LIBRARY_VERSION and core_version alias __version__ so there is no duplicate literal). Watched all 4 fail (ImportError/AttributeError, red), then implemented. Created packages/core/src/agent_debate/core/_version.py as the single source of truth (`__version__ = \"1.00\"`) and re-exported it from agent_debate.core's __init__, adding __version__ to __all__. Reconciliation: __version__ is now the source of truth; the pre-existing LIBRARY_VERSION and core_version aliases were changed from a hard-coded '1.00' literal to reference __version__, so the version string is defined in exactly one place. The per-package smoke tests (which assert LIBRARY_VERSION is a non-empty str) stay green unchanged. pyproject version fields already read '1.00' across all five packages and remain consistent with __version__ (dynamic version from code left as nice-to-have, not wired, to avoid contradiction). Gates green locally: ruff check, ruff format --check, mypy, pytest --cov (>=85), check_line_limit.py, secret_scan.py."
 }
