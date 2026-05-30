@@ -1,0 +1,18 @@
+{
+  "task_id": "0.14",
+  "title": "config/rate_limits.json (versioned 1.00)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Create config/rate_limits.json with version \"1.00\" and services (default, anthropic, search) each with requests_per_minute, requests_per_hour, concurrent_max, retry_after_seconds, max_retries (see docs/prds/api-gatekeeper.md). It will be loaded by Epic 13.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 40490
+  },
+  "usage": {
+    "tool_uses": 21,
+    "duration_ms": 140465,
+    "summary": "21 tool uses · 40.5k tokens · 2m 20s"
+  },
+  "note": "Ships only the data file config/rate_limits.json (Closes #14); the loader RateLimitConfig is Epic 13 task 13.1 and is deliberately NOT built here. TDD red-first: wrote tests/test_rate_limits_config.py and watched all 10 cases fail with FileNotFoundError (file absent), then added the file to make them pass. The file's shape is copied EXACTLY from docs/prds/api-gatekeeper.md §4: rate_limits.version == \"1.00\" and services default/anthropic/search each with the five integer keys (requests_per_minute, requests_per_hour, concurrent_max, retry_after_seconds, max_retries). default/anthropic = 30/500/5/30/3; search = 20/300/3/15/2. No Python loads these limits in this task, so there are no hard-coded values to remove and the API gatekeeper / LOG package are N/A (no external calls, no runtime code). The test resolves the path robustly via Path(__file__).resolve().parent.parent / 'config' / 'rate_limits.json' (repo-root relative, not cwd), matches the repo convention in tests/test_python_pin.py, asserts each value is a real int (excluding bool, since JSON booleans are Python ints), and asserts each service dict equals the sub-PRD shape exactly. Test is ~120 code lines (under the 150 gate); it is a pure data-contract test so it adds no measurable lines to the coverage source (packages/*/src only) and does not move the >=85% number. Gates green locally: ruff check . + ruff format --check . clean; mypy no issues; pytest --cov passed with coverage above threshold; check_line_limit.py exit 0; secret_scan.py exit 0 (the config has no secrets)."
+}

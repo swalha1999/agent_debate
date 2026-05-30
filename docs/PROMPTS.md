@@ -455,5 +455,24 @@ outcome/decision it produced.
   (mypy strict rejects it) — they `monkeypatch`/`chdir` to an isolated tmp dir
   instead, so no ambient `.env` leaks into the suite.
 
+### 0.14 — config/rate_limits.json (versioned 1.00)
+
+- **Prompt:** "Create config/rate_limits.json with version "1.00" and services
+  (default, anthropic, search) each with requests_per_minute,
+  requests_per_hour, concurrent_max, retry_after_seconds, max_retries (see
+  docs/prds/api-gatekeeper.md). It will be loaded by Epic 13."
+- **Context:** Closes issue #14. Establishes the rate-limit config file as the
+  single source of truth for the API gatekeeper (sub-PRD §4); the loader
+  `RateLimitConfig` is Epic 13, not built here.
+- **Decision/outcome (data file + contract test, no loader):** The file's shape
+  is copied **exactly** from `docs/prds/api-gatekeeper.md` §4 so "0 hard-coded
+  limits" (§5.2) holds — Python never embeds these numbers. Pragmatic TDD for a
+  data file: `tests/test_rate_limits_config.py` asserts the file exists, parses,
+  `version == "1.00"`, and that `default`/`anthropic`/`search` each carry the
+  five integer keys matching the sub-PRD; written red-first (10 failing cases,
+  `FileNotFoundError`) before the file was added. Path resolves repo-root
+  relative (`Path(__file__).resolve().parent.parent / "config" / ...`), not via
+  cwd, matching `tests/test_python_pin.py`.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
