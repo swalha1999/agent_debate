@@ -10,25 +10,29 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 ---
 
-## Epic 0 — Repo & workspace scaffold (M1)
+## Epic 0 — Repo, workspace scaffold & quality gates (M1)
 
-> Goal: a runnable, lintable, typed empty skeleton before any LLM logic.
+> Goal: a runnable, lintable, typed empty skeleton **with all CI quality gates wired
+> up FIRST** — so every later task is automatically tested, linted, coverage-checked,
+> and line-limit-checked from the very first commit. **Gates before features.**
 
 - [ ] **0.1** Init `uv` workspace at repo root (`pyproject.toml` with `[tool.uv.workspace] members = ["packages/*"]`). · P0 · Owner: __
 - [ ] **0.2** Create the five package skeletons with their own `pyproject.toml`: `packages/core`, `packages/log`, `packages/api`, `packages/cli`, `packages/ui`. · P0 · dep: 0.1
 - [ ] **0.3** Wire intra-workspace deps: `api/cli/ui/core` depend on `log`; `api/cli/ui` depend on `core`. · P0 · dep: 0.2
 - [ ] **0.4** Pin Python `>=3.12`; generate `uv.lock`; verify `uv sync` works clean. · P0 · dep: 0.1
-- [ ] **0.5** Add `ruff` (lint+format) config and `mypy`/`pyright` config in root `pyproject.toml`. · P1 · dep: 0.1
-- [ ] **0.6** Add `pytest` + a trivial passing test per package so `uv run pytest` is green. · P1 · dep: 0.2
-- [ ] **0.7** Add `.gitignore` (`.venv`, `__pycache__`, `.env`, `runs/`, caches) and `.env.example` with every var from PRD §7. · P0 · dep: 0.1
-- [ ] **0.8** GitHub Actions CI: `uv sync` → `ruff check` (0 violations) → `mypy` → `pytest --cov` (`fail_under=85`) → 150-line check → secret scan, on push/PR. · P1 · dep: 0.5, 0.6
-- [ ] **0.9** Root `README.md` per guideline §2.1: what it is, system requirements, step-by-step install (`uv sync`), usage, troubleshooting, links to docs. · P1 · dep: 0.2
-- [ ] **0.10** **Version module** `__version__` starting at **`1.00`** (guideline §8.1) in `packages/core`, re-exported by the SDK. · P0 · dep: 0.2
-- [ ] **0.11** `config/rate_limits.json` (versioned `1.00`) per guideline §5.2; loaded by config, never hard-coded. · P0 · dep: 2.1
-- [ ] **0.12** Coverage gate in `pyproject.toml` (`[tool.coverage.report] fail_under = 85`) + a **150-line-per-file** check script wired into CI (guideline §3.2, §6.2). · P1 · dep: 0.5
-- [ ] **0.13** Secret-scan check in CI; commit `.env.example`; assert 0 secrets in source (guideline §7.4). · P1 · dep: 0.8
+- [ ] **0.5** Add `ruff` (lint+format, **0 violations**) config and `mypy`/`pyright` config in root `pyproject.toml`. · P0 · dep: 0.1
+- [ ] **0.6** Add `pytest` + a trivial passing test per package so `uv run pytest` is green (TDD scaffolding from day one). · P0 · dep: 0.2
+- [ ] **0.7** Add `.gitignore` (`.venv`, `__pycache__`, `.env`, caches) and `.env.example` with every var from PRD §7. · P0 · dep: 0.1
+- [ ] **0.8** **CI quality gates set up EARLY (before any feature work)** — GitHub Actions on every push/PR runs, in order: `uv sync` → `ruff check` (0) → `mypy` → `pytest --cov` (**fail_under=85**) → **150-line-per-file check** → **secret scan**. Build fails if any gate fails. · **P0** · dep: 0.5, 0.6
+- [ ] **0.9** Coverage gate in `pyproject.toml` (`[tool.coverage.report] fail_under = 85`) — wired into 0.8 (guideline §6.2). · **P0** · dep: 0.5
+- [ ] **0.10** **150-line-per-file check script** (counts code lines, excludes blanks/comments; fails the build over 150) — wired into 0.8 (guideline §3.2). · **P0** · dep: 0.5
+- [ ] **0.11** **Secret-scan check** in CI; commit `.env.example`; assert 0 secrets in source (guideline §7.4) — wired into 0.8. · **P0** · dep: 0.8
+- [ ] **0.12** Root `README.md` per guideline §2.1: what it is, system requirements, step-by-step install (`uv sync`), usage, troubleshooting, links to docs. · P1 · dep: 0.2
+- [ ] **0.13** **Version module** `__version__` starting at **`1.00`** (guideline §8.1) in `packages/core`, re-exported by the SDK. · P0 · dep: 0.2
+- [ ] **0.14** `config/rate_limits.json` (versioned `1.00`) per guideline §5.2; loaded by config, never hard-coded. · P0 · dep: 2.1
+- [ ] **0.15** Branch protection: CI (0.8) must pass before merge. · P1 · dep: 0.8
 
-**Epic 0 acceptance:** fresh clone → `uv sync && uv run pytest --cov` (≥85%) `&& ruff check .` (0) all pass; version is `1.00`; rate-limit config loads; CI green.
+**Epic 0 acceptance:** the CI pipeline (tests + ruff 0 + mypy + coverage ≥85% + 150-line check + secret scan) is **green and enforced before any feature work begins**; fresh clone → `uv sync && uv run pytest --cov && ruff check .` all pass; version is `1.00`.
 
 ---
 
@@ -190,9 +194,11 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [ ] **11.3** Separate panels: debate transcript · controller actions/nudges · system log. · P1 · dep: 11.2
 - [ ] **11.4** Final verdict view (summary, agree/disagree, who won, token cost). · P1 · dep: 11.2
 - [ ] **11.5** RTL-safe styling (logical properties, `start`/`end`) per house CSS rules. · P2 · dep: 11.1
-- [ ] **11.6** Smoke test / screenshot of a completed debate. · P2 · dep: 11.4
+- [ ] **11.6** Apply **Nielsen's 10 usability heuristics** (§10.1): visible system status (round/streaming indicator), error prevention/recovery, consistency, minimalist design, recognition over recall. · P1 · dep: 11.4
+- [ ] **11.7** **Interface documentation** (§10.2): annotated screenshots + a short UX walkthrough in `docs/` so the UI is understandable without running it. · P1 · dep: 11.4
+- [ ] **11.8** Smoke test / screenshot of a completed debate. · P2 · dep: 11.4
 
-**Epic 11 acceptance:** a user enters a topic and watches the debate stream to a final verdict across clearly separated panels.
+**Epic 11 acceptance:** a user enters a topic and watches the debate stream to a final verdict across clearly separated panels; UI documented with screenshots and assessed against Nielsen's heuristics.
 
 ---
 
@@ -204,6 +210,8 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [ ] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
 - [ ] **12.3** Cost report: see Epic 15 (cost-breakdown table + budget). · P1 · dep: 15.2
 - [ ] **12.4** Architecture/decisions doc (or expand PRD §5) for a new team member. · P1
+- [ ] **12.4a** Docstrings on all public modules/classes/functions; meaningful comments where logic is non-obvious (guideline §3.3). · P1
+- [ ] **12.4b** Map the system to **ISO/IEC 25010 product-quality characteristics** (functional suitability, reliability, performance, security, maintainability, portability) in a short table (guideline §13). · P2
 - [ ] **12.5** **Generate sample debate runs and commit them to the repo** so the teacher can see real runs: save each run's transcript + verdict + token/cost totals under `runs/` (e.g. `runs/<run_id>.jsonl` plus a readable `runs/<run_id>.md`). Aim for a few varied topics. · P0 · Owner: __ · dep: 6.8, 8.3
 - [ ] **12.6** Add an `examples/` or `runs/README.md` index listing the saved debates (topic, who won, link) and link it from the root README. · P1 · dep: 12.5
 - [ ] **12.7** Final pass against `Improvements_to_keep_in_mind.md` — tick every box. · P0 · dep: all
@@ -220,7 +228,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 > Goal: a centralized chokepoint every external call passes through. PRD §5.6,
 > `prds/api-gatekeeper.md`. **Mandatory.** Distinct from the security gatekeeper (Epic 7).
 
-- [ ] **13.1** `RateLimitConfig` loader from `config/rate_limits.json` (versioned `1.00`); 0 hard-coded limits. · P0 · Owner: __ · dep: 0.11, 2.1
+- [ ] **13.1** `RateLimitConfig` loader from `config/rate_limits.json` (versioned `1.00`); 0 hard-coded limits. · P0 · Owner: __ · dep: 0.14, 2.1
 - [ ] **13.2** `ApiGatekeeper.execute(api_call, …)`: check rate limits → run → log every call. · P0 · dep: 13.1
 - [ ] **13.3** FIFO **overflow queue** with max depth + **backpressure** when full + **drain** as windows reset (never drop/crash). · P0 · dep: 13.2
 - [ ] **13.4** Retry-with-backoff on transient failures per config; enforce `concurrent_max`. · P0 · dep: 13.2
