@@ -430,5 +430,30 @@ outcome/decision it produced.
   artifact; finding the gap means promoting a genuinely-public constant, not
   inventing coverage.*
 
+### 2.1 — Settings model (pydantic-settings, PRD §7)
+
+- **Prompt:** "In packages/core, add a pydantic-settings Settings class with
+  every PRD §7 field and sane defaults (ROUNDS=10, MAX_WORDS=150,
+  TURN_TIMEOUT_S=60, MAX_RETRIES=2, SEARCH_BACKEND=duckduckgo). Load from
+  environment and .env."
+- **Context:** Closes issue #21. First config surface for the SDK; later tasks
+  (e.g. 2.3 strict required-key validation, rate-limit config) build on it.
+- **Decision/outcome (defaults-as-single-source + safe-to-import required key +
+  per-side fallback):** Defaults live once in `core/constants.py` (`DEFAULT_*`,
+  guideline §7.2 — no scattered literals); `settings.py` references them, which
+  also keeps both files well under the 150-line gate. `Settings` is a
+  `pydantic_settings.BaseSettings` with **no env prefix** (PRD §7 vars are bare
+  names), `extra="ignore"`, `case_sensitive=False`, `env_file=".env"`. Key
+  pattern: `ANTHROPIC_API_KEY` is typed `Optional[str]=None` so importing /
+  instantiating `Settings` **never explodes** at test-collection time or in
+  key-free packages — strict fail-fast validation is deferred to task 2.3. The
+  `PRO_MODEL`/`CON_MODEL` per-side overrides bind via `alias=` onto
+  `*_override` fields and resolve through computed `pro_model`/`con_model`
+  properties that fall back to `DEBATER_MODEL`. `get_settings()` is an
+  `lru_cache` singleton that emits a `settings_loaded` debug event through the
+  LOG package. Tests avoid pydantic-settings' runtime-only `_env_file` kwarg
+  (mypy strict rejects it) — they `monkeypatch`/`chdir` to an isolated tmp dir
+  instead, so no ambient `.env` leaks into the suite.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

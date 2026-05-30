@@ -11,6 +11,7 @@ importing across the edge, proving the dependency resolves at runtime.
 from __future__ import annotations
 
 from agent_debate.core._version import __version__
+from agent_debate.core.settings import Settings, get_settings
 from agent_debate.log import log_version
 
 #: Version of the core SDK surface — aliases the canonical ``__version__``
@@ -21,4 +22,11 @@ LIBRARY_VERSION = __version__
 #: Public alias used by dependents that re-export this package's version.
 core_version = __version__
 
-__all__ = ["LIBRARY_VERSION", "__version__", "core_version", "log_version"]
+__all__ = [
+    "LIBRARY_VERSION",
+    "Settings",
+    "__version__",
+    "core_version",
+    "get_settings",
+    "log_version",
+]
