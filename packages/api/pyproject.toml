@@ -2,16 +2,26 @@
 #
 # This is only the skeleton (TASKS.md 0.2): the run/stream/status endpoints are
 # filled in by later tasks. The API is a thin shell over the ``core`` SDK.
+#
+# Layout: PEP 420 implicit namespace package — the importable module is
+# `agent_debate.api` (no `__init__.py` at `src/agent_debate/`), so the
+# `agent_debate` namespace merges across all five distributions (TASKS.md 0.3).
+#
+# Deps (issue #3): api depends on both core and log.
 [project]
 name = "agent_debate_api"
 version = "1.00"
 description = "agent_debate API — FastAPI surface over the SDK (skeleton)."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["agent_debate_core", "agent_debate_log"]
+
+[tool.uv.sources]
+agent_debate_core = { workspace = true }
+agent_debate_log = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agent_debate_api"]
+packages = ["src/agent_debate"]

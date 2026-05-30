@@ -1,0 +1,13 @@
+{
+  "task_id": "0.3",
+  "title": "Wire intra-workspace dependencies (namespace-package layout)",
+  "date": "2026-05-30",
+  "model": "claude-opus-4-8",
+  "prompt": "Convert all five workspace packages (core, log, api, cli, ui) from the underscore src-layout (src/agent_debate_<pkg>/) to a shared PEP 420 implicit namespace-package layout (src/agent_debate/<pkg>/), so each surface is imported as agent_debate.<pkg>. The agent_debate/ directory must NOT contain an __init__.py so the namespace merges across all five distributions. Update each package's pyproject.toml hatchling wheel target to packages = [\"src/agent_debate\"]. Wire the intra-workspace dependencies (issue #3 [0.3]): core depends on log; api/cli/ui depend on both core and log, declared via [project] dependencies + [tool.uv.sources] workspace sources. Prove the edges resolve at runtime: log exposes LIBRARY_VERSION/log_version, core re-exports log_version, and api/cli/ui re-export core_version and log_version by importing across the edge. Update tests to the new agent_debate.<pkg> imports and add tests/test_cross_package_imports.py asserting cross-package imports and that the namespace merges (two subpackages importable together). Configure mypy (namespace_packages, explicit_package_bases, mypy_path) so it resolves agent_debate.<pkg>. Verify all gates green: uv sync, ruff check, ruff format --check, uv run mypy, uv run pytest --cov (>=85%). Then commit with Closes #3, push, open a PR.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "note": "Token counts not surfaced by the harness for this run; recorded as null. Moved packages/<pkg>/src/agent_debate_<pkg>/ -> packages/<pkg>/src/agent_debate/<pkg>/ (git mv, history preserved) for all five; no __init__.py at the agent_debate/ namespace level (PEP 420). Each pyproject.toml wheel target set to src/agent_debate. Deps wired via [tool.uv.sources] workspace=true: core->log; api/cli/ui->core+log. log exposes LIBRARY_VERSION/log_version; core re-exports log_version; api/cli/ui re-export core_version+log_version across the edges. Root pyproject mypy block gained namespace_packages/explicit_package_bases/mypy_path + files so a bare `uv run mypy` resolves agent_debate.<pkg>. Tests: test_packages.py updated to agent_debate.<pkg> + namespace assertions; new test_cross_package_imports.py. Gates: uv sync (green), ruff check (pass), ruff format --check (pass), uv run mypy (clean), pytest --cov (pass). Verified fresh `python -c \"import agent_debate.core, agent_debate.log\"` works (namespace merges). Line-limit gate (scripts/check_line_limit.py) skipped: script does not exist yet (task 0.10); all touched files are well under 150 lines."
+}

@@ -20,16 +20,42 @@ members = [
 name = "agent-debate-api"
 version = "1.0"
 source = { editable = "packages/api" }
+dependencies = [
+    { name = "agent-debate-core" },
+    { name = "agent-debate-log" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-debate-core", editable = "packages/core" },
+    { name = "agent-debate-log", editable = "packages/log" },
+]
 
 [[package]]
 name = "agent-debate-cli"
 version = "1.0"
 source = { editable = "packages/cli" }
+dependencies = [
+    { name = "agent-debate-core" },
+    { name = "agent-debate-log" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-debate-core", editable = "packages/core" },
+    { name = "agent-debate-log", editable = "packages/log" },
+]
 
 [[package]]
 name = "agent-debate-core"
 version = "1.0"
 source = { editable = "packages/core" }
+dependencies = [
+    { name = "agent-debate-log" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "agent-debate-log", editable = "packages/log" }]
 
 [[package]]
 name = "agent-debate-log"
@@ -40,6 +66,16 @@ source = { editable = "packages/log" }
 name = "agent-debate-ui"
 version = "1.0"
 source = { editable = "packages/ui" }
+dependencies = [
+    { name = "agent-debate-core" },
+    { name = "agent-debate-log" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-debate-core", editable = "packages/core" },
+    { name = "agent-debate-log", editable = "packages/log" },
+]
 
 [[package]]
 name = "agent-debate-workspace"
