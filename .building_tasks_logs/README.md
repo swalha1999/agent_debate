@@ -35,8 +35,20 @@ See `_template.json`. Fields:
 | `prompt` | The verbatim prompt that defined the task. |
 | `tokens` | `{input, output, total}` for the task. |
 
+## Relationship to the guideline-required artifacts
+
+This folder is our **extra** granular log. The lecturer's guidelines additionally
+require two things, which each task must also feed:
+
+1. **Prompt Book — `docs/PROMPTS.md`** (guideline §8.3): roll *significant* prompts
+   into the narrative prompt book (context, goal, output, lessons).
+2. **Token cost table** (guideline §11.1): add the task's token counts to the
+   cost-breakdown table (model · input · output · cost) — Epic 15 / `docs/PRD.md §10`.
+
+So per task: write the JSON here **and** update the Prompt Book + cost table.
+
 ## Rules
 
 - **One file per task.** Append, don't overwrite history.
-- Record the **prompt** verbatim and the **token usage** — nothing else needed.
+- Record the **prompt** verbatim and the **token usage** — nothing else needed here.
 - This folder **is** committed (it's documentation), so never put secrets/keys in it.
