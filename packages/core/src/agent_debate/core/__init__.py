@@ -26,6 +26,10 @@ from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
     SearchProvider,
     SearchResult,
+    UnknownSearchBackendError,
+    available_search_backends,
+    create_search_provider,
+    register_search_provider,
 )
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
@@ -54,10 +58,14 @@ __all__ = [
     "SearchResult",
     "ServiceLimits",
     "Settings",
+    "UnknownSearchBackendError",
     "__version__",
+    "available_search_backends",
     "core_version",
+    "create_search_provider",
     "get_settings",
     "load_rate_limit_config",
+    "register_search_provider",
     "log_version",
     "resolve_model",
     "resolve_models",
