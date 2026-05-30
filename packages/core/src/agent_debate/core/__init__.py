@@ -24,6 +24,7 @@ from agent_debate.core.gatekeeper import (
 from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
 from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
+    DuckDuckGoSearchProvider,
     SearchProvider,
     SearchResult,
     UnknownSearchBackendError,
@@ -48,6 +49,7 @@ __all__ = [
     "DEFAULT_SERVICE",
     "LIBRARY_VERSION",
     "ApiGatekeeper",
+    "DuckDuckGoSearchProvider",
     "MissingApiKeyError",
     "QueueFullError",
     "QueueStatus",
