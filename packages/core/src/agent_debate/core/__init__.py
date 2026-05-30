@@ -22,6 +22,11 @@ from agent_debate.core.gatekeeper import (
     load_rate_limit_config,
 )
 from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
+from agent_debate.core.search import (
+    DEFAULT_MAX_RESULTS,
+    SearchProvider,
+    SearchResult,
+)
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
 from agent_debate.log import log_version
@@ -35,6 +40,7 @@ LIBRARY_VERSION = __version__
 core_version = __version__
 
 __all__ = [
+    "DEFAULT_MAX_RESULTS",
     "DEFAULT_SERVICE",
     "LIBRARY_VERSION",
     "ApiGatekeeper",
@@ -44,6 +50,8 @@ __all__ = [
     "RateLimitConfig",
     "RateLimitExceededError",
     "ResolvedModels",
+    "SearchProvider",
+    "SearchResult",
     "ServiceLimits",
     "Settings",
     "__version__",
