@@ -1,0 +1,18 @@
+{
+  "task_id": "13.4",
+  "title": "Retry-with-backoff on transient failures + concurrent_max enforcement — Epic 13",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add retry-with-backoff on transient failures per config (max_retries, retry_after_seconds) and enforce concurrent_max.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Fourth task of Epic 13 (docs/prds/api-gatekeeper.md §1/§4/§6/§7): adds retry-with-backoff on transient failures and concurrent_max enforcement to ApiGatekeeper.execute. TDD red-first: wrote packages/core/tests/test_gatekeeper_retry.py (4 tests) + test_gatekeeper_concurrency.py (4 tests) and watched 6 fail (TypeError: no sleep_fn kwarg; cap not enforced), then implemented to green. New module gatekeeper/_retry.py owns the retry POLICY: is_transient() (TRANSIENT_ERRORS = (TimeoutError, ConnectionError) — a configurable type tuple; everything else, e.g. ValueError, is permanent and propagates with NO retry), backoff_delay() (EXPONENTIAL: retry_after_seconds * _BACKOFF_BASE ** retry_index, base 2.0 a named strategy constant — magnitude derives entirely from config's retry_after_seconds), and run_with_retry() (PEP 695 generic run_with_retry[T]) which retries up to max_retries, calls on_retry(n, delay, exc) + sleep_fn(delay) between attempts, and re-raises on exhaustion or a non-transient error. Concurrency: reused the _RateLimiter _inflight seam from 13.2 — added at_concurrency_cap()/acquire()/release() (release guarded so the counter never goes negative). execute() now overflows into the SAME FIFO queue when EITHER the rate window is exhausted OR the service is at concurrent_max (so an over-cap call is enqueued, never exceeds the cap); _run() acquires one in-flight slot, runs the call through run_with_retry, and releases the slot in a finally (held across the whole retry sequence; released even when the call raises). New sleep_fn seam on ApiGatekeeper.__init__ (default time.sleep) so tests capture backoff delays with zero real waiting. Each scheduled retry logs a 'retry' LogEvent (payload service/retry/delay_seconds/error) via the LOG package. File split to honour the 150-line cap: extracted the three log emitters into gatekeeper/_events.py (_GatekeeperLog binds run_id+runs_dir, one method per event kind: call/retry/queue_event) — _gatekeeper.py dropped from 155 to 70 code lines. 0 hard-coded values: max_retries, retry_after_seconds, concurrent_max all come from ServiceLimits/config; only literals are the backoff base constant, transient-error type tuple, and logging identifiers. Updated test_gatekeeper_limiter.py with 2 tests for the new concurrency seam (incl. the release-below-zero no-op branch). No existing-test semantic changes were needed (additive behaviour). Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean; mypy = no issues in 62 source files; pytest --cov = 230 passed, 100% total coverage (>=85 required); check_line_limit.py rc=0 (all files <=150 code lines); secret_scan.py rc=0. docs/PROMPTS.md entry added."
+}

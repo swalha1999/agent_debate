@@ -83,3 +83,26 @@ def test_expired_timestamps_are_pruned() -> None:
 
     clock.t += 3601.0  # advance just past the hour window -> old ts pruned
     assert limiter.check("svc", limits) is None
+
+
+def test_concurrency_cap_tracks_inflight() -> None:
+    """``at_concurrency_cap`` trips once ``concurrent_max`` calls are acquired."""
+    limiter = _RateLimiter(time_fn=_FakeClock())
+    limits = _limits(per_minute=100, per_hour=100).model_copy(update={"concurrent_max": 2})
+
+    assert not limiter.at_concurrency_cap("svc", limits)
+    limiter.acquire("svc")
+    assert not limiter.at_concurrency_cap("svc", limits)  # 1 < 2
+    limiter.acquire("svc")
+    assert limiter.at_concurrency_cap("svc", limits)  # 2 == 2 (cap)
+    limiter.release("svc")
+    assert not limiter.at_concurrency_cap("svc", limits)  # freed a slot
+
+
+def test_release_below_zero_is_a_no_op() -> None:
+    """Releasing with no in-flight calls never drives the counter negative."""
+    limiter = _RateLimiter(time_fn=_FakeClock())
+    limits = _limits(per_minute=100, per_hour=100).model_copy(update={"concurrent_max": 1})
+
+    limiter.release("svc")  # nothing in flight -> guarded no-op
+    assert not limiter.at_concurrency_cap("svc", limits)

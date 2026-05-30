@@ -636,5 +636,36 @@ outcome/decision it produced.
   assert **enqueue** instead. TDD red-first (ImportError: no `QueueFullError`),
   then green; all gates green, 100% coverage.
 
+### 2026-05-31 — 13.4 Retry-with-backoff + concurrent_max enforcement
+
+- **Prompt:** "Add retry-with-backoff on transient failures per config
+  (max_retries, retry_after_seconds) and enforce concurrent_max." (plus the
+  repo-standard checklist: TDD, 150-line cap, ruff/mypy clean, no hard-coded
+  values, gatekeeper for external calls, LOG package, coverage >= 85%.)
+- **Context:** Fourth task of Epic 13 (`docs/prds/api-gatekeeper.md` §1/§4/§6/§7).
+  Extends `execute` with the two remaining acceptance bullets: transient failures
+  retried with backoff per config, and `concurrent_max` enforced.
+- **Decision/pattern set:** New module `gatekeeper/_retry.py` owns the retry
+  **policy**. *Transient vs permanent:* `TRANSIENT_ERRORS = (TimeoutError,
+  ConnectionError)` (a type tuple) is retried; everything else (e.g.
+  `ValueError`) propagates immediately, no retry. *Backoff:* **exponential**,
+  `retry_after_seconds * _BACKOFF_BASE ** retry_index` — the base `2.0` is a named
+  strategy constant; the magnitude derives entirely from config's
+  `retry_after_seconds`, so nothing is hard-coded. `run_with_retry[T]` (PEP 695
+  generic) retries up to `max_retries`, invoking `on_retry(n, delay, exc)` +
+  `sleep_fn(delay)` between attempts. *Concurrency:* reused the `_RateLimiter`
+  `_inflight` seam from 13.2 — added `at_concurrency_cap` / `acquire` / `release`
+  (release guarded so the counter never goes negative). `execute` now overflows
+  into the **same FIFO queue** when EITHER the rate window is exhausted OR the
+  service is at `concurrent_max`, so an over-cap call is enqueued rather than
+  exceeding the cap; `_run` holds one in-flight slot across the whole retry
+  sequence and releases it in a `finally` (even on error). New injectable
+  `sleep_fn` seam (default `time.sleep`) lets tests capture backoff delays with
+  zero real waiting; each retry logs a `retry` `LogEvent` via the LOG package.
+  Split for the 150-line cap: the three log emitters moved to
+  `gatekeeper/_events.py` (`_GatekeeperLog`), dropping `_gatekeeper.py` from 155
+  to 70 code lines. TDD red-first (new retry + concurrency tests, watched fail),
+  then green; all gates green, 100% coverage, no existing tests changed.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -73,6 +73,23 @@ class _RateLimiter:
         """Record an admitted request's timestamp against ``service``."""
         self._events[service].append(self._now())
 
+    def at_concurrency_cap(self, service: str, limits: ServiceLimits) -> bool:
+        """Return ``True`` when ``service`` already has ``concurrent_max`` in flight.
+
+        The cap value comes from config (``limits.concurrent_max``); this only
+        compares it to the live in-flight counter (the 13.4 concurrency control).
+        """
+        return self._inflight[service] >= limits.concurrent_max
+
+    def acquire(self, service: str) -> None:
+        """Mark one more call as in flight for ``service`` (concurrency counter)."""
+        self._inflight[service] += 1
+
+    def release(self, service: str) -> None:
+        """Mark one in-flight call done for ``service`` (never below zero)."""
+        if self._inflight[service] > 0:
+            self._inflight[service] -= 1
+
     @staticmethod
     def _prune(events: deque[float], now: float, max_age: float) -> None:
         """Drop timestamps older than ``max_age`` seconds (oldest first)."""
