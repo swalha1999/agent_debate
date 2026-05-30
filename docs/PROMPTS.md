@@ -355,5 +355,31 @@ outcome/decision it produced.
   Pydantic models; the allowed event-type set is one exported constant, and
   serialisation is a one-line JSONL string coherent with the per-run sink.*
 
+### 1.3 — Logger helper API (2026-05-31)
+- **Prompt:** "Add helpers: get_logger(run_id) returns a bound logger;
+  log_event(**fields) validates via LogEvent and emits; context binding so
+  run_id/round propagate. Keep files <150 lines."
+- **Context:** Closes issue #18. Ties the 1.1 `configure()` setup factory and the
+  1.2 `LogEvent` schema into the ergonomic public surface every other package
+  uses to emit structured events (PRD §5.8). No new sink — reuses 1.1's.
+- **Decision/outcome (the LOG public emit contract — significant, sets how
+  dependents log):** TDD red-first (`tests/test_helpers.py`, 9 cases). New
+  `_api.py` (~40 code lines): `get_logger(run_id, *, runs_dir=DEFAULT_RUNS_DIR)`
+  is a thin idempotent wrapper over `configure()` returning a `run_id`-bound
+  logger; `log_event(*, run_id, agent, event_type, round=None, payload=None,
+  tokens=None, latency_ms=None, runs_dir=DEFAULT_RUNS_DIR)` **builds + validates
+  a `LogEvent` first** (unknown `event_type` / missing required field raises
+  `ValidationError` *before* any emit — the sink never sees a malformed record),
+  then emits one `runs/<run_id>.jsonl` line and returns the validated event.
+  Round context binds via structlog contextvars: `bind_round(n)`/`bind_context`/
+  `clear_context`; an explicit `round` kwarg wins over the bound contextvar,
+  else it falls back to the bound round, else stays unset so validation rejects
+  it as a missing required field. No-hardcoding: `runs_dir` reuses
+  `DEFAULT_RUNS_DIR`; the contextvar key is a module constant. mypy stays clean
+  by building the `LogEvent` kwargs as a `dict[str, Any]` so **pydantic is the
+  single validation point** (not the static signature). Pattern set: *dependents
+  log via `get_logger`/`log_event`; every record is validated through `LogEvent`
+  before it reaches the sink, and `run_id`/`round` ride structlog contextvars.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

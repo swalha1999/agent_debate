@@ -14,10 +14,22 @@ and is idempotent. It is the foundation the event-schema/helper tasks build on.
 
 :class:`LogEvent` (TASKS.md 1.2) is the typed Pydantic v2 schema every record
 conforms to; :data:`EVENT_TYPES` is the strict allowed ``event_type`` set.
+
+:func:`get_logger`/:func:`log_event` plus the context helpers
+(:func:`bind_round`/:func:`bind_context`/:func:`clear_context`) (TASKS.md 1.3)
+are the ergonomic public surface dependents use to emit validated structured
+events with ``run_id``/``round`` bound.
 """
 
 from __future__ import annotations
 
+from agent_debate.log._api import (
+    bind_context,
+    bind_round,
+    clear_context,
+    get_logger,
+    log_event,
+)
 from agent_debate.log._setup import DEFAULT_RUNS_DIR, configure
 from agent_debate.log.event import EVENT_TYPES, EventType, LogEvent
 
@@ -33,6 +45,11 @@ __all__ = [
     "LIBRARY_VERSION",
     "EventType",
     "LogEvent",
+    "bind_context",
+    "bind_round",
+    "clear_context",
     "configure",
+    "get_logger",
+    "log_event",
     "log_version",
 ]
