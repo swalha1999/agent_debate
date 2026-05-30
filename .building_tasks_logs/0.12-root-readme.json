@@ -1,0 +1,18 @@
+{
+  "task_id": "0.12",
+  "title": "Root README (guideline §2.1)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write README.md per guideline §2.1: project summary, system requirements, step-by-step install (uv sync + .env setup), quickstart usage for CLI/API/UI/SDK, troubleshooting, and links to docs/ (PRD, TASKS, prds/, guidelines).\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 58718
+  },
+  "usage": {
+    "tool_uses": 24,
+    "duration_ms": 198300,
+    "summary": "24 tool uses · 58.7k tokens · 3m 18s"
+  },
+  "note": "TDD: wrote tests/test_readme.py FIRST (8 case-insensitive structural assertions — README exists & is substantive, project summary names debate+controller, System requirements section with Python 3.12 + uv, Install section with `uv sync` + `.env.example`, Usage/Quickstart heading, Troubleshooting heading, links to docs/PRD.md + docs/TASKS.md), watched 7 fail / 1 pass (red), then wrote README.md to pass (green). README replaces the one-line placeholder with a full user manual per guideline §2.1: project summary from PRD §1, a System-requirements table (Python>=3.12, uv, git, OS notes, API key), step-by-step Install (git clone → uv sync → cp .env.example .env + fill ANTHROPIC_API_KEY), an HONEST Usage section splitting 'Available now' (pytest/ruff/mypy + the two scripts that actually exist) from CLI/API/UI/SDK examples explicitly marked '(planned)' since those surfaces aren't implemented yet, a Configuration table mirroring PRD §7, a Troubleshooting table (missing uv, wrong Python, missing key, import errors, coverage, secret scan), a Documentation table linking PRD/TASKS/prds/PROMPTS/guidelines, and Contributing/quality-gate + License/credits sections. No real secrets; references .env.example only. README is prose so the no-hard-coded-values / API-gatekeeper / LOG code standards and the 150-line CODE limit do not apply; line-limit + secret scans still pass. Gates green locally (ruff, ruff format, mypy, pytest --cov, line-limit, secret_scan)."
+}
