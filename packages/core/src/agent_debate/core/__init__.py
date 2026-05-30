@@ -10,12 +10,15 @@ importing across the edge, proving the dependency resolves at runtime.
 
 from __future__ import annotations
 
+from agent_debate.core._version import __version__
 from agent_debate.log import log_version
 
-#: Version of the core SDK surface.
-LIBRARY_VERSION = "1.00"
+#: Version of the core SDK surface — aliases the canonical ``__version__``
+#: (``_version.py``) so the literal "1.00" is defined in exactly one place
+#: (guideline §8.1). Smoke tests that predate task 0.13 still read this name.
+LIBRARY_VERSION = __version__
 
 #: Public alias used by dependents that re-export this package's version.
-core_version = LIBRARY_VERSION
+core_version = __version__
 
-__all__ = ["LIBRARY_VERSION", "core_version", "log_version"]
+__all__ = ["LIBRARY_VERSION", "__version__", "core_version", "log_version"]
