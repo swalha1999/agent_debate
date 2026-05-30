@@ -1,0 +1,18 @@
+{
+  "task_id": "1.4",
+  "title": "Redaction filter (structlog processor: secret redaction + payload truncation)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a structlog processor that redacts secret-like values (keys named *key*/*token*/*secret*, sk-… patterns) and truncates payloads over a configurable size. Add tests.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "TDD: wrote packages/log/tests/test_redaction.py FIRST (12 cases: value under a secret-like key (api_key) redacted; token/password/secret/authorization keys redacted; sk-ant-… value redacted under a non-secret key; openai sk-…/AWS AKIA…/PEM header value patterns redacted; recursive redaction into nested dicts AND lists; long string truncated at MAX_VALUE_LEN with the marker; short string untouched; make_redactor(max_len=4) truncates earlier; the LogEvent 'tokens' count key allowlisted (NOT redacted); non-string scalars pass through; the configured pipeline JSONL file on disk contains NO secret + the marker present; the console sink also redacts). Watched red (ModuleNotFoundError: agent_debate.log.redaction), then implemented packages/log/src/agent_debate/log/redaction.py (63 code lines, <=150): pure recursive redact_value(value, max_len) — dicts walked (secret-like KEY redacts its value outright, else recurse), lists/tuples mapped, strings redacted-or-truncated, other scalars pass through; _redact_event_dict builds an EventDict so mypy sees the right return type; make_redactor(max_len=MAX_VALUE_LEN) factory + redact_event default-length processor. Named single-source configs (no scattered magic): REDACTED marker, TRUNCATED_SUFFIX, MAX_VALUE_LEN=2048, SECRET_KEY_HINTS (key/token/secret/password/authorization/auth/credential/…), SECRET_VALUE_PATTERNS (aligned with scripts/secret_scan.py: sk-ant-…, sk-…, AKIA…, PEM header; plus bearer-token regex), and SAFE_KEYS allowlist ({tokens, token_count, tokens_used}) to stop false-positive redaction of the LogEvent 'tokens' COUNT field (contains 'token'). Wired redact_event into configure()'s processor chain in _setup.py immediately BEFORE the terminal _DualSinkRenderer, so redaction+truncation apply to BOTH the console and JSONL sinks (PRD §5.8). Re-exported redact_event, make_redactor, REDACTED, MAX_VALUE_LEN from agent_debate.log __init__ (__all__ + module/build_processors docstrings updated). No external API calls -> API gatekeeper (Epic 13) N/A. Gates green locally: ruff check (0), ruff format --check, mypy strict (35 files, 0; fixed a no-any-return by funnelling through a typed _redact_event_dict), pytest --cov (137 passed, 100% total, redaction.py 100%), check_line_limit.py (max 63 lines), secret_scan.py (clean — tests/ excluded and constants split so no literal pattern matches). The on-disk JSONL test (test_pipeline_jsonl_on_disk_has_no_secret) logs an event whose payload carries sk-ant-… under api_key and sk-… under text, reads runs/<run_id>.jsonl back from disk, and asserts BOTH secret strings are absent while ***REDACTED*** is present — proving no secret leaks to the file sink."
+}

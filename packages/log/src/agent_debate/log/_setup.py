@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TextIO
 
 import structlog
+from agent_debate.log.redaction import redact_event
 
 if TYPE_CHECKING:
     from structlog.typing import FilteringBoundLogger
@@ -86,13 +87,19 @@ def configure(
 
 
 def _build_processors(sink: TextIO) -> list[structlog.typing.Processor]:
-    """Build the shared processor chain ending in the dual-sink renderer."""
+    """Build the chain: redact secrets/truncate, then the dual-sink renderer.
+
+    :func:`~agent_debate.log.redaction.redact_event` runs immediately before the
+    terminal :class:`_DualSinkRenderer` so redaction/truncation applies to both
+    the console and JSONL sinks (TASKS.md 1.4).
+    """
     return [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        redact_event,
         _DualSinkRenderer(sink),
     ]
 
