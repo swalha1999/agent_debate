@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 60528
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 47,
+    "duration_ms": 273386,
+    "summary": "47 tool uses · 60.5k tokens · 4m 33s"
   },
   "note": "Third task of Epic 3 (pluggable web search, docs/prds/search-plugin.md §4 + PRD §5.5): the default, free, key-less search vendor on top of the 3.1 interface + 3.2 registry. Added the `ddgs` dependency (>=9) to packages/core pyproject and relocked (uv lock -> ddgs 9.14.4); ddgs is the maintained successor to duckduckgo-search, imported `from ddgs import DDGS`. Verified the installed API: DDGS().text(query, **kwargs) -> list[dict[str, Any]] with keys title/href/body; ddgs ships py.typed so it is typed and NO mypy ignore/override was needed. Added search/duckduckgo.py: DuckDuckGoSearchProvider (name='duckduckgo'), search(query, *, max_results=DEFAULT_MAX_RESULTS) -> list[SearchResult]; calls DDGS().text(query, max_results=...) and maps each raw dict to SearchResult(title=title, url=href, snippet=body) with .get(...,'') so missing keys -> '' (no crash) and empty payload -> []. The live DDGS().text(...) call is isolated to a static _fetch() — the single external hop — left as a clear seam/comment for the API gatekeeper wrapping in task 13.6. No-hard-coded-values: max_results default = DEFAULT_MAX_RESULTS (base); the backend name 'duckduckgo' is a single source DUCKDUCKGO_BACKEND = constants.DEFAULT_SEARCH_BACKEND, reused as both the class `name` and the @register_search_provider key, so Settings(SEARCH_BACKEND default 'duckduckgo') resolves to this provider via the factory with no factory edits. The provider is re-exported from search/__init__ (so importing the subpackage registers it) and from agent_debate.core. TDD red-first: wrote test_duckduckgo.py (8 tests, ALL monkeypatch a _SpyDDGS stand-in for the DDGS class so NO real network call happens: maps raw dicts to SearchResult, default + explicit max_results passed through, missing keys handled gracefully, empty raw -> [], name == backend key, satisfies SearchProvider Protocol, create_search_provider(Settings(SEARCH_BACKEND='duckduckgo')) returns a DuckDuckGoSearchProvider), watched it fail (ModuleNotFoundError), then implemented to green. All gates green locally: uv sync clean; ruff check = All checks passed; ruff format --check clean; mypy = no issues in 74 source files; pytest --cov = 274 passed, 100% total coverage (duckduckgo.py 100%, >=85 required); check_line_limit.py rc=0 (duckduckgo.py well under 150 code lines); secret_scan.py rc=0. docs/PROMPTS.md entry added."
 }
