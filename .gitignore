@@ -24,4 +24,6 @@ htmlcov/
 # added explicitly with `git add -f`. Keep the dir itself tracked via .gitkeep.
 runs/*.jsonl
 runs/*.md
+**/runs/*.jsonl
+**/runs/*.md
 !runs/.gitkeep
