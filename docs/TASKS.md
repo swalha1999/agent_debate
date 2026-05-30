@@ -197,10 +197,14 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [ ] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
 - [ ] **12.3** Cost report: document typical token usage per debate and how it scales with rounds/word-limit (PRD §8). · P1 · dep: 6.7
 - [ ] **12.4** Architecture/decisions doc (or expand PRD §5) for a new team member. · P1
-- [ ] **12.5** Final pass against `Improvements_to_keep_in_mind.md` — tick every box. · P0 · dep: all
-- [ ] **12.6** Final pass against the lecturer's `software_submission_guidelines-V3` PDF. · P0 · dep: all
+- [ ] **12.5** **Generate sample debate runs and commit them to the repo** so the teacher can see real runs: save each run's transcript + verdict + token/cost totals under `runs/` (e.g. `runs/<run_id>.jsonl` plus a readable `runs/<run_id>.md`). Aim for a few varied topics. · P0 · Owner: __ · dep: 6.8, 8.3
+- [ ] **12.6** Add an `examples/` or `runs/README.md` index listing the saved debates (topic, who won, link) and link it from the root README. · P1 · dep: 12.5
+- [ ] **12.7** Final pass against `Improvements_to_keep_in_mind.md` — tick every box. · P0 · dep: all
+- [ ] **12.8** Final pass against the lecturer's `software_submission_guidelines-V3` PDF. · P0 · dep: all
 
-**Epic 12 acceptance:** every PRD §8 box checked; CI green; both guideline docs satisfied.
+**Epic 12 acceptance:** every PRD §8 box checked; CI green; both guideline docs satisfied; **sample debate runs are committed to the repo** and indexed.
+
+> 📌 **Reminder:** after the engine works (Epic 6) and the controller renders verdicts (Epic 8), don't forget to **run several debates and commit the saved runs** — this is the evidence the teacher will look at.
 
 ---
 

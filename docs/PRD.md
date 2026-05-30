@@ -264,6 +264,7 @@ class SearchProvider(Protocol):
 - [ ] All five surfaces (UI, CLI, API, SDK, LOG) work; logs capture every event with `run_id`.
 - [ ] No secrets in repo; `ruff`, type checks, and tests pass in CI.
 - [ ] Per-run cost (tokens) is logged and reported (cost awareness).
+- [ ] **Sample debate runs are committed to the repo** (`runs/`) so the teacher can review real runs (transcript + verdict + token/cost). See TASKS.md §12.5.
 
 ## 9. Open questions / future work
 
