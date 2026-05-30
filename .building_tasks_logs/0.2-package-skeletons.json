@@ -7,7 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 44476
   },
-  "note": "Token counts not surfaced by the harness for this run; recorded as null. Created packages/{core,log,api,cli,ui}, each with a tiny pyproject.toml (name agent_debate_<pkg>, version 1.00, hatchling) and a src layout (src/agent_debate_<pkg>/__init__.py). TDD: tests/test_packages.py asserts all five import cleanly and declare the right name/src layout (watched it fail, then made it pass). To make `uv sync` install all five into the shared venv, the root pyproject now depends on the five members via [tool.uv.sources] workspace = true. Intra-workspace deps (core/log wiring) are deliberately left empty — that is task 0.3. Gates run: uv sync (green, builds all 6 packages), ruff check (pass), ruff format --check (pass), pytest (12 passed), mypy packages+tests (clean). Skipped gates: 150-line check_line_limit.py (task 0.10, not built — all files are well under 150 lines by inspection) and the coverage>=85% gate (fail_under=0 until task 0.9; skeletons have no runtime code to cover)."
+  "usage": {
+    "tool_uses": 35,
+    "duration_ms": 191713,
+    "summary": "35 tool uses · 44.5k tokens · 3m 12s"
+  },
+  "note": "Token usage from the build harness: 44,476 total tokens over 35 tool uses in ~3m 12s (input/output not separately surfaced, recorded as null). Created packages/{core,log,api,cli,ui}, each with a tiny pyproject.toml (name agent_debate_<pkg>, version 1.00, hatchling) and a src layout (src/agent_debate_<pkg>/__init__.py). TDD: tests/test_packages.py asserts all five import cleanly and declare the right name/src layout (watched it fail, then made it pass). To make `uv sync` install all five into the shared venv, the root pyproject now depends on the five members via [tool.uv.sources] workspace = true. Intra-workspace deps (core/log wiring) are deliberately left empty — that is task 0.3. Gates run: uv sync (green, builds all 6 packages), ruff check (pass), ruff format --check (pass), pytest (12 passed), mypy packages+tests (clean). Skipped gates: 150-line check_line_limit.py (task 0.10, not built — all files are well under 150 lines by inspection) and the coverage>=85% gate (fail_under=0 until task 0.9; skeletons have no runtime code to cover)."
 }
