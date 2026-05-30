@@ -946,5 +946,36 @@ outcome/decision it produced.
   network-free (gatekeeper N/A); registration as a real Pydantic AI tool is a
   separate later task.*
 
+### Task 4.3 — analyze_opponent_argument skill (Epic 4, issue #34)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Implement analyze_opponent_argument(...) that takes the
+  opponent's last message, surfaces weaknesses/assumptions, and returns what to
+  rebut. Validated inputs." (+ repo standards: TDD red-first, ≤150 code lines/file,
+  ruff 0 + mypy clean, no hard-coded values, external calls via the API gatekeeper,
+  log via LOG, coverage ≥85%.)
+- **Context:** The **second agent skill** (PRD §5.2), reusing the `core/skills/`
+  layout set by `build_argument` (4.2). A debater calls it to dissect the
+  opponent's last message and **decide what to rebut**.
+- **Outcome / pattern set:** Added `skills/analyze_opponent.py` plus two models in
+  `skills/models.py`, re-exported from `agent_debate.core.skills` and
+  `agent_debate.core`. **Input** `OpponentAnalysisRequest` (frozen,
+  `extra="forbid"`): `side: DebateSide`, non-empty `opponent_message`, optional
+  `weaknesses: list[str]` (validator trims + drops blanks). **Output**
+  `OpponentAnalysis` (frozen): `side`, extracted `claims` (message split on
+  `CLAIM_SPLIT_DELIMITERS` from `constants.py`), `weaknesses`, and a single
+  prioritised `rebuttal_target`. Same **pure/deterministic, no-network** shape as
+  `build_argument` (gatekeeper N/A). Anti-sycophancy (`docs/prds/anti-sycophancy.md`
+  §2): `rebuttal_target` is **always** a concrete point — the strongest flagged
+  weakness, else the opponent's lead claim — so the agent targets and rebuts, never
+  concedes. **Composes** with `build_argument`: `rebuttal_target` feeds
+  `ArgumentRequest.opponent_point` (asserted by an integration test). TDD red-first:
+  `test_analyze_opponent.py` (12 tests) — watched it fail (`ImportError`),
+  implemented to green. Gates: ruff/format clean, mypy clean (87 files), 317 passed,
+  100% coverage on the new module (100% total), line-limit + secret-scan pass.
+  *Pattern: extend an existing skills subpackage by adding one focused module +
+  its models and two re-export lines; keep skills composable (one skill's output is
+  a ready input for another) without coupling their models.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
