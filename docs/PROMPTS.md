@@ -141,5 +141,24 @@ outcome/decision it produced.
   declares a positive `line-length`, and mypy has the strict-ish + namespace
   flags `True` (watched it fail before the config edit).
 
+### 0.6 — Add pytest + a trivial test per package (2026-05-30)
+- **Prompt:** "Configure pytest (and pytest-cov) at the root. Add tests/ per
+  package with one trivial passing test (e.g. asserts __version__ importable).
+  Ensure `uv run pytest` is green."
+- **Context:** Builds on the 0.1–0.5 workspace; closes issue #6. Root already had
+  pytest/pytest-cov and a top-level `tests/` dir; this task wants a per-package
+  test layout so each surface owns at least one test.
+- **Decision/outcome:** Each `packages/<pkg>/` gets a `tests/` dir with one smoke
+  test asserting the package imports and exposes a non-empty `LIBRARY_VERSION`
+  (a dedicated `__version__` is task 0.13 — not over-built here). Pytest
+  `testpaths` now lists the root `tests` plus all five package `tests/` dirs so
+  collection is deterministic. **Pattern set:** the five smoke files use unique
+  basenames (`test_<pkg>_smoke.py`) rather than a shared `test_smoke.py` — a
+  shared basename collides under pytest's default prepend import mode and under
+  mypy (duplicate module), and adding `__init__.py` would break the PEP 420
+  namespace; unique basenames avoid all three with no extra config. Each package
+  `tests/` dir was added to mypy `files` + `mypy_path` so the new tests stay
+  type-checked. Gates green: ruff/format/mypy clean, 34 passed, 100% coverage.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

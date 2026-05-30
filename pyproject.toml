@@ -99,6 +99,14 @@ mypy_path = [
     "packages/ui/src",
     "src",
     "tests",
+    # Each package `tests/` dir is its own base so its uniquely-named smoke test
+    # (task 0.6, `test_<pkg>_smoke.py`) maps to a top-level module relative to
+    # its own root rather than requiring an `__init__.py` under the namespace.
+    "packages/core/tests",
+    "packages/log/tests",
+    "packages/api/tests",
+    "packages/cli/tests",
+    "packages/ui/tests",
 ]
 # Default targets for a bare `uv run mypy` (over the namespace surfaces + tests).
 files = [
@@ -109,10 +117,32 @@ files = [
     "packages/ui/src/agent_debate",
     "src",
     "tests",
+    # Per-package smoke tests stay type-checked (task 0.5 includes `tests`).
+    "packages/core/tests",
+    "packages/log/tests",
+    "packages/api/tests",
+    "packages/cli/tests",
+    "packages/ui/tests",
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# Discover both the root workspace tests and each package's own ``tests/`` dir
+# (task 0.6, issue #6): every surface owns at least one trivial smoke test, and
+# listing the paths explicitly keeps collection deterministic regardless of the
+# invocation dir. New packages add their tests path here.
+testpaths = [
+    "tests",
+    "packages/core/tests",
+    "packages/log/tests",
+    "packages/api/tests",
+    "packages/cli/tests",
+    "packages/ui/tests",
+]
+# Each per-package smoke test uses a unique basename (``test_<pkg>_smoke.py``)
+# so the default ``prepend`` import mode does not collide across the ``tests/``
+# dirs and no ``__init__.py`` is needed (which would break the PEP 420
+# ``agent_debate`` namespace). The same unique-basename rule keeps mypy from
+# reporting duplicate modules over these test files.
 
 [tool.coverage.report]
 # Coverage threshold is enforced once there is code to cover (task 0.9).
