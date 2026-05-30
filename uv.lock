@@ -6,10 +6,52 @@ resolution-markers = [
     "python_full_version < '3.15'",
 ]
 
+[manifest]
+members = [
+    "agent-debate-api",
+    "agent-debate-cli",
+    "agent-debate-core",
+    "agent-debate-log",
+    "agent-debate-ui",
+    "agent-debate-workspace",
+]
+
+[[package]]
+name = "agent-debate-api"
+version = "1.0"
+source = { editable = "packages/api" }
+
+[[package]]
+name = "agent-debate-cli"
+version = "1.0"
+source = { editable = "packages/cli" }
+
+[[package]]
+name = "agent-debate-core"
+version = "1.0"
+source = { editable = "packages/core" }
+
+[[package]]
+name = "agent-debate-log"
+version = "1.0"
+source = { editable = "packages/log" }
+
+[[package]]
+name = "agent-debate-ui"
+version = "1.0"
+source = { editable = "packages/ui" }
+
 [[package]]
 name = "agent-debate-workspace"
 version = "1.0"
 source = { editable = "." }
+dependencies = [
+    { name = "agent-debate-api" },
+    { name = "agent-debate-cli" },
+    { name = "agent-debate-core" },
+    { name = "agent-debate-log" },
+    { name = "agent-debate-ui" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -20,6 +62,13 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [
+    { name = "agent-debate-api", editable = "packages/api" },
+    { name = "agent-debate-cli", editable = "packages/cli" },
+    { name = "agent-debate-core", editable = "packages/core" },
+    { name = "agent-debate-log", editable = "packages/log" },
+    { name = "agent-debate-ui", editable = "packages/ui" },
+]
 
 [package.metadata.requires-dev]
 dev = [
