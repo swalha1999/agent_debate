@@ -233,5 +233,29 @@ outcome/decision it produced.
   scoped to the 5 packages, 100%. Line-limit check (0.10) skipped — script not
   built yet; all touched files well under 150 lines.
 
+### 0.10 — 150-line-per-file check script (2026-05-30)
+- **Prompt:** "Write scripts/check_line_limit.py that walks packages/**/*.py,
+  counts code lines excluding blank and comment-only lines, and exits non-zero
+  listing any file > 150. Wire it into CI (0.8)."
+- **Context:** Closes issue #10. PRD §3.2 caps every code file at 150 lines and
+  mandates an automated CI check. ci.yml (0.8) already carried a
+  forward-compatible guard (`if [ -f scripts/check_line_limit.py ]`) that
+  activates the gate the moment the script lands — no workflow edit required.
+- **Decision/outcome (token-accurate counting + scoped lint/type — significant):**
+  counted code lines with stdlib `tokenize` rather than a regex heuristic — a
+  physical line is code only if it bears a token that is not
+  COMMENT/STRING/NL/NEWLINE/INDENT/DEDENT/ENCODING/ENDMARKER, so multi-line
+  docstring interiors and comment-only lines are excluded while `x = "lit"`
+  still counts. Threshold is a single named `DEFAULT_MAX_LINES = 150` constant
+  with a `--max-lines` CLI override (no scattered magic number, §7.2). Script
+  exposes `count_code_lines`/`find_offenders`/`main` so the logic is unit-tested
+  and self-passes at 114 code lines. Brought *just* this script into the gate:
+  narrowed ruff `extend-exclude` from `"scripts"` → `"scripts/create_issues.py"`
+  and added the script to mypy `files`, keeping the data-heavy generator
+  excluded. TDD: `tests/test_check_line_limit.py` written first (8 cases),
+  watched red, then green. Gates green: ruff/format/mypy clean (21 files),
+  56 passed, 100% coverage; `python scripts/check_line_limit.py` exits 0 on the
+  current tree — the line-limit gate is now LIVE in CI.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
