@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 52979
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 32,
+    "duration_ms": 222724,
+    "summary": "32 tool uses · 53.0k tokens · 3m 43s"
   },
   "note": "First task of Epic 13 (the API gatekeeper, docs/prds/api-gatekeeper.md) — the centralized chokepoint for all external LLM/search calls. Created a gatekeeper SUBPACKAGE under the core SDK for clean growth: packages/core/src/agent_debate/core/gatekeeper/__init__.py (re-exports) + config.py (models + loader). 13.2 execute / 13.3 FIFO queue / 13.4 retry+concurrency / 13.5 get_queue_status land in the same package later. TDD red-first: wrote packages/core/tests/test_rate_limit_config.py first and watched it fail (ModuleNotFoundError: agent_debate.core.gatekeeper), then implemented. Pydantic models: ServiceLimits (frozen, extra=forbid; 5 required int fields — requests_per_minute/requests_per_hour/concurrent_max/retry_after_seconds gt=0, max_retries ge=0 so 0=no-retries is allowed; NO default VALUES so the numbers cannot be baked into code) and RateLimitConfig (version:str, services:dict[str,ServiceLimits]) mirroring the file minus the top-level 'rate_limits' wrapper. Loader load_rate_limit_config(path=None) resolves config/rate_limits.json at the repo root via Path(__file__).resolve().parents[6] (cwd-independent, not brittle); unwraps 'rate_limits', model_validates; missing file -> FileNotFoundError naming the path; malformed JSON / schema failure -> ValueError mentioning rate_limits.json. RateLimitConfig.get_service_limits(name) returns the named service, FALLING BACK to the 'default' service (sub-PRD §4 intent) for unconfigured names. Logs via the LOG package (get_logger('gatekeeper.config'), debug rate_limit_config_loaded). 0 hard-coded limits: no 30/500/etc literals in Python — the ONLY constants are the file NAME (RATE_LIMITS_FILENAME='rate_limits.json' + 'config' dirname) and the fallback service KEY (DEFAULT_SERVICE='default'); all numbers come from the file (proven by test_explicit_path_with_custom_values loading 7/11/1/13/0 from a tmp file). Re-exported RateLimitConfig/ServiceLimits/load_rate_limit_config/DEFAULT_SERVICE from agent_debate.core.gatekeeper and from agent_debate.core. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . = 50 files already formatted; mypy = no issues in 50 source files; pytest --cov = 203 passed, 100% total coverage (>=85 required); check_line_limit.py rc=0 (config.py is the largest new file, well under 150); secret_scan.py rc=0."
 }
