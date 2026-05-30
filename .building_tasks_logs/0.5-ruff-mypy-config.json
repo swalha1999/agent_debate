@@ -7,10 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 51010
   },
   "usage": {
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 25,
+    "duration_ms": 151649,
+    "summary": "25 tool uses · 51.0k tokens · 2m 32s"
   },
   "note": "Fleshed out the shared lint/type-check gate in the root pyproject.toml. ruff: line-length 100, target py312, lint.select now E,W,F,I,UP,B,SIM,C4,PIE,RET,N (was E,F,I), [tool.ruff.format] with docstring-code-format. mypy: kept strict=true and the PEP 420 namespace settings from 0.3 (namespace_packages, explicit_package_bases, mypy_path, files), and spelled out the strict-ish flags explicitly (disallow_untyped_defs, disallow_incomplete_defs, warn_unused_ignores, warn_redundant_casts, warn_return_any, no_implicit_optional) so a later strict=false cannot silently relax them. TDD: added tests/test_lint_config.py (asserts ruff selects >= {E,F,I,UP,B}, declares a positive line-length, mypy has the strict-ish flags True, and the namespace settings stay True); watched it fail (ruff missing UP/B; mypy missing explicit flags) before editing config, then green. The broader ruleset surfaced one violation in my own test (SIM300 Yoda-condition on `REQUIRED <= selected`); rewrote as `selected >= REQUIRED`. The skeleton source needed no changes — already typed and clean. scripts/create_issues.py kept EXCLUDED from ruff (extend-exclude): it is a 592-line one-off, data-heavy generator whose 125 violations are almost entirely E501 long lines from embedded prompt-string data tables that cannot be wrapped without mangling the data; excluding is the documented low-churn choice, and the rationale comment in pyproject was expanded. Gates: uv sync (clean), ruff check . (All checks passed), ruff format --check . (11 files formatted), uv run mypy (clean, 11 source files), uv run pytest --cov (29 passed, 100% coverage, >= 85%). Line-limit gate (scripts/check_line_limit.py, task 0.10) skipped — not built yet; the new test file is 83 lines, well under 150. No external API calls / LOG usage / hard-coded config relevant to this config-only task."
 }
