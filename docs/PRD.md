@@ -70,7 +70,7 @@ controller must detect and **nudge a captured agent back onto its assigned side.
 | Package/dep manager | **`uv`** | Required; fast, reproducible, workspace support. |
 | LLM abstraction | **Pydantic AI** | Provider-agnostic ("something like Vercel AI SDK" for Python). Swap models by changing a model string — **no ecosystem lock-in.** Typed agents + first-class tool calling for skills. |
 | Default provider | **Anthropic Claude** (e.g. `anthropic:claude-sonnet-4-6` for debaters, `anthropic:claude-opus-4-8` for controller) | Strong reasoning. Swappable per role. |
-| Web search | **DuckDuckGo** (`duckduckgo-search`/`ddgs`) | Free, no API key, provider-independent. Wrapped so it can be swapped for Tavily later. |
+| Web search | **Pluggable `SearchProvider` interface**, default impl = **DuckDuckGo** (`duckduckgo-search`/`ddgs`) | Free, no API key, provider-independent. Search is a **plug-in** behind a stable interface — swap to Tavily/Bing/SerpAPI by changing one config value, no engine changes. |
 | API | **FastAPI** + Uvicorn | Standard, async, typed. |
 | UI | Lightweight web UI over the API (live transcript) | Renders per-round transcript, controller actions, verdict. |
 | CLI | **Typer** | Ergonomic, typed CLI. |
@@ -120,7 +120,7 @@ Each debater is configured with:
 - A **system prompt** that states its side, the rules (word limit, must rebut), and
   an **explicit list of the skills it has and when to use them.**
 - **Skills (tools):**
-  - `web_search(query)` — DuckDuckGo search (mandatory capability).
+  - `web_search(query)` — mandatory capability; calls the configured `SearchProvider` plug-in (DuckDuckGo by default). The skill is provider-agnostic — the agent never talks to a specific search vendor directly.
   - `build_argument(...)` — structure a persuasive argument / rebuttal.
   - `analyze_opponent_argument(...)` — dissect the opponent's last message, find
     weaknesses, and decide what to answer.
@@ -173,7 +173,39 @@ Every model call is wrapped with a **timeout**; on timeout the call is **cancell
 and retried** up to N times (then that turn is marked failed and the controller is
 informed). This satisfies "add a timeout that kills and recalls the process."
 
-### 5.5 Security gatekeeper
+### 5.5 Pluggable search providers (web search is a plug-in)
+
+Web search is a **swappable plug-in**, not hardcoded. The engine and the
+`web_search` skill depend only on a stable interface; concrete vendors live behind
+it and are selected by config.
+
+```python
+# packages/core/.../search/base.py
+class SearchResult(BaseModel):
+    title: str
+    url: str
+    snippet: str
+
+class SearchProvider(Protocol):
+    name: str
+    def search(self, query: str, *, max_results: int = 5) -> list[SearchResult]: ...
+```
+
+- **Registry + config selection.** Providers register under a name; the active one is
+  chosen via `SEARCH_BACKEND` (e.g. `duckduckgo`, `tavily`, `bing`). Switching
+  backends is a **one-line config change** — no engine, agent, or skill edits.
+- **Default plug-in:** `DuckDuckGoSearchProvider` (free, no key).
+- **Drop-in additions:** a new provider is added by implementing `SearchProvider` and
+  registering it; e.g. `TavilySearchProvider`, `SerpApiSearchProvider`. Nothing
+  upstream changes.
+- **Uniform contract:** every provider returns the same `SearchResult` shape, so the
+  `web_search` skill and the gatekeeper sanitisation work identically regardless of
+  vendor.
+- **Same pattern is reused** for other replaceable bits (the LLM provider is already
+  pluggable via Pydantic AI's model strings), keeping the system consistent and
+  lock-in-free.
+
+### 5.6 Security gatekeeper
 
 - All external text (user-supplied topic, **web-search results**, model output) passes
   through a **gatekeeper** that sanitises it before it re-enters a prompt — defends
@@ -185,7 +217,7 @@ informed). This satisfies "add a timeout that kills and recalls the process."
   arbitrary code execution from model output.
 - Dependency pinning via `uv.lock`.
 
-### 5.6 Logging
+### 5.7 Logging
 
 - `structlog`-based, every event carries: `run_id`, `round`, `agent`, `event_type`
   (`message` | `tool_call` | `nudge` | `timeout` | `retry` | `verdict` | `system`),
@@ -218,7 +250,8 @@ informed). This satisfies "add a timeout that kills and recalls the process."
 | `MAX_WORDS` | Word limit per message | `150` |
 | `TURN_TIMEOUT_S` | Per-turn timeout | `60` |
 | `MAX_RETRIES` | Retries on timeout/error | `2` |
-| `SEARCH_BACKEND` | `duckduckgo` (swappable) | `duckduckgo` |
+| `SEARCH_BACKEND` | Selects the `SearchProvider` plug-in (`duckduckgo`/`tavily`/…) — swap with one value | `duckduckgo` |
+| `SEARCH_API_KEY` | Key for backends that need one (ignored by DuckDuckGo) | — |
 
 ## 8. Acceptance criteria
 
