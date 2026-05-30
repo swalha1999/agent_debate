@@ -19,6 +19,11 @@ conforms to; :data:`EVENT_TYPES` is the strict allowed ``event_type`` set.
 (:func:`bind_round`/:func:`bind_context`/:func:`clear_context`) (TASKS.md 1.3)
 are the ergonomic public surface dependents use to emit validated structured
 events with ``run_id``/``round`` bound.
+
+:func:`redact_event` (and the :func:`make_redactor` factory) (TASKS.md 1.4) is
+the structlog processor — wired into :func:`configure`'s chain before the
+renderers — that redacts secret-like values (by key name and by value pattern,
+recursively) and truncates oversized strings, so secrets reach neither sink.
 """
 
 from __future__ import annotations
@@ -32,6 +37,12 @@ from agent_debate.log._api import (
 )
 from agent_debate.log._setup import DEFAULT_RUNS_DIR, configure
 from agent_debate.log.event import EVENT_TYPES, EventType, LogEvent
+from agent_debate.log.redaction import (
+    MAX_VALUE_LEN,
+    REDACTED,
+    make_redactor,
+    redact_event,
+)
 
 #: Version of the LOG surface; re-exported by dependents to prove the edge.
 LIBRARY_VERSION = "1.00"
@@ -43,6 +54,8 @@ __all__ = [
     "DEFAULT_RUNS_DIR",
     "EVENT_TYPES",
     "LIBRARY_VERSION",
+    "MAX_VALUE_LEN",
+    "REDACTED",
     "EventType",
     "LogEvent",
     "bind_context",
@@ -52,4 +65,6 @@ __all__ = [
     "get_logger",
     "log_event",
     "log_version",
+    "make_redactor",
+    "redact_event",
 ]

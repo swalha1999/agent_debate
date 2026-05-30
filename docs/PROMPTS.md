@@ -381,5 +381,29 @@ outcome/decision it produced.
   log via `get_logger`/`log_event`; every record is validated through `LogEvent`
   before it reaches the sink, and `run_id`/`round` ride structlog contextvars.*
 
+### 1.4 — Redaction filter (2026-05-31)
+- **Prompt:** "Add a structlog processor that redacts secret-like values (keys
+  named *key*/*token*/*secret*, sk-… patterns) and truncates payloads over a
+  configurable size. Add tests."
+- **Context:** Closes issue #19. A **runtime** structlog processor — the
+  counterpart to the build-time `scripts/secret_scan.py` gate (PRD §7.4) — wired
+  into 1.1's `configure()` chain so it covers both PRD §5.8 sinks.
+- **Decision/outcome (where redaction sits + how false positives are avoided):**
+  TDD red-first (`tests/test_redaction.py`, 12 cases). New `redaction.py` (63
+  code lines): pure recursive `redact_value(value, max_len)` walks dicts (a
+  secret-like *key* redacts its value outright, else recurse), maps lists/tuples,
+  redacts-or-truncates strings, passes other scalars through. The processor is
+  inserted **immediately before the terminal `_DualSinkRenderer`**, so redaction
+  + truncation apply to **both** the console and JSONL sinks. Named single-source
+  configs (no scattered magic): `REDACTED`, `TRUNCATED_SUFFIX`,
+  `MAX_VALUE_LEN=2048` (override via `make_redactor(max_len=…)`),
+  `SECRET_KEY_HINTS`, and `SECRET_VALUE_PATTERNS` (aligned with `secret_scan.py`:
+  `sk-ant-…`/`sk-…`/`AKIA…`/PEM + a bearer-token regex; a partial match redacts
+  the whole value, fail-safe). Key subtlety — a `SAFE_KEYS` allowlist
+  (`tokens`/`token_count`/`tokens_used`) prevents the `LogEvent` `tokens` *count*
+  field (contains "token") from being false-positively redacted. Pattern set:
+  *secrets are scrubbed at the LOG boundary by a single processor; never trust a
+  payload to be secret-free, and allowlist legitimate hint-bearing metadata.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
