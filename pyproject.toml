@@ -54,11 +54,12 @@ packages = ["src/agent_debate_workspace"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-# `scripts/` holds one-off, data-heavy build-time generators (e.g. issue
-# creation) whose source is mostly long embedded prompt strings that cannot be
-# wrapped without mangling the data, not shipped code. Linting them adds churn
-# without value, so they stay excluded from the gate (task 0.5 decision).
-extend-exclude = ["scripts"]
+# `scripts/create_issues.py` is a one-off, data-heavy build-time generator whose
+# source is mostly long embedded prompt strings that cannot be wrapped without
+# mangling the data — linting it adds churn without value, so it stays excluded
+# (task 0.5 decision). Real tooling under `scripts/` (e.g. the line-limit check,
+# task 0.10) is NOT excluded: it is held to the same ruff gate as shipped code.
+extend-exclude = ["scripts/create_issues.py"]
 
 [tool.ruff.lint]
 # Rule families for the 0-violation gate (issue #5):
@@ -123,6 +124,9 @@ files = [
     "packages/api/tests",
     "packages/cli/tests",
     "packages/ui/tests",
+    # Real build-time tooling is type-checked (task 0.10); the data-heavy
+    # one-off `scripts/create_issues.py` generator stays out of scope.
+    "scripts/check_line_limit.py",
 ]
 
 [tool.pytest.ini_options]
