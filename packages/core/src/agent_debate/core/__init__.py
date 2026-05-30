@@ -13,7 +13,10 @@ from __future__ import annotations
 from agent_debate.core._version import __version__
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
+    ApiGatekeeper,
+    QueueStatus,
     RateLimitConfig,
+    RateLimitExceededError,
     ServiceLimits,
     load_rate_limit_config,
 )
@@ -33,8 +36,11 @@ core_version = __version__
 __all__ = [
     "DEFAULT_SERVICE",
     "LIBRARY_VERSION",
+    "ApiGatekeeper",
     "MissingApiKeyError",
+    "QueueStatus",
     "RateLimitConfig",
+    "RateLimitExceededError",
     "ResolvedModels",
     "ServiceLimits",
     "Settings",
