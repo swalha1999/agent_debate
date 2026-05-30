@@ -839,5 +839,43 @@ outcome/decision it produced.
   later gatekeeper wrapping; mock the vendor client class in tests so the suite
   never hits the network.*
 
+### Task 3.4 — Search resilience (Epic 3, issue #29)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Wrap provider calls with a timeout and retry/backoff;
+  return an empty list (not an exception) on persistent failure, logged." (+ repo
+  standards: TDD red-first, ≤150 code lines/file, ruff 0 + mypy clean, no
+  hard-coded values, external calls via the API gatekeeper, log via LOG,
+  coverage ≥85%.)
+- **Context:** Epic 3's fourth task — the search layer's **own** graceful
+  degradation, distinct from the API gatekeeper (Epic 13). The gatekeeper retries
+  for the *rate/throughput* concern; this wrapper's single job is "**never throw to
+  the caller** — a flaky/timed-out search returns `[]` (logged), so a debate never
+  crashes from search" (sub-PRD §6).
+- **Outcome / pattern set:** Added `search/resilient.py` —
+  `ResilientSearchProvider`, a **transparent decorator** implementing the
+  `SearchProvider` Protocol (so the registry/factory can return it in place of the
+  inner provider). Per call it runs the inner `search` under a timeout, retries
+  transient failures (`TimeoutError`/`ConnectionError`) with exponential backoff,
+  and on persistent failure returns `[]` and logs the degradation. **Reused** the
+  gatekeeper's `run_with_retry`/`backoff_delay` (`gatekeeper/_retry.py`) instead of
+  duplicating backoff. No-hard-coded-values: `max_retries` + `retry_after_seconds`
+  come from the **search** service `ServiceLimits` (`config/rate_limits.json`);
+  `timeout_s` from `Settings.turn_timeout_s`; `sleep_fn` + `timeout_runner` are
+  injected seams so tests assert exact delays with no real sleeping. Timeout
+  approach (`search/_timeout.py`): run the synchronous inner call on a **daemon
+  worker thread** and `join(timeout_s)` — still alive → raise `TimeoutError`
+  (transient → retries, then degrades to `[]`); daemon so a hung call never blocks
+  exit. Logging split into `search/_resilient_log.py` (a `retry` event per retry, a
+  `timeout` event on degradation) to keep `resilient.py` ≤150 lines. TDD red-first:
+  `test_search_resilience.py` (6 tests) — watched it fail (`ModuleNotFoundError`),
+  implemented to green. Gates: ruff/format clean, mypy clean (78 files), 280
+  passed, 100% coverage, line-limit + secret-scan pass.
+  *Pattern: graceful degradation = a thin decorator that catches everything and
+  returns the empty/neutral value (logged), distinct from rate-limit retry; reuse
+  the existing retry policy rather than re-implementing backoff; bound a blocking
+  sync call with a daemon-thread `join(timeout)` and inject the sleep/timeout seams
+  so the suite never waits real time.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -11,7 +11,9 @@ Task 3.1 ships the *interface* (:class:`SearchResult`, :class:`SearchProvider`,
 (:func:`register_search_provider`, :func:`create_search_provider`,
 :func:`available_search_backends`) that selects the active provider from
 ``SEARCH_BACKEND``. The default ``DuckDuckGoSearchProvider`` (task 3.3) registers
-on top. The re-exports below are the subpackage's public surface.
+on top, and :class:`ResilientSearchProvider` (task 3.4) wraps any provider so a
+flaky/failed search degrades to an empty list instead of crashing the debate
+(sub-PRD §6). The re-exports below are the subpackage's public surface.
 """
 
 from __future__ import annotations
@@ -28,10 +30,12 @@ from agent_debate.core.search.registry import (
     create_search_provider,
     register_search_provider,
 )
+from agent_debate.core.search.resilient import ResilientSearchProvider
 
 __all__ = [
     "DEFAULT_MAX_RESULTS",
     "DuckDuckGoSearchProvider",
+    "ResilientSearchProvider",
     "SearchProvider",
     "SearchResult",
     "UnknownSearchBackendError",
