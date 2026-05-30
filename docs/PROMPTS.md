@@ -1036,5 +1036,27 @@ outcome/decision it produced.
   length-cap; thresholds/patterns live in one named `constants.py`, overridable per
   call.*
 
+### 7.2 — Input validation (PRD §5.7)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/7.2-input-validation.json`.
+- **Context:** 7.1 *sanitises* (silently neutralises) untrusted text. 7.2 is the
+  complementary **validation** posture for *direct user input* at a trusted
+  boundary (the debate topic, a web-search query): reject abusive/oversized input
+  with a clear, typed error instead of mangling it.
+- **Outcome / pattern set:** Added `security/validation.py` —
+  `validate_topic` / `validate_search_query` (length cap + control/escape-char
+  rejection + non-empty), a typed `InvalidInputError(ValueError)` whose message
+  names the field and the cap, and `TopicInput` / `SearchQueryInput` Pydantic
+  models that reuse the same functions via `field_validator` (PRD §5.7 "tool
+  inputs validated"). New caps `MAX_TOPIC_LEN` (500) / `MAX_QUERY_LEN` (256) live
+  in `security/constants.py` (single source, no inline magic); all re-exported
+  from `agent_debate.core.security` and `agent_debate.core`. TDD red-first:
+  `test_security_validation.py` (16 tests) failed on an `ImportError`, then green.
+  Gates: ruff/format clean, mypy clean (96 files), 367 passed, 100% on the new
+  module, line-limit + secret-scan pass.
+  *Pattern: sanitise untrusted text (data) but **validate-and-reject** direct user
+  input — distinct postures sharing one named-constant config; expose both a
+  function and a Pydantic model so every surface validates identically.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
