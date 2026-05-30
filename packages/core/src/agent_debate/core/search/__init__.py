@@ -31,6 +31,7 @@ from agent_debate.core.search.registry import (
     register_search_provider,
 )
 from agent_debate.core.search.resilient import ResilientSearchProvider
+from agent_debate.core.search.tavily import TavilySearchProvider
 
 __all__ = [
     "DEFAULT_MAX_RESULTS",
@@ -38,6 +39,7 @@ __all__ = [
     "ResilientSearchProvider",
     "SearchProvider",
     "SearchResult",
+    "TavilySearchProvider",
     "UnknownSearchBackendError",
     "available_search_backends",
     "create_search_provider",
