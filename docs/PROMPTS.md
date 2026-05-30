@@ -66,5 +66,16 @@ outcome/decision it produced.
   coverage stubs (fleshed out by tasks 0.5 / 0.9). TDD: `tests/test_workspace.py`
   asserts the workspace contract.
 
+### 0.2 — Create the five package skeletons (2026-05-30)
+- **Prompt:** "Create five packages under packages/: core, log, api, cli, ui. Each
+  has a pyproject.toml (name agent_debate_<pkg>), an `__init__.py`, and a src
+  layout. core is the SDK; log is the logging package; api/cli/ui are surfaces."
+- **Context:** First real workspace members on top of the 0.1 root.
+- **Decision/outcome:** Five tiny packages under `packages/*`, each `agent_debate_<pkg>`
+  with a src layout and hatchling build. The root pyproject now depends on all five
+  via `[tool.uv.sources] workspace = true` so one `uv sync` installs every surface
+  into the shared venv. Intra-package wiring (core/log deps) is left to task 0.3.
+  TDD: `tests/test_packages.py` parametrizes over the five packages (import + name).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -2,10 +2,10 @@
 #
 # This is the single source of truth for shared tooling and the workspace layout
 # (PRD §5.1). The five package surfaces live under `packages/*` and are added by
-# later tasks (0.2+). The root itself is a minimal package so `uv sync` resolves
-# cleanly while `packages/*` is still empty, and so shared dev tooling installs in
-# one place. Ruff/mypy/coverage config here is intentionally minimal — tasks 0.5
-# and 0.9 flesh it out.
+# later tasks (0.2+). The root depends on all five members so a single `uv sync`
+# installs every surface into the shared venv, and so shared dev tooling installs
+# in one place. Ruff/mypy/coverage config here is intentionally minimal — tasks
+# 0.5 and 0.9 flesh it out.
 
 [project]
 name = "agent-debate-workspace"
@@ -13,10 +13,26 @@ version = "1.00"
 description = "Workspace root for agent_debate — a multi-agent debate system."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+# The root depends on every workspace member so a single `uv sync` installs all
+# five surfaces (PRD §5.1) into the shared venv and they import cleanly.
+dependencies = [
+    "agent_debate_core",
+    "agent_debate_log",
+    "agent_debate_api",
+    "agent_debate_cli",
+    "agent_debate_ui",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]
+
+# Resolve the workspace dependencies above to the local packages, not PyPI.
+[tool.uv.sources]
+agent_debate_core = { workspace = true }
+agent_debate_log = { workspace = true }
+agent_debate_api = { workspace = true }
+agent_debate_cli = { workspace = true }
+agent_debate_ui = { workspace = true }
 
 [dependency-groups]
 dev = [

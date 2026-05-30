@@ -1,0 +1,18 @@
+# LOG package — shared logging surface (PRD §5.1, §5.7).
+#
+# This is only the skeleton (TASKS.md 0.2): structured logging, cost accounting,
+# the log schema and sinks are filled in by later tasks. LOG is a shared
+# dependency used by every other package.
+[project]
+name = "agent_debate_log"
+version = "1.00"
+description = "agent_debate LOG — structured logging and cost accounting (skeleton)."
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_debate_log"]
