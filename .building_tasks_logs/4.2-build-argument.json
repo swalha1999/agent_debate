@@ -7,10 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 67149
   },
   "usage": {
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 43,
+    "duration_ms": 268363,
+    "summary": "43 tool uses · 67.1k tokens · 4m 28s"
   },
   "note": "First agent skill of Epic 4 (PRD §5.2). Created the core/skills/ subpackage mirroring the search/gatekeeper layout: skills/models.py (validated I/O models) + skills/build_argument.py (the function) + skills/__init__.py (re-export), with agent_debate.core re-exporting ArgumentRequest, Argument, DebateSide, build_argument. INPUT model ArgumentRequest (frozen, extra='forbid'): side: DebateSide (a StrEnum pro/con so a bad value fails ValidationError), claim (non-empty after trim), supports: list[str] (min_length=1; a field validator trims entries, drops blanks, and rejects an all-blank list), optional opponent_point. OUTPUT model Argument (frozen, extra='forbid'): side, claim, normalised supports, optional rebuttal, and a conclusion; round-trips through JSON. PURE/NO-NETWORK skill: build_argument deterministically STRUCTURES the agent-supplied content into the typed Argument and makes NO LLM/network call — the LLM provides the content as tool arguments and the skill arranges it — so the API gatekeeper (Epic 13) requirement is N/A here (noted per task). Anti-sycophancy (docs/prds/anti-sycophancy.md §2/§3): when opponent_point is supplied, the rebuttal quotes and explicitly contests it (lead-in 'The opponent argued: ' + lead-out ' — this does not hold, because:') rather than restating/conceding. No hard-coded values: REBUTTAL_LEAD_IN/REBUTTAL_LEAD_OUT/CONCLUSION_TEMPLATE live in constants.py. Emits an optional 'tool_call' debug line via the LOG package (no run_id needed for a pure call). Tool-readiness: validated-input function + Pydantic input/output models; FULL Pydantic AI tool registration is task 4.5 (not over-built here). TDD red-first: wrote packages/core/tests/test_build_argument.py (10 tests: structured output fields, side reflected, opponent_point produces a rebuttal link, JSON round-trip, and ValidationError on empty/whitespace claim, bad side enum value, missing required field, empty supports list, and all-blank supports; plus supports normalisation), watched it fail (ImportError: cannot import name 'Argument'), then implemented to green. Gates green locally: uv sync clean; ruff check . = All checks passed (switched DebateSide to enum.StrEnum per UP042); ruff format --check . clean; mypy = no issues in 85 source files; pytest --cov = 305 passed, 100% coverage on the new skills subpackage, 99.66% total (>=85 required); check_line_limit.py rc=0 (models.py ~42 code lines, build_argument.py ~16, both well under 150); secret_scan.py rc=0. docs/PROMPTS.md entry added."
 }
