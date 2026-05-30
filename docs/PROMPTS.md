@@ -104,5 +104,21 @@ outcome/decision it produced.
   to `agent_debate.<pkg>` + added `tests/test_cross_package_imports.py` (edges +
   namespace-merge assertions).
 
+### 0.4 — Pin Python and lock deps (2026-05-30)
+- **Prompt:** "Set requires-python >=3.12 across packages. Run uv lock to produce
+  uv.lock and commit it. Verify `uv sync` is clean and reproducible from scratch."
+- **Context:** Builds on the 0.1–0.3 workspace; closes issue #4. All five
+  packages + the root already declared `requires-python = ">=3.12"`, and `uv.lock`
+  already pinned the same floor.
+- **Decision/outcome:** The metadata floor was already consistent, so the
+  reproducibility gap was the **interpreter selection**, not the version
+  constraint. Added a top-level **`.python-version` pinning `3.12`** so a fresh
+  `uv sync` always selects CPython 3.12 (the host previously resolved to 3.14).
+  `uv lock` (CPython 3.12.13) produced no change to `uv.lock` — the committed
+  lock already matched — and `uv lock --check` / `uv sync --frozen` confirm
+  reproducibility. TDD: `tests/test_python_pin.py` asserts every `pyproject.toml`
+  declares `>=3.12`, `.python-version` pins `3.12`, and `uv.lock` exists and
+  declares `>=3.12` (watched the `.python-version` assertion fail first).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
