@@ -18,3 +18,10 @@ __pycache__/
 .coverage
 .coverage.*
 htmlcov/
+
+# Per-run debate output written by the LOG sinks (PRD §5.8). Generated run
+# artifacts are not committed; curated *sample* runs for review (PRD §12.5) are
+# added explicitly with `git add -f`. Keep the dir itself tracked via .gitkeep.
+runs/*.jsonl
+runs/*.md
+!runs/.gitkeep

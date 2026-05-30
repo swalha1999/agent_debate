@@ -308,5 +308,30 @@ outcome/decision it produced.
   (script in repo) + a contract test guarding its documented invariants*, not a
   one-off click in the GitHub UI.
 
+### 1.1 — structlog setup factory (2026-05-31)
+- **Prompt:** "In packages/log, add a configure() factory that sets up structlog
+  with two sinks: a human-readable console renderer and a JSONL file writer to
+  runs/<run_id>.jsonl. Make it idempotent."
+- **Context:** Closes issue #16. First real feature: the LOG package is the
+  shared structured-logging surface used by every other package (PRD §5.7/§5.8).
+  Scoped to the configuration factory only — event schema, get_logger/log_event
+  and redaction are the follow-on tasks 1.2–1.5 that build on this chain.
+- **Decision/outcome (dual-sink terminal processor + handle-cache idempotency —
+  significant, sets the LOG sink pattern):** added `structlog>=25.5,<26`
+  (resolved 25.5.0) to packages/log and relocked. TDD red-first
+  (`tests/test_configure.py`). The two sinks (PRD §5.8) are realised by a single
+  terminal processor `_DualSinkRenderer` that fans every event to **both** a
+  per-run JSONL file (`<runs_dir>/<run_id>.jsonl`, append + flush, via
+  `JSONRenderer`) and stdout (via `ConsoleRenderer`), then returns `""`. No
+  hard-coded path: a `DEFAULT_RUNS_DIR="runs"` constant plus a parameterised
+  `runs_dir`; the dir is created if missing. Idempotency is achieved by caching
+  open file handles keyed on the resolved path (`_OPEN_SINKS`) so a repeat
+  `configure()` reuses the handle and never duplicates sinks or errors — and the
+  test asserts no duplicate JSONL lines. Generated `runs/*.jsonl`/`*.md` are
+  gitignored (curated sample runs per PRD §12.5 added later with `git add -f`);
+  `runs/.gitkeep` keeps the dir tracked. Pattern set: *LOG sinks are one terminal
+  structlog processor fanning out to file + console, with per-run file handles
+  cached for idempotent re-configuration.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

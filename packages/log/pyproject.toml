@@ -12,7 +12,10 @@ name = "agent_debate_log"
 version = "1.00"
 description = "agent_debate LOG — structured logging and cost accounting (skeleton)."
 requires-python = ">=3.12"
-dependencies = []
+# structlog is the structured-logging engine behind LOG's two sinks (PRD §5.8):
+# a pretty console renderer + a per-run JSONL file. Pinned to a current stable
+# release; the exact resolved version is frozen in uv.lock.
+dependencies = ["structlog>=25.5,<26"]
 
 [build-system]
 requires = ["hatchling"]
