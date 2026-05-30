@@ -144,6 +144,30 @@ testpaths = [
 # ``agent_debate`` namespace). The same unique-basename rule keeps mypy from
 # reporting duplicate modules over these test files.
 
+# --- Coverage gate (task 0.9, issue #9; PRD §6.2) ----------------------------
+#
+# Single source of truth for the ≥85% coverage threshold. ``pytest --cov`` reads
+# this config, so the CI step carries no hard-coded number that could drift from
+# config (issue #9: "avoid a hard-coded value diverging from config").
+
+[tool.coverage.run]
+# Measure only the shipped surfaces: the five packages share one PEP 420
+# ``agent_debate`` namespace spread across ``packages/*/src`` (TASKS.md 0.3).
+# Point coverage at those source roots so it reports per-package source and
+# never counts the test tree toward the percentage.
+source = [
+    "packages/core/src",
+    "packages/log/src",
+    "packages/api/src",
+    "packages/cli/src",
+    "packages/ui/src",
+]
+# Account for the namespace packages installed into the shared venv as well as
+# the in-tree sources so a single measurement is reported per file regardless of
+# how the surface is imported.
+branch = true
+
 [tool.coverage.report]
-# Coverage threshold is enforced once there is code to cover (task 0.9).
-fail_under = 0
+# Enforce the mandated ≥85% threshold (PRD §6.2). The suite fails below it.
+fail_under = 85
+show_missing = true

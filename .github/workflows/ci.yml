@@ -40,8 +40,11 @@ jobs:
       - name: Type check (mypy)
         run: uv run mypy
 
+      # Coverage threshold is config-driven: the ≥85% gate lives in
+      # [tool.coverage.report].fail_under in pyproject.toml (task 0.9), so this
+      # step carries no hard-coded number that could diverge from config.
       - name: Tests + coverage (pytest, fail under 85%)
-        run: uv run pytest --cov --cov-fail-under=85
+        run: uv run pytest --cov --cov-report=term-missing
 
       # Task 0.10 drops in scripts/check_line_limit.py; until then this skips.
       - name: 150-line file check

@@ -208,5 +208,30 @@ outcome/decision it produced.
   before adding `ci.yml`. Gates green: ruff/format/mypy clean, 46 passed, 100%
   coverage.
 
+### 0.9 — Coverage gate ≥85%, config-driven (2026-05-30)
+- **Prompt:** "Add [tool.coverage.run] (source = packages) and
+  [tool.coverage.report] fail_under = 85 to pyproject. Wire `pytest --cov
+  --cov-report=term-missing` into CI so it fails under 85%."
+- **Context:** Closes issue #9. PRD §6.2 mandates `pyproject.toml` set
+  `fail_under = 85` as the single source of truth. 0.8 had enforced 85
+  provisionally via the CI flag `--cov-fail-under=85`; this task moves the
+  number into config so it cannot diverge from the CLI.
+- **Decision/outcome (config-driven gate — significant):** added
+  `[tool.coverage.run]` with `source` = the five package namespace src roots
+  (`packages/{core,log,api,cli,ui}/src`) + `branch = true`, and set
+  `[tool.coverage.report].fail_under = 85` (replacing the 0.9 placeholder `0`)
+  with `show_missing = true`. `pytest --cov` now reads the threshold from
+  pyproject, so CI drops the hard-coded `--cov-fail-under=85` and runs
+  `uv run pytest --cov --cov-report=term-missing` instead — **one source of
+  truth**, no divergence. Reconciled `tests/test_ci_workflow.py`: its ordered
+  gate fragments swapped `--cov-fail-under=85` → `pytest --cov` (still present,
+  still in order). TDD: `tests/test_coverage_config.py` written first (asserts
+  `fail_under == 85` and `source` covers all five `packages/*/src`), watched 2
+  fail before adding config. Proved the gate bites by temporarily setting
+  `fail_under = 101` (coverage rejected it), confirming pyproject is the active
+  source; reverted. Gates green: ruff/format/mypy clean, 48 passed, coverage
+  scoped to the 5 packages, 100%. Line-limit check (0.10) skipped — script not
+  built yet; all touched files well under 150 lines.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
