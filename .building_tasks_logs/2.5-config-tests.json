@@ -1,0 +1,16 @@
+{
+  "task_id": "2.5",
+  "title": "Config acceptance tests (Epic 2 pass)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write tests: Settings loads from env; PRO/CON fall back to DEBATER_MODEL; an invalid model string raises clearly.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Closes #25. Epic-2 acceptance pass (mirrors 1.5 consolidating Epic 1). Core config (2.1-2.4) was already implemented at ~100% coverage, so this task is NET tests, not new production code. Added packages/core/tests/test_config_acceptance.py: a single consolidated module exercising the three acceptance behaviours END-TO-END through the public agent_debate.core API (get_settings/Settings/resolve_model/resolve_models/validate_required_keys) instead of re-testing internals. Genuine net-new (previously unverified) edges covered: (1) empty-string PRO_MODEL=/CON_MODEL= -- exactly what copying .env.example verbatim produces -- must fall back to DEBATER_MODEL (empty is falsy via `or`), never a broken empty model; (2) the mixed case (PRO overridden, CON unset) resolving independently; (3) malformed/blank/no-colon model strings ('', '   ', 'anthropic') raising loudly (pydantic-ai UserError, a RuntimeError) vs a recognised-format unknown provider raising ValueError; (4) a bad DEBATER_MODEL from env surfacing loudly via resolve_models; (5) end-to-end .env-file-on-disk loading and friendly MissingApiKeyError winning over the deep SDK error. TDD red-first was demonstrated honestly on the empty-string fallback: temporarily replaced `pro_model_override or self.debater_model` with an `is not None` variant -> test_empty_string_override_falls_back went RED ('' != 'anthropic:claude-sonnet-4-6'); reverting to the original `or` form turned it GREEN. No production code was changed in the final diff. Coverage remained 100% (>=85 gate). All CI gates green locally: ruff check, ruff format --check, mypy, pytest --cov, scripts/check_line_limit.py (<=150 code lines/file), scripts/secret_scan.py. Honest overlap note: the three headline behaviours each already had unit coverage in test_settings.py/test_models.py/test_validation.py; the acceptance module's added value is (a) proving them through the public API as an integrated story and (b) the empty-string / mixed / malformed-vs-unknown edges that were not previously asserted."
+}

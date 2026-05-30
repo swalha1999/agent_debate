@@ -522,5 +522,29 @@ outcome/decision it produced.
   relative (`Path(__file__).resolve().parent.parent / "config" / ...`), not via
   cwd, matching `tests/test_python_pin.py`.
 
+### 2.5 — Config acceptance tests (Epic 2 pass) (2026-05-31)
+
+- **Prompt:** "Write tests: Settings loads from env; PRO/CON fall back to
+  DEBATER_MODEL; an invalid model string raises clearly."
+- **Context:** Closes issue #25. Epic 2 core config (2.1–2.4) was already
+  implemented with ~100% unit coverage. This is the Epic-2 *acceptance* pass
+  (mirrors how 1.5 consolidated Epic 1): one consolidated module exercising the
+  three acceptance behaviours END-TO-END through the public `agent_debate.core`
+  API rather than re-testing internals, plus genuine edge gaps.
+- **Decision/outcome (acceptance module + real edge gaps, honest about overlap):**
+  `tests/test_config_acceptance.py` drives `get_settings`/`Settings`/
+  `resolve_model`/`resolve_models`/`validate_required_keys` from the package
+  root. Net-new (previously unverified) edges: **empty-string** `PRO_MODEL=`/
+  `CON_MODEL=` (exactly what copying `.env.example` produces) must *fall back* to
+  `DEBATER_MODEL` (empty is falsy via `or`), not yield a broken empty model;
+  the **mixed** case (PRO overridden, CON unset); a **malformed** (blank /
+  no-colon) model string raising loudly (`UserError`/`RuntimeError`) vs the
+  recognised-but-unknown provider raising `ValueError`; and the bad-`DEBATER_MODEL`
+  error surfacing through `resolve_models`. TDD red-first was demonstrated on the
+  empty-string fallback by briefly swapping `pro_model_override or …` for an
+  `is not None` form (test went RED: `'' != 'anthropic:claude-sonnet-4-6'`), then
+  reverting (GREEN). No production code changed. Coverage stayed 100%; all gates
+  green (ruff, ruff-format, mypy, pytest --cov ≥85, line-limit, secret-scan).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
