@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 57388
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 39,
+    "duration_ms": 239661,
+    "summary": "39 tool uses · 57.4k tokens · 4m 0s"
   },
   "note": "Second task of Epic 3 (pluggable web search, docs/prds/search-plugin.md §3 + PRD §5.5). Built the registry + factory on top of the 3.1 interface, mirroring the gatekeeper layout. Added search/registry.py (register_search_provider class decorator -> _REGISTRY dict[name -> SearchProvider class]; create_search_provider(settings) factory; available_search_backends() sorted names) and search/errors.py (UnknownSearchBackendError, a LookupError carrying the bad backend + available names with an actionable 'set SEARCH_BACKEND to one of: ...' message). search/__init__ and agent_debate.core re-export all four symbols. No-hard-coded-values holds: the active backend is settings.search_backend (config/env), selection is a pure registry lookup (no concrete class named in the factory), so adding a backend never edits the factory. The factory makes NO network call — it only constructs the provider; SEARCH_API_KEY is passed only to providers whose constructor exposes an api_key param (inspect.signature check), keyless providers (DuckDuckGo, 3.3) construct with no args. register_search_provider rejects duplicate names (fails loudly instead of silently shadowing). TDD red-first: wrote test_search_registry.py (9 tests: decorator transparency + Protocol conformance, backend selects provider, one-line swap returns the OTHER provider, api_key passed/ignored per constructor, unknown backend raises actionable error naming available backends, registering a new name makes it selectable with no factory edits, sorted available list, duplicate-registration rejection; autouse fixture snapshots/restores _REGISTRY; Settings built directly for hermetic tests), watched it fail (ImportError: UnknownSearchBackendError), then implemented to green. All gates green locally: uv sync clean; ruff check = All checks passed; ruff format --check clean; mypy = no issues in 72 source files; pytest --cov = 266 passed, 100% total coverage (>=85 required); check_line_limit.py rc=0 (registry.py 35 code lines, errors.py 9, both well under 150); secret_scan.py rc=0. docs/PROMPTS.md entry added."
 }
