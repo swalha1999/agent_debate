@@ -729,5 +729,39 @@ outcome/decision it produced.
   assert the on-disk log artifact; net-new value comes from edges no per-task
   test asserted, not from re-covering internals.*
 
+### Task 3.1 — SearchProvider interface (Epic 3, issue #26)
+
+- **Prompt:** "In packages/core search/base.py, define SearchResult
+  (title,url,snippet) and a SearchProvider Protocol with name and
+  search(query,*,max_results=5)->list[SearchResult]. Per
+  docs/prds/search-plugin.md. Follow repo standards: TDD …"
+- **Context:** Closes issue #26. First task of Epic 3 (pluggable web search,
+  `docs/prds/search-plugin.md` §2 + PRD §5.5). Ships the **interface only** — no
+  concrete provider (DuckDuckGo is 3.3) and no registry (3.2). The goal is a
+  stable seam so the search vendor is swappable with one config change.
+- **Decision/pattern set (interface-first plug-in seam):** New `search`
+  subpackage mirroring the `gatekeeper` layout — `search/base.py` holds the
+  surface, `search/__init__.py` re-exports, and `agent_debate.core` re-exports in
+  turn. `SearchResult` is a **frozen, `extra="forbid"` Pydantic `BaseModel`**
+  (same hardening as the gatekeeper's `QueueStatus`): a result flows on into
+  sanitisation and the run log unchanged, and a malformed provider payload fails
+  loudly. `SearchProvider` is a **`@runtime_checkable` `typing.Protocol`** so the
+  registry (3.2) can `isinstance`-assert conformance — vendors are purely
+  structural, no upstream subclassing. The `max_results=5` default has a single
+  source: a module-level `DEFAULT_MAX_RESULTS = 5` constant used directly in the
+  Protocol signature and re-exported. TDD red-first: wrote
+  `test_search_base.py` (7 tests: field validation, JSON round-trip, non-string
+  rejection, default-page-size constant, a dummy class satisfying the Protocol +
+  duck-call honouring the default/explicit `max_results`, and a class missing
+  both members **not** satisfying it), watched it fail (`ImportError:
+  DEFAULT_MAX_RESULTS`), then implemented to green. No network/gatekeeper wiring
+  yet — the docstrings flag that a future provider's `search` must route through
+  the Epic 13 gatekeeper. All gates green: ruff/format clean, mypy clean (69
+  files), 257 passed, 100% coverage, line-limit + secret-scan pass. Pattern:
+  *introduce a plug-in as a re-exported interface-only subpackage first
+  (frozen-BaseModel result + runtime_checkable Protocol + single-source default
+  constant); concrete providers and the registry land on top without reshaping
+  the contract.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -1,0 +1,18 @@
+{
+  "task_id": "3.1",
+  "title": "SearchProvider interface — SearchResult + SearchProvider Protocol (Epic 3)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "In packages/core search/base.py, define SearchResult (title,url,snippet) and a SearchProvider Protocol with name and search(query,*,max_results=5)->list[SearchResult]. Per docs/prds/search-plugin.md.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 52590
+  },
+  "usage": {
+    "tool_uses": 31,
+    "duration_ms": 189446,
+    "summary": "31 tool uses · 52.6k tokens · 3m 9s"
+  },
+  "note": "First task of Epic 3 (pluggable web search, docs/prds/search-plugin.md §2 + PRD §5.5). Interface ONLY — no concrete provider (DuckDuckGo is 3.3) and no registry (3.2). Created the search subpackage mirroring the gatekeeper layout: search/base.py (surface) + search/__init__.py (re-export), with agent_debate.core re-exporting SearchResult, SearchProvider, DEFAULT_MAX_RESULTS. SearchResult is a frozen, extra='forbid' Pydantic BaseModel (title/url/snippet: str) — same hardening as the gatekeeper QueueStatus. SearchProvider is a @runtime_checkable typing.Protocol (name: str + search(query, *, max_results=DEFAULT_MAX_RESULTS) -> list[SearchResult]) so the future registry can isinstance-assert conformance. The max_results=5 default has a single source: module-level DEFAULT_MAX_RESULTS = 5 used directly in the Protocol signature and re-exported. TDD red-first: wrote packages/core/tests/test_search_base.py (7 tests: field validation, JSON round-trip, non-string rejection, default constant == 5, a dummy class satisfying the Protocol + duck-call honouring default/explicit max_results, and a class missing name/search NOT satisfying it), watched it fail (ImportError: DEFAULT_MAX_RESULTS), then implemented to green. No network/gatekeeper wiring here (interface only); docstrings flag that a future provider's search must route through the Epic 13 gatekeeper. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean; mypy = no issues in 69 source files; pytest --cov = 257 passed, 100% total coverage (>=85 required); check_line_limit.py rc=0 (search/base.py 14 code lines, well under 150); secret_scan.py rc=0. docs/PROMPTS.md entry added."
+}
