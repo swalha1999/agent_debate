@@ -455,6 +455,34 @@ outcome/decision it produced.
   (mypy strict rejects it) — they `monkeypatch`/`chdir` to an isolated tmp dir
   instead, so no ambient `.env` leaks into the suite.
 
+### 2.2 — Model resolver (Pydantic AI, PRD §4) (2026-05-31)
+
+- **Prompt:** "Add a resolver mapping
+  DEBATER_MODEL/CONTROLLER_MODEL/PRO_MODEL/CON_MODEL strings to Pydantic AI
+  model instances. PRO/CON fall back to DEBATER_MODEL. Anthropic default; any
+  provider via model string."
+- **Context:** Closes issue #22. Turns the task 2.1 settings strings into the
+  concrete model objects the agents/controller (and the Epic 13 gatekeeper) will
+  drive. Strict required-key validation stays in task 2.3.
+- **Decision/outcome (config-only swap + one-place fallback + offline
+  construction):** `core/models.py` wraps Pydantic AI's
+  `pydantic_ai.models.infer_model` — the provider is chosen **entirely** by the
+  `provider:model` string (Anthropic is the PRD §7 default, encoded in the
+  string, not hard-coded), so swapping providers is a config-only change with
+  zero code edits (proven by `test_env_swaps_debater_with_zero_code_changes`,
+  which flips `DEBATER_MODEL` via env and asserts the resolved `model_name`
+  changes). `resolve_models(settings)` returns a frozen `ResolvedModels`
+  dataclass for the four roles and reuses the settings' computed
+  `pro_model`/`con_model` properties, so the PRO/CON → DEBATER fallback lives in
+  exactly one place. A bad string fails loudly (`infer_model` raises
+  `ValueError`/`UserError`), never a silent broken model. Construction is
+  **offline** — no network call; the Anthropic client only reads
+  `ANTHROPIC_API_KEY` at build time, so tests inject a dummy key via
+  `monkeypatch` (no real key needed). Actual API calls will route through the
+  Epic 13 gatekeeper, which drives these resolved models. Dep added:
+  `pydantic-ai-slim[anthropic]>=1.0,<2` (resolved 1.104.0); the `[anthropic]`
+  extra ships the default-provider client.
+
 ### 0.14 — config/rate_limits.json (versioned 1.00)
 
 - **Prompt:** "Create config/rate_limits.json with version "1.00" and services
