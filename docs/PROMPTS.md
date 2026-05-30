@@ -405,5 +405,30 @@ outcome/decision it produced.
   *secrets are scrubbed at the LOG boundary by a single processor; never trust a
   payload to be secret-free, and allowlist legitimate hint-bearing metadata.*
 
+## 1.5 — LOG unit tests (Epic-1 acceptance pass)
+
+- **Prompt:** "Write pytest tests: an event is written to runs/<run_id>.jsonl
+  and round-trips; invalid event_type rejected; redaction hides a fake key. Keep
+  coverage high."
+- **Context:** Closes issue #20. The LOG package (1.1–1.4) was already
+  feature-complete at 100% coverage, each module shipped with its own unit
+  suite. This task is the **integration/acceptance** pass: prove the three
+  acceptance areas end-to-end **through the public API** (`agent_debate.log`),
+  not by re-testing internals, then close any genuine edge-case gaps.
+- **Decision/outcome (acceptance-through-public-API + the net-new gap closed):**
+  Added `tests/test_log_acceptance.py` (the three areas via `log_event` →
+  on-disk JSONL: write+**reconstruct a `LogEvent` from the disk line**, invalid
+  `event_type` rejected with nothing written, fake `sk-ant-…` key redacted in
+  the file) and `tests/test_log_edge_cases.py` (multiple events **appended** to
+  one file in order; the **exactly-at-`MAX_VALUE_LEN`** truncation boundary;
+  empty payload round-trip; bound-round propagate-then-clear in one flow;
+  idempotent `get_logger` keeping a single sink between writes). TDD red-first
+  came from a real gap: the truncation marker `TRUNCATED_SUFFIX` was not part of
+  the public surface — the edge test imported it (red: `ImportError`), then it
+  was exported from `agent_debate.log.__init__` (green). Pattern: *Epic
+  acceptance tests drive the public API end-to-end and assert the on-disk
+  artifact; finding the gap means promoting a genuinely-public constant, not
+  inventing coverage.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

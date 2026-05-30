@@ -40,6 +40,7 @@ from agent_debate.log.event import EVENT_TYPES, EventType, LogEvent
 from agent_debate.log.redaction import (
     MAX_VALUE_LEN,
     REDACTED,
+    TRUNCATED_SUFFIX,
     make_redactor,
     redact_event,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "LIBRARY_VERSION",
     "MAX_VALUE_LEN",
     "REDACTED",
+    "TRUNCATED_SUFFIX",
     "EventType",
     "LogEvent",
     "bind_context",
