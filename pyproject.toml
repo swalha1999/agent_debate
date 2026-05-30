@@ -49,21 +49,42 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_debate_workspace"]
 
-# --- Shared tooling stubs (expanded by tasks 0.5 / 0.9) -----------------------
+# --- Shared tooling: lint + type-check gate (task 0.5) ------------------------
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-# `scripts/` holds one-off build-time generators (e.g. issue creation), not
-# shipped code; full linting of them is deferred to task 0.5.
+# `scripts/` holds one-off, data-heavy build-time generators (e.g. issue
+# creation) whose source is mostly long embedded prompt strings that cannot be
+# wrapped without mangling the data, not shipped code. Linting them adds churn
+# without value, so they stay excluded from the gate (task 0.5 decision).
 extend-exclude = ["scripts"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+# Rule families for the 0-violation gate (issue #5):
+#   E/W  pycodestyle errors + warnings   F  pyflakes (unused, undefined)
+#   I    import sorting (isort)          UP pyupgrade (modern syntax)
+#   B    flake8-bugbear (likely bugs)    SIM flake8-simplify
+#   C4   comprehensions                  PIE misc lints
+#   RET  return consistency              N  pep8-naming
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RET", "N"]
+
+[tool.ruff.format]
+# Explicit so the `ruff format --check .` gate is deterministic.
+docstring-code-format = true
 
 [tool.mypy]
 python_version = "3.12"
+# `strict` turns the full strict bundle on; the flags below are spelled out so
+# the strict-ish contract is explicit and a later `strict = false` cannot
+# silently relax them (task 0.5).
 strict = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
 # The five surfaces share one PEP 420 `agent_debate` namespace package spread
 # across `packages/*/src` (TASKS.md 0.3). Enable namespace mode and point mypy
 # at those source roots so it resolves `agent_debate.<pkg>` even though there is
