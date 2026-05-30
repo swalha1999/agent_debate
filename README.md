@@ -176,6 +176,25 @@ uv sync && uv run ruff check . && uv run ruff format --check . \
   && uv run python scripts/secret_scan.py
 ```
 
+### Branch protection
+
+`main` is a **protected branch**: there are **no direct pushes** — all changes
+land through a pull request, and a PR **cannot merge unless the CI
+`Quality gates` check is green**. This is enforced server-side by GitHub branch
+protection (the `required_status_checks` rule names the `Quality gates`
+check-run produced by [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+To keep the build reproducible, the exact rule is applied by a committed,
+re-runnable script — owner/repo are read from `gh repo view`, never hard-coded:
+
+```bash
+./scripts/setup_branch_protection.sh   # requires an admin `gh auth login`
+```
+
+The rule is deliberately scoped so an admin maintainer can still merge an
+approved PR once CI is green (`enforce_admins` is off and no approving reviews
+are required); non-admins remain fully gated by the required check.
+
 ## License & credits
 
 Coursework project for **Orchestration of AI Agents**, by **swalha1999** and
