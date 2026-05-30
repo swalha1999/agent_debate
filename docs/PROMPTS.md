@@ -907,5 +907,44 @@ outcome/decision it produced.
   sync call with a daemon-thread `join(timeout)` and inject the sleep/timeout seams
   so the suite never waits real time.*
 
+### Task 4.2 — build_argument skill (Epic 4, issue #33)
+
+- **Date:** 2026-05-31
+- **Prompt (verbatim):** "Implement build_argument(...) that helps a debater
+  structure a persuasive argument or rebuttal for its assigned side (claim,
+  support, link to opponent's point). Register as a Pydantic AI tool with
+  validated inputs." (+ repo standards: TDD red-first, ≤150 code lines/file,
+  ruff 0 + mypy clean, no hard-coded values, external calls via the API
+  gatekeeper, log via LOG, coverage ≥85%.)
+- **Context:** The **first agent skill** (PRD §5.2). Skills are the named tools a
+  debater exposes; later tasks add `analyze_opponent_argument` (4.3) and the real
+  Pydantic AI tool registration (4.5).
+- **Outcome / pattern set:** Created `core/skills/` mirroring the `search`/
+  `gatekeeper` subpackage layout: `skills/models.py` (validated I/O models) +
+  `skills/build_argument.py` (the function) + `skills/__init__.py` (re-export),
+  with `agent_debate.core` re-exporting `ArgumentRequest`, `Argument`,
+  `DebateSide`, `build_argument`. **Input** `ArgumentRequest` (frozen,
+  `extra="forbid"`): `side: DebateSide` (a `StrEnum` pro/con — bad value fails
+  loudly), non-empty `claim`, `supports: list[str]` (`min_length=1`, validator
+  trims + drops blanks and rejects all-blank), optional `opponent_point`.
+  **Output** `Argument` (frozen, `extra="forbid"`): side, claim, normalised
+  supports, optional `rebuttal`, and a `conclusion`. The skill is **pure and
+  deterministic** — it *structures* the agent-supplied content into the typed
+  output and makes **no LLM/network call**, so the API gatekeeper (Epic 13) is
+  **N/A** here (the LLM provides content as tool args; the skill arranges it).
+  Anti-sycophancy (`docs/prds/anti-sycophancy.md` §2): when an `opponent_point` is
+  given, the rebuttal quotes and *contests* it ("…— this does not hold,
+  because:") rather than restating it. No hard-coded values — the rebuttal lead
+  phrases and conclusion template live in `constants.py`. Optional `tool_call`
+  debug line emitted via the LOG package (no run_id required for a pure call).
+  TDD red-first: `test_build_argument.py` (10 tests) — watched it fail
+  (`ImportError`), implemented to green. Gates: ruff/format clean, mypy clean
+  (85 files), 305 passed, 100% coverage on the new subpackage (99.66% total),
+  line-limit + secret-scan pass.
+  *Pattern: a skill = a pure, deterministic structuring function over a validated
+  Pydantic input → typed output; keep the LLM out of it so it stays testable and
+  network-free (gatekeeper N/A); registration as a real Pydantic AI tool is a
+  separate later task.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -35,6 +35,12 @@ from agent_debate.core.search import (
     register_search_provider,
 )
 from agent_debate.core.settings import Settings, get_settings
+from agent_debate.core.skills import (
+    Argument,
+    ArgumentRequest,
+    DebateSide,
+    build_argument,
+)
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
 from agent_debate.log import log_version
 
@@ -51,6 +57,9 @@ __all__ = [
     "DEFAULT_SERVICE",
     "LIBRARY_VERSION",
     "ApiGatekeeper",
+    "Argument",
+    "ArgumentRequest",
+    "DebateSide",
     "DuckDuckGoSearchProvider",
     "MissingApiKeyError",
     "QueueFullError",
@@ -67,6 +76,7 @@ __all__ = [
     "UnknownSearchBackendError",
     "__version__",
     "available_search_backends",
+    "build_argument",
     "core_version",
     "create_search_provider",
     "get_settings",
