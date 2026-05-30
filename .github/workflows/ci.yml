@@ -1,0 +1,62 @@
+# CI quality gates (TASKS.md 0.8, issue #8; PRD §6/§7, §9).
+#
+# Established EARLY so every push and pull request runs the full gate stack
+# before feature work lands. The steps run in order and the build fails on the
+# first failure: a cheap gate (lint/format) guards an expensive one (tests).
+#
+# Forward-compatible gates: the 150-line check (task 0.10) and the leak scan
+# (task 0.11) are wired now but skip cleanly until their tooling lands, so the
+# scaffold pipeline is GREEN today and each gate activates automatically once
+# its script/tool is committed — no edit to this file required.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality-gates:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Official uv installer; matches the .python-version pin (3.12).
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install workspace (uv sync)
+        run: uv sync
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format)
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy)
+        run: uv run mypy
+
+      - name: Tests + coverage (pytest, fail under 85%)
+        run: uv run pytest --cov --cov-fail-under=85
+
+      # Task 0.10 drops in scripts/check_line_limit.py; until then this skips.
+      - name: 150-line file check
+        run: |
+          if [ -f scripts/check_line_limit.py ]; then
+            uv run python scripts/check_line_limit.py
+          else
+            echo "line-limit check pending task 0.10 (scripts/check_line_limit.py absent)"
+          fi
+
+      # Task 0.11 wires the real secret scan; until then this skips.
+      - name: Secret scan
+        run: |
+          if [ -f scripts/secret_scan.py ]; then
+            uv run python scripts/secret_scan.py
+          else
+            echo "secret scan pending task 0.11 (scanner absent)"
+          fi
