@@ -64,6 +64,31 @@ select = ["E", "F", "I"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+# The five surfaces share one PEP 420 `agent_debate` namespace package spread
+# across `packages/*/src` (TASKS.md 0.3). Enable namespace mode and point mypy
+# at those source roots so it resolves `agent_debate.<pkg>` even though there is
+# no `__init__.py` at the namespace level.
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [
+    "packages/core/src",
+    "packages/log/src",
+    "packages/api/src",
+    "packages/cli/src",
+    "packages/ui/src",
+    "src",
+    "tests",
+]
+# Default targets for a bare `uv run mypy` (over the namespace surfaces + tests).
+files = [
+    "packages/core/src/agent_debate",
+    "packages/log/src/agent_debate",
+    "packages/api/src/agent_debate",
+    "packages/cli/src/agent_debate",
+    "packages/ui/src/agent_debate",
+    "src",
+    "tests",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

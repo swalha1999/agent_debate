@@ -76,6 +76,33 @@ outcome/decision it produced.
   via `[tool.uv.sources] workspace = true` so one `uv sync` installs every surface
   into the shared venv. Intra-package wiring (core/log deps) is left to task 0.3.
   TDD: `tests/test_packages.py` parametrizes over the five packages (import + name).
+  _(Update, task 0.3: the per-package src layout was later moved from the
+  underscore form `src/agent_debate_<pkg>/` to a shared namespace package
+  `src/agent_debate/<pkg>/`, so surfaces are now imported as `agent_debate.<pkg>`,
+  not `agent_debate_<pkg>`. The distribution names stay `agent_debate_<pkg>`.)_
+
+### 0.3 — Wire intra-workspace deps + namespace-package restructure (2026-05-30)
+- **Prompt:** "Convert all five packages from the underscore src-layout
+  (`src/agent_debate_<pkg>/`) to a shared PEP 420 namespace-package layout
+  (`src/agent_debate/<pkg>/`), so surfaces import as `agent_debate.<pkg>`; the
+  `agent_debate/` dir has no `__init__.py` so the namespace merges. Wire the 0.3
+  deps (issue #3): core → log; api/cli/ui → core + log via `[tool.uv.sources]`
+  workspace sources, and prove the edges resolve at runtime by re-exporting
+  version constants across each edge."
+- **Context:** Builds on the 0.2 skeletons; closes issue #3.
+- **Decision/outcome:** Chose **PEP 420 implicit namespace packages** over the
+  underscore src-layout. Rationale: clean `agent_debate.<pkg>` imports that match
+  the PRD's `from agent_debate import …` convention (PRD §5.1), one shared
+  top-level namespace instead of five sibling top-levels, and no `__init__.py` at
+  the namespace root so all five distributions merge in one interpreter. Each
+  `pyproject.toml` hatchling wheel target is `src/agent_debate`; deps declared via
+  `[project].dependencies` + `[tool.uv.sources] workspace = true`. `log` exposes
+  `LIBRARY_VERSION`/`log_version`; `core` re-exports `log_version`; api/cli/ui
+  re-export `core_version` + `log_version` — a successful import proves each edge.
+  Root mypy config gained `namespace_packages` / `explicit_package_bases` /
+  `mypy_path` so it resolves the namespace. TDD: updated `tests/test_packages.py`
+  to `agent_debate.<pkg>` + added `tests/test_cross_package_imports.py` (edges +
+  namespace-merge assertions).
 
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
