@@ -1,0 +1,12 @@
+{
+  "task_id": "0.0",
+  "title": "Short task title",
+  "date": "YYYY-MM-DD",
+  "model": "claude-opus-4-8",
+  "prompt": "Verbatim prompt that defined this task.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  }
+}
