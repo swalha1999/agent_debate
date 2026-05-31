@@ -27,20 +27,30 @@ from agent_debate.core.engine.result import (
     ToolCallRecord,
 )
 from agent_debate.core.engine.setup import DebateSetup, SetupModels, setup_debate
+from agent_debate.core.engine.stream import (
+    CollectingSink,
+    EventSink,
+    emit_event,
+    stream_debate,
+)
 
 __all__ = [
+    "CollectingSink",
     "CostTotals",
     "DebateConfig",
     "DebateMessage",
     "DebateResult",
     "DebateSetup",
+    "EventSink",
     "Gatekeeper",
     "SetupModels",
     "TimeoutRunner",
     "ToolCallRecord",
     "TurnFailedError",
+    "emit_event",
     "generate_turn_output",
     "run_closing_discussion",
     "run_debate_loop",
     "setup_debate",
+    "stream_debate",
 ]

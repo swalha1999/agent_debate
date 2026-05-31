@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent_debate.core import constants
-from agent_debate.log import log_event
+from agent_debate.log import EventSink, emit_event
 
 
 class _CallLog:
@@ -28,11 +28,20 @@ class _CallLog:
     only event-specific fields, keeping the LOG schema mapping in a single place.
     """
 
-    def __init__(self, *, run_id: str, agent: str, round_: int, runs_dir: Path | str) -> None:
+    def __init__(
+        self,
+        *,
+        run_id: str,
+        agent: str,
+        round_: int,
+        runs_dir: Path | str,
+        sink: EventSink | None = None,
+    ) -> None:
         self._run_id = run_id
         self._agent = agent
         self._round = round_
         self._runs_dir = runs_dir
+        self._sink = sink
 
     def timeout(self, timeout_s: float, exc: BaseException) -> None:
         """Emit one ``timeout`` event for a model call that exceeded the budget."""
@@ -64,7 +73,8 @@ class _CallLog:
         )
 
     def _emit(self, event_type: str, payload: dict[str, object]) -> None:
-        log_event(
+        emit_event(
+            self._sink,
             run_id=self._run_id,
             agent=self._agent,
             event_type=event_type,

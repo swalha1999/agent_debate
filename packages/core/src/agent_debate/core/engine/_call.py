@@ -42,6 +42,7 @@ from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.gatekeeper import load_rate_limit_config
 from agent_debate.core.gatekeeper._retry import is_transient, run_with_retry
 from agent_debate.core.search._timeout import run_with_timeout
+from agent_debate.log import EventSink
 
 #: Type of the timeout seam: run a no-arg call, bounded by ``timeout_s`` seconds.
 TimeoutRunner = Callable[[Callable[[], Any], float], Any]
@@ -82,6 +83,7 @@ def generate_turn_output(  # noqa: PLR0913 — explicit per-call deps (no shared
     runs_dir: Path | str,
     sleep_fn: Callable[[float], None] = time.sleep,
     timeout_runner: TimeoutRunner = _default_timeout_runner,
+    sink: EventSink | None = None,
 ) -> Any:
     """Run a debater's model call through the gatekeeper under timeout + retry (§4).
 
@@ -104,6 +106,7 @@ def generate_turn_output(  # noqa: PLR0913 — explicit per-call deps (no shared
         runs_dir: Directory holding the per-run JSONL sink.
         sleep_fn: Injected sleep seam invoked with each backoff delay.
         timeout_runner: Injected timeout seam bounding each attempt.
+        sink: Optional live event sink (§6, task 6.6); ``None`` logs only.
 
     Returns:
         The result of ``gatekeeper.execute`` (the model output).
@@ -111,7 +114,7 @@ def generate_turn_output(  # noqa: PLR0913 — explicit per-call deps (no shared
     Raises:
         TurnFailedError: When the timeout + retry budget is exhausted.
     """
-    emitter = _CallLog(run_id=run_id, agent=agent, round_=round_, runs_dir=runs_dir)
+    emitter = _CallLog(run_id=run_id, agent=agent, round_=round_, runs_dir=runs_dir, sink=sink)
     retry_after = _retry_after_seconds(service)
 
     def _attempt() -> Any:
