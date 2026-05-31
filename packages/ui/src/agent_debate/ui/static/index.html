@@ -19,6 +19,15 @@
       <h1>agent_debate</h1>
       <p class="lead">Enter a topic and start a multi-agent debate.</p>
 
+      <!-- Help & documentation (Nielsen #10, task 11.6): a short hint telling
+           the user what the app does and how to use it — minimal, no clutter. -->
+      <p id="help" class="help">
+        A <strong>Pro</strong> and a <strong>Con</strong> agent debate your
+        topic while a <strong>Moderator</strong> keeps them on track. Type a
+        topic and press <kbd>Enter</kbd> (or Start) — the live transcript,
+        moderator nudges and a final <strong>Verdict</strong> appear below.
+      </p>
+
       <form id="debate-form" class="debate-form" novalidate>
         <label for="topic">Debate topic</label>
         <input
@@ -29,8 +38,23 @@
           autocomplete="off"
           placeholder="e.g. Should cities ban private cars?"
         />
-        <button type="submit" id="start">Start debate</button>
+        <div class="form-actions">
+          <button type="submit" id="start">Start debate</button>
+          <!-- User control & freedom (Nielsen #3): reset / start over without
+               being trapped. Hidden until a debate has started. -->
+          <button type="button" id="new-debate" class="secondary" hidden>
+            New debate
+          </button>
+        </div>
       </form>
+
+      <!-- Visibility of system status (Nielsen #1): a clear, always-honest
+           status line — Connecting… / Debating — round N / Complete / Error —
+           with a streaming "live" dot toggled while SSE events arrive. -->
+      <div id="status" class="status" role="status" aria-live="polite" hidden>
+        <span class="status__dot" aria-hidden="true"></span>
+        <span id="status-text" class="status__text"></span>
+      </div>
 
       <output id="result" class="result" aria-live="polite"></output>
 
@@ -66,9 +90,9 @@
           id="controller-panel"
           class="panel controller-panel"
           aria-live="polite"
-          aria-label="Controller actions and nudges"
+          aria-label="Moderator actions and nudges"
         >
-          <h2 class="panel__heading">Controller actions / nudges</h2>
+          <h2 class="panel__heading">Moderator actions / nudges</h2>
           <ol id="controller-actions" class="event-list"></ol>
         </section>
 
