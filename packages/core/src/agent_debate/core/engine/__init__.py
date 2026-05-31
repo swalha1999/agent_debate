@@ -22,6 +22,7 @@ from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.loop import run_debate_loop
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import (
+    CostBreakdown,
     CostTotals,
     DebateMessage,
     DebateResult,
@@ -38,6 +39,7 @@ from agent_debate.core.engine.stream import (
 
 __all__ = [
     "CollectingSink",
+    "CostBreakdown",
     "CostTotals",
     "DebateConfig",
     "DebateEngine",

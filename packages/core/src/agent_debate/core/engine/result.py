@@ -20,6 +20,7 @@ from agent_debate.core.engine._usage import (
     usage_by_agent,
     usage_by_round,
 )
+from agent_debate.core.pricing import CostBreakdown
 from agent_debate.core.skills.models import DebateSide, NudgeMessage, Verdict
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
@@ -138,6 +139,9 @@ class DebateResult(BaseModel):
         closing_discussion: The freer closing exchange before judgement.
         verdict: The controller's final verdict, or ``None`` before judgement.
         totals: Aggregate token/cost/latency totals for the run.
+        cost_breakdown: Per-model + overall cost-breakdown table (PRD §10/§11),
+            priced from the config price table when the run completes; ``None``
+            until the engine prices the captured tokens (Epic 15, task 15.2).
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -149,9 +153,11 @@ class DebateResult(BaseModel):
     closing_discussion: list[DebateMessage] = Field(default_factory=list)
     verdict: Verdict | None = None
     totals: CostTotals = Field(default_factory=CostTotals)
+    cost_breakdown: CostBreakdown | None = None
 
 
 __all__ = [
+    "CostBreakdown",
     "CostTotals",
     "DebateMessage",
     "DebateResult",
