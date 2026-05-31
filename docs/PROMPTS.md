@@ -2169,5 +2169,61 @@ fails → restore → green.
   cell points at a verified, already-shipped mechanism — so each claim reuses a
   module/test name confirmed against the tree, never an aspiration.*
 
+### Sample debate runs committed for the teacher (task 12.5, 2026-05-31)
+- **Prompt:** "Run several debates on varied topics and commit each run under
+  `runs/` as `<run_id>.jsonl` plus a readable `<run_id>.md` (transcript, verdict,
+  token/cost). This is the evidence the teacher reviews."
+- **Context:** PRD §11's final acceptance bullet wants *real* committed runs the
+  teacher can read. The LOG package already writes the machine `runs/<run_id>.jsonl`
+  event log, and Epic 15 already renders a cost table (`format_cost_table`), but **no
+  `.md` exporter existed** (grepped `packages/` for markdown/render/export). These
+  are REAL Anthropic API calls (real money), so cost control was a first-class
+  constraint.
+- **Topics chosen (one per kind, for variety):** a **policy** question — *"Should
+  governments impose congestion pricing to enter city centers?"*; a **tech-ethics**
+  question — *"Should AI-generated art be eligible for copyright protection?"*; and a
+  **lifestyle** question — *"Is waking up at 5am the key to a productive life?"*.
+- **The real lesson — attempting real runs surfaced two engine bugs:** the *first*
+  batch of sample runs were generated before two now-merged fixes, and reading the
+  transcripts is exactly what exposed the bugs. The debaters were arguing *generic*
+  positions, not the stated motion. Root causes: (1) #202 — the debate topic was
+  never injected into the debater's context, so the agent only knew "argue the FOR
+  side" of *some* topic; and (2) #203 — even once a system prompt was built, the
+  engine *dropped it* on the `message_history` path and never delivered it to the
+  model. Both are the kind of bug that unit tests with mocked models happily pass but
+  that a human reading a real transcript catches in seconds. **Prompt-Book lesson:
+  the cheapest validation of an LLM pipeline is to read one real transcript end-to-end
+  — paid runs are not just evidence, they are a test.** After both fixes merged to
+  `main`, the runs were **regenerated on the fixed engine**: the debaters now name and
+  argue the exact motion (e.g. Pro on congestion pricing cites London's 30% traffic
+  drop; Con on AI art invokes *Thaler v. Perlmutter* and human-authorship doctrine)
+  and rebut each other's actual words. Winners on the regenerated runs: Pro (policy),
+  Con (tech-ethics), tie (lifestyle).
+- **Reduced-rounds decision (documented in `runs/README.md`):** sample runs use a
+  reduced round count (**`--rounds 4`** policy, **`--rounds 3`** the other two) with
+  **`--max-words 120`** instead of the default **10×150**, purely for cost — total
+  ≈$1 across all three (regeneration on the fixed engine cost ~$0.42 + ~$0.26 + ~$0.30)
+  instead of low-single-dollars. A 3-4 round debate still exercises the *entire*
+  mechanism (Pro/Con alternation, rebuttal of the opponent's actual words, the
+  controller drift-check/nudge path, the closing discussion, the debate-derived
+  verdict, the per-model cost table), so it is valid evidence; the system's default
+  remains the full 10×150. A **`--rounds 1` smoke test ran first** (and was rerun
+  after the fixes merged) to confirm the engine delivers the topic + system prompt
+  end-to-end with the configured key before spending on the three real runs.
+- **Outcome/pattern:** Wrote a small TDD-first md exporter
+  (`core/export/markdown.py` + `_sections.py`, <150 lines each) that renders a
+  completed `DebateResult` and **reuses `format_cost_table` verbatim** — no
+  duplicated pricing/markdown (§4). A build-time `scripts/generate_sample_runs.py`
+  drives `DebateEngine.run` (writes the jsonl via LOG) then `write_run_markdown`
+  (writes the md), with all debate params as CLI flags (no hard-coding). Two
+  Windows/env gotchas surfaced on the real run: a *blank* process `ANTHROPIC_API_KEY`
+  shadowed the `.env` value (pydantic-settings: env wins over env_file) — fixed by
+  clearing the blank shadow so `Settings` reads `.env`, then exporting the key for
+  pydantic-ai; and the pretty console LOG sink died on emoji debate text under a
+  legacy code page (cp1255) — fixed by forcing UTF-8 on the script's streams.
+  *Pattern: a readable artifact reuses the existing renderer rather than
+  re-implementing it; and "cost-conscious" means smoke-test-then-reduce, never
+  loop-on-error against a paid API.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
