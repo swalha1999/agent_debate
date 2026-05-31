@@ -1952,5 +1952,24 @@ outcome/decision it produced.
   `done` and references the winner/summary/converged/`total_tokens` fields; the CSS is
   RTL-safe. Browser behaviour itself is the UI smoke test (11.8).
 
+- **Task 11.5 — RTL-safe styling (#77).** Prompt: *"Style the UI using CSS logical
+  properties (text-start/end, ps-/pe-, ms-/me-, items-start/end) for RTL support; never
+  left/right."* This was the dedicated RTL audit/hardening pass over the UI built in
+  11.1–11.4. The audit found the CSS **already clean** — 11.1–11.4 had used logical
+  properties throughout (`text-align: start`, `margin/padding-inline`, `border-inline-
+  start`, `inset`-free, `min-block-size`), no physical `left/right` declarations. The real
+  gap was RTL *capability*: `<html>` carried only `lang="en"`, no `dir`. Decision: add an
+  explicit `dir="ltr"` on `<html>` (default LTR, but the document is now genuinely RTL-
+  switchable — flipping to `dir="rtl"` mirrors the whole layout because every directional
+  rule is logical). The durable deliverable is `test_ui_rtl.py`: it serves `style.css` +
+  `index.html` and **asserts no physical-direction property declarations** (`margin/padding-
+  left/right`, bare `left:/right:`, `border-left/right`, `text-align: left/right`, `float/
+  clear: left/right`) using boundary-anchored regexes (so logical names like `margin-inline-
+  start` and the word "right" inside values/content never false-match), AND asserts logical
+  props are positively present + `<html>` carries `dir`. Red→green proven honestly: with the
+  CSS already clean, the physical-prop tests passed and only the `dir` test was red; planting
+  `margin-left`/`text-align: right` made the enforcement test fail as designed. The test now
+  fails the build for any future CSS that reintroduces physical direction.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

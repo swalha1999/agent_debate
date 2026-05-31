@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- ``dir`` makes the document RTL-capable (task 11.5). The layout is styled
+     with CSS *logical* properties only (margin/padding/border-inline, inset-
+     inline, text-align: start) so flipping this to ``dir="rtl"`` mirrors the
+     whole UI correctly — no physical left/right anywhere. Default LTR here. -->
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
