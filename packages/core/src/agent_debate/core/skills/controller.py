@@ -14,9 +14,11 @@ it. No LLM/network call is made, so the API gatekeeper (Epic 13) does not apply.
 Epic 8.1 deepens ``assess_drift`` into a robust deterministic §3 drift classifier:
 the scoring lives in :mod:`agent_debate.core.skills._drift_logic` with its phrase
 sets/weights/threshold in :mod:`agent_debate.core.skills._drift_constants` (split
-out to keep this module under the 150-line guideline). ``render_verdict`` (8.3)
-still uses the light per-side score tally; named constants live in
-:mod:`agent_debate.core.constants`.
+out to keep this module under the 150-line guideline). Epic 8.3 deepens
+``render_verdict`` into a SUMMARY + converged/agreed flag + result + winner +
+reasoning, judged on argumentation/rebuttal/engagement (NOT factual correctness —
+PRD §3); its deterministic scorer + named constants live in
+:mod:`agent_debate.core.skills._verdict_logic` / ``_verdict_constants``.
 """
 
 from __future__ import annotations
@@ -26,8 +28,6 @@ from agent_debate.core.constants import (
     DRIFT_REASON_SIGNALS,
     DRIFT_SIGNAL_CONFIDENCE,
     NUDGE_CORRECTION_TEMPLATE,
-    VERDICT_RATIONALE_TEMPLATE,
-    VERDICT_TIE,
 )
 from agent_debate.core.skills._drift_constants import (
     DRIFT_CAPTURE_THRESHOLD,
@@ -35,6 +35,7 @@ from agent_debate.core.skills._drift_constants import (
     DRIFT_REASON_ON_SIDE,
 )
 from agent_debate.core.skills._drift_logic import detect_drift
+from agent_debate.core.skills._verdict_logic import build_verdict
 from agent_debate.core.skills.models import (
     DebateSide,
     DriftAssessment,
@@ -138,48 +139,32 @@ def nudge(agent: DebateSide | str, reason: str) -> NudgeMessage:
     return NudgeMessage(target=resolved, reason=trimmed, correction=correction)
 
 
-def _tally_scores(turns: list[TranscriptTurn]) -> dict[DebateSide, float]:
-    """Sum the per-turn scores for each side (sides absent from the transcript = 0)."""
-    totals: dict[DebateSide, float] = {DebateSide.PRO: 0.0, DebateSide.CON: 0.0}
-    for turn in turns:
-        totals[turn.side] += turn.score
-    return totals
-
-
 def render_verdict(transcript: VerdictRequest | list[TranscriptTurn]) -> Verdict:
-    """Structure ``transcript`` into a debate-derived :class:`Verdict` (PRD §5.3).
+    """Structure ``transcript`` into a debate-derived :class:`Verdict` (PRD §3.2, §5.3).
 
-    Accepts a bare list of turns or a :class:`VerdictRequest`. When the controller LLM
-    supplies a ``winner``/``rationale`` they are used verbatim; otherwise the winner is
-    tallied from the per-side score totals (a tie when equal). The verdict carries only
+    Accepts a bare list of turns or a :class:`VerdictRequest`. The deepened verdict
+    (8.3) carries a SUMMARY, whether the agents CONVERGED/agreed, the RESULT (winning
+    side or ``tie``), and the REASONING — judged on ARGUMENTATION / REBUTTAL quality /
+    ENGAGEMENT, explicitly **not** factual correctness (PRD §3: no fact-checking). The
+    transparent deterministic scoring lives in :func:`build_verdict` /
+    :mod:`agent_debate.core.skills._verdict_logic`; a controller-supplied
+    ``winner``/``rationale`` is honoured verbatim. The verdict carries only
     debate-derived fields — never a pre-held controller stance.
 
     Args:
         transcript: The structured transcript, optionally with a supplied outcome.
 
     Returns:
-        The structured :class:`Verdict` (``winner``, ``rationale``, ``scores``).
+        The structured :class:`Verdict` (summary, converged, winner, rationale,
+        per-side totals + per-criterion breakdown).
     """
     request = (
         transcript if isinstance(transcript, VerdictRequest) else VerdictRequest(turns=transcript)
     )
-    scores = _tally_scores(request.turns)
-    if request.winner is not None:
-        winner: DebateSide | str = (
-            request.winner if request.winner == VERDICT_TIE else DebateSide(request.winner)
-        )
-    elif scores[DebateSide.PRO] > scores[DebateSide.CON]:
-        winner = DebateSide.PRO
-    elif scores[DebateSide.CON] > scores[DebateSide.PRO]:
-        winner = DebateSide.CON
-    else:
-        winner = VERDICT_TIE
-    label = winner.value if isinstance(winner, DebateSide) else winner
-    rationale = request.rationale or VERDICT_RATIONALE_TEMPLATE.format(
-        winner=label, pro=scores[DebateSide.PRO], con=scores[DebateSide.CON]
-    )
+    verdict = build_verdict(request)
+    label = verdict.winner.value if isinstance(verdict.winner, DebateSide) else verdict.winner
     _LOG.info("verdict", tool="render_verdict", winner=label, turns=len(request.turns))
-    return Verdict(winner=winner, rationale=rationale, scores=scores)
+    return verdict
 
 
 __all__ = ["assess_drift", "nudge", "render_verdict"]

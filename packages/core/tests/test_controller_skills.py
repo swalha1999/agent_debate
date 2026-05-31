@@ -203,7 +203,16 @@ def test_render_verdict_does_not_leak_controller_stance() -> None:
     result = render_verdict(_transcript())
 
     dumped = result.model_dump()
-    assert set(dumped) == {"winner", "rationale", "scores"}
+    # 8.3 deepens the verdict with additive debate-derived fields; none expose a
+    # pre-held controller stance/opinion.
+    assert set(dumped) == {
+        "winner",
+        "rationale",
+        "scores",
+        "summary",
+        "converged",
+        "criteria_scores",
+    }
     assert "stance" not in dumped
     assert "opinion" not in dumped
 

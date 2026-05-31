@@ -18,26 +18,37 @@ Result: exactly ``config.rounds`` Pro + ``config.rounds`` Con messages, alternat
 each ≤ ``config.max_words``. After the main rounds — and before the verdict — a
 freer **closing discussion** runs (task 6.5, :mod:`~agent_debate.core.engine.
 closing`), its turns stored in ``DebateResult.closing_discussion`` (separate from
-the main transcript). The verdict is a 6.8 seam (``verdict=None``). EVERY model call
-routes through the API gatekeeper (Epic 13); the per-turn helper (:mod:`turn`) marks
-the seam where 6.4's timeout/retry slots in. Caps come from ``config`` (no
-hard-coding); every message / nudge is logged via the LOG package.
+the main transcript). After it, the controller renders the final **verdict** (task
+8.3, :func:`~agent_debate.core.skills.render_verdict`) — a debate-derived summary +
+converged flag + result + winner + reasoning, judged on argumentation/rebuttal/
+engagement (NOT factual correctness, PRD §3) — set on ``DebateResult.verdict`` and
+logged as a ``verdict`` event. EVERY model call routes through the API gatekeeper
+(Epic 13); the per-turn helper (:mod:`turn`) marks the seam where 6.4's timeout/
+retry slots in. Caps come from ``config`` (no hard-coding); every message / nudge /
+verdict is logged via the LOG package.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from agent_debate.core import constants
 from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.drift import run_drift_check
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import CostTotals, DebateMessage, DebateResult
 from agent_debate.core.engine.setup import DebateSetup
-from agent_debate.core.engine.stream import EventSink
+from agent_debate.core.engine.stream import EventSink, emit_event
 from agent_debate.core.engine.turn import run_debate_turn
 from agent_debate.core.gatekeeper import ApiGatekeeper, load_rate_limit_config
-from agent_debate.core.skills import DebateSide, NudgeMessage
+from agent_debate.core.skills import (
+    DebateSide,
+    NudgeMessage,
+    TranscriptTurn,
+    Verdict,
+    render_verdict,
+)
 from agent_debate.log import DEFAULT_RUNS_DIR
 
 
@@ -71,7 +82,7 @@ def run_debate_loop(
 
     Returns:
         The assembled :class:`DebateResult` (transcript + nudges + closing
-        discussion + totals); the verdict (``None``) is left as the 6.8 seam.
+        discussion + the debate-derived verdict + totals).
     """
     keeper = gatekeeper or ApiGatekeeper(load_rate_limit_config(), run_id=run_id, runs_dir=runs_dir)
     transcript: list[DebateMessage] = []
@@ -108,11 +119,13 @@ def run_debate_loop(
     closing = run_closing_discussion(
         setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir, sink=sink
     )
+    verdict = _verdict(transcript + closing, run_id, runs_dir, sink)
     return DebateResult(
         topic=setup.topic,
         transcript=transcript,
         nudges=nudges,
         closing_discussion=closing,
+        verdict=verdict,
         totals=CostTotals.from_messages(transcript + closing),
     )
 
@@ -181,6 +194,44 @@ def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared muta
     )
     if correction is not None:
         nudges.append(correction)
+
+
+def _verdict(
+    messages: list[DebateMessage],
+    run_id: str,
+    runs_dir: Path | str,
+    sink: EventSink | None,
+) -> Verdict | None:
+    """Render the final verdict from the debate transcript, log + stream it (§3.2).
+
+    After the closing discussion the controller renders a debate-DERIVED verdict
+    (:func:`~agent_debate.core.skills.render_verdict`): a summary, whether the agents
+    converged/agreed, the result and WHO WON with reasoning — judged on
+    argumentation/rebuttal/engagement, never factual correctness (PRD §3). Failed
+    turns (markers, not real arguments) are excluded; an all-failed run yields no
+    verdict (``None``). The verdict is logged + streamed as a ``verdict`` event so
+    live consumers render it.
+    """
+    turns = [TranscriptTurn(side=m.side, text=m.content) for m in messages if not m.failed]
+    if not turns:
+        return None
+    verdict = render_verdict(turns)
+    label = verdict.winner.value if isinstance(verdict.winner, DebateSide) else verdict.winner
+    emit_event(
+        sink,
+        run_id=run_id,
+        agent=constants.LOOP_VERDICT_LOG_AGENT,
+        event_type=constants.LOOP_VERDICT_EVENT_TYPE,
+        round=constants.CLOSING_ROUND,
+        payload={
+            "winner": label,
+            "converged": verdict.converged,
+            "summary": verdict.summary,
+            "rationale": verdict.rationale,
+        },
+        runs_dir=runs_dir,
+    )
+    return verdict
 
 
 __all__ = ["run_debate_loop"]

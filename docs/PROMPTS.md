@@ -1637,5 +1637,33 @@ outcome/decision it produced.
   "private" is enforced by where it is injected, asserted by its absence from the
   opponent's history and the transcript.*
 
+## 8.3 — Verdict: deepened render_verdict + engine wiring (`tests/test_verdict.py`)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/8.3-verdict.json`.
+- **Context:** 4.4 shipped a BASELINE `render_verdict` (winner from a per-side
+  score tally) and the engine left `DebateResult.verdict=None` as a seam. 8.3
+  DEEPENS the verdict to the PRD §3.2 step-4 contract and WIRES it into the loop:
+  the controller writes a summary, whether the agents converged/agreed, the
+  result, and WHO WON with reasoning — judged on argumentation/rebuttal/engagement,
+  explicitly NOT factual correctness (PRD §3: no fact-checking).
+- **Outcome / pattern set:** TDD red-first (8 tests, watched 6 fail, then green).
+  `Verdict` gained ADDITIVE fields `summary`, `converged`, `criteria_scores` (back-
+  compat defaults, so existing usage validates). New `skills/_verdict_logic.py`
+  (`score_debate` + `build_verdict`) scores each side on three NAMED criteria from
+  transparent text signals — argumentation = per-turn base weight + any controller-
+  supplied per-turn `score`; rebuttal/engagement = counts of NAMED marker phrases;
+  winner = higher total, tie within `VERDICT_TIE_MARGIN`; `converged` = both sides
+  show agreement/concession markers. ALL phrase sets / weights / margin / criteria
+  labels / templates are named in `skills/_verdict_constants.py` (split out of
+  `constants.py` to keep it under 150 lines). NO truth-checking anywhere — a
+  test proves a factually-false but better-argued side still wins. The loop's new
+  `_verdict` helper builds `TranscriptTurn`s from the main+closing transcript
+  (failed markers excluded; all-failed → `None`), calls `render_verdict`, sets
+  `DebateResult.verdict`, and logs/streams a `verdict` event via `emit_event` (6.6)
+  under the neutral controller label. *Pattern: judge argument QUALITY from named,
+  transparent transcript signals — never claim truth — so the verdict is
+  deterministic, testable, and PRD-§3 compliant; deepen the output model additively
+  so the baseline contract stays green.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

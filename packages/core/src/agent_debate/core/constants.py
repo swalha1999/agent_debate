@@ -83,6 +83,14 @@ VERDICT_TIE = "tie"
 #: is the derived outcome and ``{pro}``/``{con}`` the per-side totals.
 VERDICT_RATIONALE_TEMPLATE = "Verdict {winner}: tallied from the transcript (pro={pro}, con={con})."
 
+#: ``event_type`` recorded when the controller renders the final verdict after the
+#: closing discussion (orchestration §3.2 step 4 — the LOG schema's ``verdict`` kind).
+LOOP_VERDICT_EVENT_TYPE = "verdict"
+
+#: ``agent`` label recorded on the verdict event — the controller renders it. A
+#: name, not a stance (the controller stays neutral, PRD §5.3).
+LOOP_VERDICT_LOG_AGENT = "controller"
+
 #: ``event_type`` used when a generated message exceeds the word limit and is
 #: trimmed (TASKS.md 5.7). The LOG schema has no ``"violation"`` type, so a policy
 #: violation is recorded as a ``system`` event (its payload names the violation).
@@ -218,6 +226,8 @@ __all__ = [
     "LOOP_MODEL_SERVICE",
     "LOOP_NUDGE_EVENT_TYPE",
     "LOOP_NUDGE_LOG_AGENT",
+    "LOOP_VERDICT_EVENT_TYPE",
+    "LOOP_VERDICT_LOG_AGENT",
     "NUDGE_CORRECTION_TEMPLATE",
     "PROVIDER_KEY_ENV_VARS",
     "REBUTTAL_LEAD_IN",
