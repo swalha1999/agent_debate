@@ -90,6 +90,11 @@ controller must detect and **nudge a captured agent back onto its assigned side.
 
 ## 5. Architecture
 
+> For a newcomer-oriented walkthrough of the system, the five packages, the key
+> mechanisms, and an ADR-style **decisions/rationale** table, see the dedicated
+> [`ARCHITECTURE.md`](ARCHITECTURE.md). This section is the canonical spec it
+> summarises and links back to.
+
 ### 5.1 Packages (uv workspace)
 
 The repo is a **uv workspace** with these members (the five required surfaces):

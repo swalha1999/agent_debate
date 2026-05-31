@@ -173,6 +173,7 @@ env vars — they live in versioned `config/rate_limits.json` (PRD §5.6).
 |---|---|
 | Per-package READMEs | One per surface: [`core` (SDK)](packages/core/README.md), [`cli`](packages/cli/README.md), [`api`](packages/api/README.md), [`ui`](packages/ui/README.md), [`log`](packages/log/README.md) — install/run/import, public API, config, and a minimal example for each. |
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirements — vision, goals, architecture, surfaces, acceptance criteria. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture & decisions doc — the system, the five packages, key mechanisms, and an ADR-style "decisions / rationale" table for a new team member. |
 | [`docs/UI.md`](docs/UI.md) | The web UI — annotated layout diagrams + UX walkthrough (understand the interface without running it). |
 | [`docs/TASKS.md`](docs/TASKS.md) | The full task breakdown by epic, with status and dependencies. |
 | [`docs/prds/`](docs/prds/) | Dedicated sub-PRDs: [debate orchestration](docs/prds/debate-orchestration.md), [anti-sycophancy](docs/prds/anti-sycophancy.md), [API gatekeeper](docs/prds/api-gatekeeper.md), [search plug-in](docs/prds/search-plugin.md). |

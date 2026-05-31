@@ -2106,5 +2106,25 @@ fails → restore → green.
   *Pattern: README examples must be copy-pasted from the real entrypoints/`__all__`,
   never invented; correct stale status truthfully rather than aspirationally.*
 
+### Architecture/decisions doc (task 12.4, 2026-05-31)
+- **Prompt:** "Write an architecture/decisions doc (or expand PRD §5) explaining
+  the system, packages, and key decisions for a new team member."
+- **Context:** PRD §5 + the four sub-PRDs + the per-package READMEs (12.2) each
+  cover a slice, but a newcomer had no single map tying them together — and no
+  consolidated record of *why* the key designs are the way they are.
+- **Outcome/pattern:** Added a dedicated `docs/ARCHITECTURE.md` (cleaner than
+  bloating the PRD): system overview + the three-agent model and an ASCII
+  orchestration diagram; the five packages with responsibilities + the one-way
+  dependency graph (core = heart, LOG = shared leaf, CLI/API/UI = thin shells);
+  a code map ("where to look"); the key mechanisms (anti-sycophancy, both
+  gatekeepers, pluggable search, timeout/retry, logging, cost/budget) each
+  pointing at the REAL modules/classes; and an **ADR-style decisions table**
+  (decision → why → trade-off, D1–D12). Cross-linked from PRD §5 and the root
+  README Documentation table; summarises-and-links the deeper docs rather than
+  duplicating them. *Pattern: every module/class name cited was verified against
+  the actual tree (e.g. `engine/loop.py::run_debate_loop`,
+  `gatekeeper/_gatekeeper.py::ApiGatekeeper`, `search/registry.py`,
+  `security/sanitiser.py`) so the doc cannot drift from reality.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
