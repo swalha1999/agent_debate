@@ -2282,5 +2282,31 @@ fails → restore → green.
   in a covered module, keep the notebook a thin presentation layer, and only reach
   into the raw log for detail the aggregated dataset can't supply.*
 
+### Interpreted visualizations (task 14.3, issue #99, 2026-05-31)
+
+- **Prompt intent:** produce charts for the §9 analyses, *save* them, and
+  *interpret each in prose* connecting the observation to the design — §9 wants
+  interpretation, not just numbers.
+- **Reuse-not-reimplement:** the chart module
+  (`agent_debate.core.research.viz`) takes the 14.2 analysis outputs
+  (`who_wins`, `agree_vs_disagree`, `nudges_per_side`, `RoundMetric`) and draws
+  them; it never re-aggregates the runs. The thin
+  `scripts/generate_figures.py` CLI (mirroring `aggregate_runs.py`) writes the
+  PNGs to `notebooks/figures/`.
+- **Optional dep, guarded import:** matplotlib is a *research/notebook* concern,
+  not a runtime dep of the SDK/API/CLI surfaces, so it goes into the dev group
+  plus a dedicated `[dependency-groups] viz` group (`uv sync --group viz`) — not
+  `core`'s runtime deps. The import is **deferred** inside a `_pyplot()` helper
+  that forces the headless Agg backend, so `agent_debate.core` still imports fine
+  when the extra is absent; only drawing a chart needs it.
+- **Interpretation over metrics:** the prose (`notebooks/figures/README.md` + a
+  notebook viz section) reads each chart against the anti-sycophancy design —
+  balanced who-wins, **0% convergence as the *expected* adversarial outcome**,
+  **0/0 nudges as evidence the side-anchoring held without controller
+  intervention** (the nudge path itself is covered by engine staged-drift tests
+  8.4), and the super-linear per-round token/latency growth as the §10 cost
+  signature. Kept honest about the small **n = 4** sample. *Pattern: a chart is
+  only useful once it is read back against the design hypothesis it tests.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

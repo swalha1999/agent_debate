@@ -40,6 +40,18 @@ dev = [
     "mypy>=1.11",
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    # The research/viz charts (task 14.3) are a notebook/analysis concern, not a
+    # runtime dep of the SDK/API/CLI surfaces, so matplotlib is pulled into the
+    # dev group (which CI already installs) rather than hard-wired into `core`.
+    # `core` guards the import so it still imports fine without this extra.
+    "matplotlib>=3.8",
+]
+# Research-only plotting extra: install with `uv sync --group viz` (or the dev
+# group, which includes it) to regenerate the §9 charts via
+# `scripts/generate_figures.py`. Kept out of the package runtime deps so the
+# SDK/API/CLI surfaces stay matplotlib-free.
+viz = [
+    "matplotlib>=3.8",
 ]
 
 [build-system]
@@ -149,7 +161,16 @@ files = [
     # one-off `scripts/create_issues.py` generator stays out of scope.
     "scripts/check_line_limit.py",
     "scripts/secret_scan.py",
+    "scripts/generate_figures.py",
 ]
+
+# matplotlib ships no type stubs (and types-matplotlib is not a workspace dep),
+# so the strict gate would otherwise flag a missing-import error for the
+# research/viz module (task 14.3). Ignore the missing stubs for that one library
+# only — our own code stays fully type-checked.
+[[tool.mypy.overrides]]
+module = ["matplotlib.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 # Discover both the root workspace tests and each package's own ``tests/`` dir

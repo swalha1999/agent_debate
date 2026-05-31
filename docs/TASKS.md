@@ -246,7 +246,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 - [x] **14.1** Aggregate runs into a dataset (per-topic outcomes, drift/nudge counts, tokens, latency). · P1 · Owner: __ · dep: 12.5
 - [x] **14.2** `notebooks/` analysis: who-wins distribution, agree-vs-disagree rate, drift frequency per side, tokens/latency per round. · P1 · dep: 14.1
-- [ ] **14.3** Visualizations (charts) saved to `runs/`/`notebooks/`; interpreted in prose (not just metrics). · P1 · dep: 14.2
+- [x] **14.3** Visualizations (charts) saved to `runs/`/`notebooks/`; interpreted in prose (not just metrics). · P1 · dep: 14.2
 - [ ] **14.4** Optional parameter exploration: effect of `MAX_WORDS`/`ROUNDS`/model on quality + cost. · P2 · dep: 14.2
 
 **Epic 14 acceptance:** a results notebook with interpreted visualizations exists, evidencing the anti-sycophancy design and debate behaviour.
