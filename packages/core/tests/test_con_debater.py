@@ -33,16 +33,22 @@ from agent_debate.core.settings import Settings
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.test import TestModel
 
+_TOPIC = "Should cities ban private cars from downtown cores?"
+
 
 def _prompt(**overrides: object) -> str:
-    """Build a CON system prompt with a default word limit, overriding selected kwargs."""
-    fields: dict[str, object] = {"max_words": 150}
+    """Build a CON system prompt with a default word limit + topic, overriding kwargs."""
+    fields: dict[str, object] = {"max_words": 150, "topic": _TOPIC}
     fields.update(overrides)
     return build_debater_system_prompt(DebateSide.CON, **fields)  # type: ignore[arg-type]
 
 
 def test_con_prompt_states_the_against_side() -> None:
     assert "AGAINST" in _prompt()
+
+
+def test_con_prompt_states_the_actual_topic_text() -> None:
+    assert _TOPIC in _prompt()
 
 
 def test_con_prompt_requires_rebutting_the_opponent() -> None:
@@ -72,12 +78,12 @@ def test_con_prompt_word_limit_is_config_driven() -> None:
 
 
 def test_create_con_debater_returns_an_agent_without_network() -> None:
-    agent = create_con_debater(model=TestModel())
+    agent = create_con_debater(model=TestModel(), topic=_TOPIC)
     assert isinstance(agent, pydantic_ai.Agent)
 
 
 def test_con_agent_system_prompt_has_side_rules_and_skills() -> None:
-    agent = create_con_debater(model=TestModel())
+    agent = create_con_debater(model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert "AGAINST" in prompt
     assert "rebut" in prompt.lower()
@@ -86,18 +92,24 @@ def test_con_agent_system_prompt_has_side_rules_and_skills() -> None:
         assert skill in prompt
 
 
+def test_con_agent_system_prompt_states_the_topic() -> None:
+    agent = create_con_debater(model=TestModel(), topic=_TOPIC)
+    prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
+    assert _TOPIC in prompt
+
+
 def test_con_prompt_mirrors_pro_except_the_side() -> None:
     # DRY mirror: the only difference between the two debaters' prompts is the side
     # label (FOR ↔ AGAINST). Rules and skill list must be identical text otherwise.
-    con = build_debater_system_prompt(DebateSide.CON, max_words=150)
-    pro = build_debater_system_prompt(DebateSide.PRO, max_words=150)
+    con = build_debater_system_prompt(DebateSide.CON, max_words=150, topic=_TOPIC)
+    pro = build_debater_system_prompt(DebateSide.PRO, max_words=150, topic=_TOPIC)
     assert con != pro
     assert con.replace("AGAINST", "FOR") == pro
 
 
 def test_con_agent_mirrors_pro_agent_prompt_except_side() -> None:
-    con_agent = create_con_debater(model=TestModel())
-    pro_agent = create_pro_debater(model=TestModel())
+    con_agent = create_con_debater(model=TestModel(), topic=_TOPIC)
+    pro_agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     con = "\n".join(con_agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     pro = "\n".join(pro_agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert con.replace("AGAINST", "FOR") == pro
@@ -105,13 +117,13 @@ def test_con_agent_mirrors_pro_agent_prompt_except_side() -> None:
 
 def test_con_agent_word_limit_comes_from_settings() -> None:
     settings = Settings(max_words=77)
-    agent = create_con_debater(settings, model=TestModel())
+    agent = create_con_debater(settings, model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert "77" in prompt
 
 
 def test_con_agent_defaults_to_process_settings_word_limit() -> None:
-    agent = create_con_debater(model=TestModel())
+    agent = create_con_debater(model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert str(Settings().max_words) in prompt
 
@@ -125,7 +137,7 @@ def test_con_agent_resolves_con_model_from_settings_when_not_injected(
     monkeypatch.setenv("CON_MODEL", "anthropic:claude-sonnet-4-6")
     settings = Settings()
     assert settings.con_model == "anthropic:claude-sonnet-4-6"
-    agent = create_con_debater(settings)
+    agent = create_con_debater(settings, topic=_TOPIC)
     assert isinstance(agent.model, AnthropicModel)
 
 

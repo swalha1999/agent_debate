@@ -17,6 +17,7 @@ No values are inlined: the side labels, rule templates and the skill list
 
 from __future__ import annotations
 
+from agent_debate.core.security import sanitize_untrusted_text
 from agent_debate.core.skills import DebateSide
 
 #: The named skills every debater is told it can call, in the PRD §5.2 order.
@@ -52,6 +53,10 @@ SIDE_LABEL: dict[DebateSide, str] = {
 #: Opening line — states the assigned side. ``{label}`` is FOR/AGAINST.
 SIDE_LINE = "You are a debate agent arguing the {label} side of the topic."
 
+#: States the actual motion so the debater knows WHAT it is arguing about (not just
+#: "the topic" generically). ``{topic}`` is the sanitised, validated user topic.
+TOPIC_LINE = "The debate topic (the motion) is: «{topic}»."
+
 #: The single source of truth for the anti-concession wording (anti-sycophancy
 #: §2 mechanism 2). Shared by the system-prompt rules AND the per-turn side anchor
 #: (:mod:`~agent_debate.core.agents.anchoring`) so the instruction is written once.
@@ -79,18 +84,27 @@ SKILL_LINE_TEMPLATE = "- {name}: {usage}"
 def build_debater_system_prompt(
     side: DebateSide,
     *,
+    topic: str,
     max_words: int,
     skills: tuple[str, ...] = DEBATER_SKILLS,
 ) -> str:
     """Build a debater's system prompt for ``side`` (PRD §5.2, anti-sycophancy §2).
 
-    The returned text states the assigned side (FOR/AGAINST), the rules (answer in
-    ``<= max_words`` words; you MUST rebut; do not concede merely because the
+    The returned text states the assigned side (FOR/AGAINST), the actual ``topic``
+    (the motion) so the debater knows what it is arguing about, the rules (answer
+    in ``<= max_words`` words; you MUST rebut; do not concede merely because the
     opponent is convincing), and an explicit list of the named ``skills`` with a
     one-line "when to use" each.
 
+    The ``topic`` is untrusted user input; it is sanitised here with the security
+    gatekeeper (§5.7, :func:`~agent_debate.core.security.sanitize_untrusted_text`)
+    before being embedded, to neutralise prompt-injection — mirroring how
+    :mod:`~agent_debate.core.engine.setup` sanitises the topic for logging.
+
     Args:
         side: The assigned stance — ``PRO`` (FOR) or ``CON`` (AGAINST).
+        topic: The validated user topic (the motion) to state in the prompt;
+            sanitised before embedding.
         max_words: The per-message word limit, supplied from
             :class:`~agent_debate.core.Settings` (never hard-coded).
         skills: The named skills to list; defaults to :data:`DEBATER_SKILLS`.
@@ -99,17 +113,19 @@ def build_debater_system_prompt(
         The assembled system-prompt string.
     """
     side_line = SIDE_LINE.format(label=SIDE_LABEL[side])
+    topic_line = TOPIC_LINE.format(topic=sanitize_untrusted_text(topic))
     rules = RULES_TEMPLATE.format(max_words=max_words)
     skill_lines = [
         SKILL_LINE_TEMPLATE.format(name=name, usage=SKILL_USAGE[name]) for name in skills
     ]
     skills_block = "\n".join([SKILLS_HEADER, *skill_lines])
-    return "\n\n".join([side_line, rules, skills_block])
+    return "\n\n".join([side_line, topic_line, rules, skills_block])
 
 
 __all__ = [
     "ANTI_CONCESSION_RULE",
     "DEBATER_SKILLS",
     "SIDE_LABEL",
+    "TOPIC_LINE",
     "build_debater_system_prompt",
 ]

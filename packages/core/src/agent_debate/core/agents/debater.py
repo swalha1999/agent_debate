@@ -49,21 +49,26 @@ def create_debater(
     side: DebateSide,
     settings: Settings | None = None,
     *,
+    topic: str,
     model: Model | None = None,
     gatekeeper: Gatekeeper | None = None,
 ) -> Agent[None, str]:
     """Build a debater :class:`~pydantic_ai.Agent` for ``side`` (PRD §5.2).
 
-    The agent's ``system_prompt`` is built from config: the per-message word limit
-    is read from ``settings.max_words`` (never hard-coded). When ``model`` is given
-    it is used as-is (tests inject a ``TestModel`` to avoid any network/key); else
-    the side's configured model string is resolved offline. The three debater skills
-    (:func:`~agent_debate.core.agents.tools.debater_tools`) are registered as real
-    Pydantic AI tools, with ``web_search`` routed through the API gatekeeper.
+    The agent's ``system_prompt`` is built from config: it states the actual
+    ``topic`` (the motion) so the debater knows what it is arguing about, and the
+    per-message word limit is read from ``settings.max_words`` (never hard-coded).
+    When ``model`` is given it is used as-is (tests inject a ``TestModel`` to avoid
+    any network/key); else the side's configured model string is resolved offline.
+    The three debater skills (:func:`~agent_debate.core.agents.tools.debater_tools`)
+    are registered as real Pydantic AI tools, with ``web_search`` routed through the
+    API gatekeeper.
 
     Args:
         side: The assigned stance — ``PRO`` or ``CON``.
         settings: Configuration to read; defaults to the process settings.
+        topic: The validated debate topic to embed in the system prompt (sanitised
+            by the prompt builder before use).
         model: An optional pre-built model to inject (skips string resolution).
         gatekeeper: The API gatekeeper ``web_search`` routes its external call through.
 
@@ -77,7 +82,7 @@ def create_debater(
     else:
         model_string = getattr(resolved_settings, _SIDE_MODEL_ATTR[side])
         agent_model = resolve_model(model_string)
-    prompt = build_debater_system_prompt(side, max_words=resolved_settings.max_words)
+    prompt = build_debater_system_prompt(side, topic=topic, max_words=resolved_settings.max_words)
     tools = debater_tools(resolved_settings, gatekeeper)
     _LOG.debug("debater_created", side=side.value, max_words=resolved_settings.max_words)
     return Agent(agent_model, system_prompt=prompt, tools=tools)
@@ -86,20 +91,23 @@ def create_debater(
 def create_pro_debater(
     settings: Settings | None = None,
     *,
+    topic: str,
     model: Model | None = None,
     gatekeeper: Gatekeeper | None = None,
 ) -> Agent[None, str]:
     """Build the **Pro** debater (side=FOR) — the task-5.1 entry point (issue #38).
 
     Thin wrapper over :func:`create_debater` with ``side=PRO``; see it for argument
-    semantics. The Con debater (task 5.2) gets its own wrapper over the same seam.
+    semantics (including the ``topic`` embedded in the system prompt). The Con
+    debater (task 5.2) gets its own wrapper over the same seam.
     """
-    return create_debater(DebateSide.PRO, settings, model=model, gatekeeper=gatekeeper)
+    return create_debater(DebateSide.PRO, settings, topic=topic, model=model, gatekeeper=gatekeeper)
 
 
 def create_con_debater(
     settings: Settings | None = None,
     *,
+    topic: str,
     model: Model | None = None,
     gatekeeper: Gatekeeper | None = None,
 ) -> Agent[None, str]:
@@ -109,9 +117,9 @@ def create_con_debater(
     with ``side=CON`` so the Con agent reuses the exact same rules and skill list as
     Pro (DRY), only the assigned side flips. Its model resolves from ``CON_MODEL``
     (falling back to ``DEBATER_MODEL``); see :func:`create_debater` for argument
-    semantics.
+    semantics (including the ``topic`` embedded in the system prompt).
     """
-    return create_debater(DebateSide.CON, settings, model=model, gatekeeper=gatekeeper)
+    return create_debater(DebateSide.CON, settings, topic=topic, model=model, gatekeeper=gatekeeper)
 
 
 __all__ = ["create_con_debater", "create_debater", "create_pro_debater"]
