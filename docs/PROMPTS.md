@@ -1555,5 +1555,33 @@ outcome/decision it produced.
   seams; when a dependency (gatekeeper) needs per-run state it can't hold at
   construction, defer its default to the seam that has that state — never bypass it.*
 
+## 6.9 — Engine acceptance tests, mocked LLM (`tests/test_engine_acceptance.py`)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.9-engine-tests.json`.
+- **Context:** the per-task Epic-6 suites already covered each unit at ~100%; this
+  is the consolidation/acceptance pass (mirrors 1.5/2.5/3.6/4.6/5.8/7.5/13.7) that
+  proves the orchestration sub-PRD §7 criteria compose as ONE story through the
+  **public `DebateEngine` SDK** at the DEFAULT scale, mocked LLM, no network.
+- **Outcome / pattern set:** TDD red-first demonstrated on the net-new assertion —
+  a default-config `DebateEngine().run()` yields exactly `10 Pro + 10 Con`
+  alternating turns (the wrong expectation `== 11` was watched fail, then restored
+  to `10`). The four §7 behaviours: (1) the 10v10 default-scale debate + word
+  limit + alternation through the SDK; (2) the adversarial relay (5.6) framing is
+  asserted to reach the agent via a `FunctionModel` that records the prompt text it
+  sees — sliced to the main rounds since the closing turns are (correctly)
+  relay-free; (3) timeout→cancel→retry→success and (4) exhausted-retry→FAILED are
+  driven through `run_debate_turn` with the **injectable `timeout_runner`/`sleep_fn`
+  seams** (the SDK deliberately does not expose them), plus a full SDK debate that
+  survives every turn timing out (`max_retries=0` so the loop never sleeps) via a
+  `TimeoutGatekeeper`; (5) streamed events equal the JSONL log, in order.
+  **Subtlety:** the public SDK has no sleep/timeout seam, so the timeout edges use
+  the turn-level seams (honest: unit-level determinism, SDK-level composition) — NO
+  real sleeps/threads/network. Files split to honour the 150-line cap
+  (`_engine_acceptance_helpers.py` holds the `FunctionModel`/gatekeeper/`hang_n_times`
+  fixtures). No source change needed — the engine already satisfied §7; this pass
+  is pure acceptance composition. *Pattern: when the public surface hides a
+  determinism seam, exercise the edge at the seam's own level and compose the happy
+  path through the public API — don't widen the public API just to test it.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
