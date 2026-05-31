@@ -11,25 +11,30 @@ Like the debater skills these are pure, deterministic structuring helpers: the
 controller LLM supplies the judgement as arguments, the skill validates and arranges
 it. No LLM/network call is made, so the API gatekeeper (Epic 13) does not apply.
 
-Epic 8 deepens ``assess_drift`` (8.1) and ``render_verdict`` (8.3); the baselines
-here (a concession-phrase heuristic; a per-side score tally) are intentionally light
-and extend from the named constants in :mod:`agent_debate.core.constants`.
+Epic 8.1 deepens ``assess_drift`` into a robust deterministic §3 drift classifier:
+the scoring lives in :mod:`agent_debate.core.skills._drift_logic` with its phrase
+sets/weights/threshold in :mod:`agent_debate.core.skills._drift_constants` (split
+out to keep this module under the 150-line guideline). ``render_verdict`` (8.3)
+still uses the light per-side score tally; named constants live in
+:mod:`agent_debate.core.constants`.
 """
 
 from __future__ import annotations
 
 from agent_debate.core.constants import (
     DRIFT_CLEAR_CONFIDENCE,
-    DRIFT_CONCESSION_PHRASES,
-    DRIFT_PHRASE_CONFIDENCE,
-    DRIFT_REASON_CLEAR,
-    DRIFT_REASON_PHRASE,
     DRIFT_REASON_SIGNALS,
     DRIFT_SIGNAL_CONFIDENCE,
     NUDGE_CORRECTION_TEMPLATE,
     VERDICT_RATIONALE_TEMPLATE,
     VERDICT_TIE,
 )
+from agent_debate.core.skills._drift_constants import (
+    DRIFT_CAPTURE_THRESHOLD,
+    DRIFT_REASON_DETECTED,
+    DRIFT_REASON_ON_SIDE,
+)
+from agent_debate.core.skills._drift_logic import detect_drift
 from agent_debate.core.skills.models import (
     DebateSide,
     DriftAssessment,
@@ -53,43 +58,61 @@ _LOG = get_logger("skills.controller")
 _SIDE_ADAPTER: TypeAdapter[DebateSide] = TypeAdapter(DebateSide)
 
 
-def _detect_concession(message: str) -> str | None:
-    """Return the first concession phrase found in ``message`` (lower-cased), if any."""
-    lowered = message.lower()
-    return next((phrase for phrase in DRIFT_CONCESSION_PHRASES if phrase in lowered), None)
+def _join_labels(labels: list[str]) -> str:
+    """Join fired signal labels into a readable clause (``a``; ``a and b``; ``a, b and c``)."""
+    if len(labels) == 1:
+        return labels[0]
+    return f"{', '.join(labels[:-1])} and {labels[-1]}"
 
 
 def assess_drift(
     message: str,
     side: DebateSide | str,
     signals: list[str] | None = None,
+    opponent_message: str | None = None,
 ) -> DriftAssessment:
-    """Classify whether ``message`` shows the ``side`` agent being captured.
+    """Classify whether ``message`` shows the ``side`` agent being captured (§3).
 
-    Baseline (Epic 8.1 deepens this): caller-supplied ``signals`` (heuristics the
-    controller LLM flagged) take precedence and force ``captured``; otherwise a
-    concession-phrase scan over the text decides. Inputs are validated by
-    :class:`DriftAssessment` (and :class:`DebateSide` for the side) — an empty
-    message, bad side, or out-of-range confidence raises ``ValidationError``.
+    Deterministic detector (Epic 8.1): caller-supplied ``signals`` (heuristics the
+    controller LLM flagged) take precedence and force ``captured`` at a high fixed
+    confidence; otherwise :func:`detect_drift` scores the four anti-sycophancy §3
+    signals — concession, framing/conclusion adoption, hedging, and restating the
+    opponent without rebuttal — into a clamped weighted confidence. The agent is
+    ``captured`` when that confidence reaches :data:`DRIFT_CAPTURE_THRESHOLD`; the
+    reason names the fired signal(s). No LLM/network call is made, so the API
+    gatekeeper (Epic 13) is N/A. Inputs are validated by :class:`DriftRequest` /
+    :class:`DriftAssessment` (and :class:`DebateSide`) — an empty message, bad side,
+    or out-of-range confidence raises ``ValidationError``.
 
     Args:
         message: The agent's latest message text (must be non-empty).
         side: The agent's assigned side (``pro``/``con``).
         signals: Optional drift heuristics the controller LLM flagged.
+        opponent_message: The opponent's last message, optional context enabling
+            the overlap-based "restating without rebuttal" signal.
 
     Returns:
         The structured :class:`DriftAssessment` (``captured``, ``reason``, ``confidence``).
     """
     resolved_side = _SIDE_ADAPTER.validate_python(side)
-    request = DriftRequest(message=message, side=resolved_side, signals=signals or [])
+    request = DriftRequest(
+        message=message,
+        side=resolved_side,
+        signals=signals or [],
+        opponent_message=opponent_message,
+    )
     if request.signals:
         captured, confidence = True, DRIFT_SIGNAL_CONFIDENCE
         reason = DRIFT_REASON_SIGNALS.format(signals=", ".join(request.signals))
-    elif (phrase := _detect_concession(request.message)) is not None:
-        captured, confidence = True, DRIFT_PHRASE_CONFIDENCE
-        reason = DRIFT_REASON_PHRASE.format(phrase=phrase)
     else:
-        captured, confidence, reason = False, DRIFT_CLEAR_CONFIDENCE, DRIFT_REASON_CLEAR
+        confidence, labels = detect_drift(request.message, request.opponent_message)
+        captured = confidence >= DRIFT_CAPTURE_THRESHOLD
+        confidence = confidence if labels else DRIFT_CLEAR_CONFIDENCE
+        reason = (
+            DRIFT_REASON_DETECTED.format(labels=_join_labels(labels))
+            if labels
+            else DRIFT_REASON_ON_SIDE
+        )
     _LOG.debug("tool_call", tool="assess_drift", side=request.side.value, captured=captured)
     return DriftAssessment(captured=captured, reason=reason, confidence=confidence)
 

@@ -162,6 +162,9 @@ class DriftRequest(BaseModel):
         side: The agent's assigned side (``pro``/``con``); a bad value is rejected.
         signals: Optional drift heuristics the controller LLM flagged; blanks are
             dropped on validation.
+        opponent_message: The opponent's last message, supplied as optional context
+            so the deepened detector (Epic 8.1) can surface "restating the opponent
+            without rebuttal" via token overlap. Backward-compatible default ``None``.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -169,6 +172,7 @@ class DriftRequest(BaseModel):
     message: str = Field(min_length=1)
     side: DebateSide
     signals: list[str] = Field(default_factory=list)
+    opponent_message: str | None = None
 
     @field_validator("message")
     @classmethod
@@ -179,6 +183,14 @@ class DriftRequest(BaseModel):
     @classmethod
     def _signals_clean(cls, value: list[str]) -> list[str]:
         return [item.strip() for item in value if item.strip()]
+
+    @field_validator("opponent_message")
+    @classmethod
+    def _opponent_message_clean(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
 
 class DriftAssessment(BaseModel):
