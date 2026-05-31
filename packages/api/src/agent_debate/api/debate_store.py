@@ -18,6 +18,7 @@ import threading
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from agent_debate.api.event_buffer import EventBuffer
 from agent_debate.core import DebateResult
 
 
@@ -38,12 +39,15 @@ class DebateRecord:
         status: Current :class:`DebateStatus`.
         result: The completed :class:`DebateResult`, or ``None`` until done.
         error: A short error message when ``status`` is ``failed``.
+        events: Per-run live event buffer the SSE endpoint (10.3) streams from;
+            the streaming runner publishes each event here as it happens.
     """
 
     run_id: str
     status: DebateStatus = DebateStatus.RUNNING
     result: DebateResult | None = None
     error: str | None = None
+    events: EventBuffer = field(default_factory=EventBuffer)
 
 
 @dataclass
@@ -66,18 +70,20 @@ class DebateStore:
             return self._records.get(run_id)
 
     def mark_done(self, run_id: str, result: DebateResult) -> None:
-        """Flip ``run_id`` to ``done`` and store its ``result``."""
+        """Flip ``run_id`` to ``done``, store its ``result``, close its buffer."""
         with self._lock:
             record = self._records[run_id]
             record.status = DebateStatus.DONE
             record.result = result
+        record.events.close()
 
     def mark_failed(self, run_id: str, error: str) -> None:
-        """Flip ``run_id`` to ``failed`` and store a short ``error`` message."""
+        """Flip ``run_id`` to ``failed``, store ``error``, close its buffer."""
         with self._lock:
             record = self._records[run_id]
             record.status = DebateStatus.FAILED
             record.error = error
+        record.events.close()
 
 
 __all__ = ["DebateRecord", "DebateStatus", "DebateStore"]
