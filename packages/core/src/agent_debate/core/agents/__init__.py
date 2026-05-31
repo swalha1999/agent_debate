@@ -24,11 +24,26 @@ a verdict, and lists :data:`CONTROLLER_SKILLS`) and the
 :func:`~agent_debate.core.agents.controller.create_controller` factory over the resolved
 ``CONTROLLER_MODEL``.
 
+Task 5.4 (issue #41) adds **independent agent contexts**
+(:mod:`~agent_debate.core.agents.context`): :class:`AgentContext` (one agent's OWN
+ordered history), :class:`Turn` (typed ``role``/``content`` record mapping to
+pydantic-ai ``message_history``), the :class:`DebateContexts` holder and
+:func:`create_debate_contexts` — three ISOLATED contexts so the two debaters never
+share a chat thread (anti-sycophancy §2).
+
 The re-exports below are the subpackage's public surface.
 """
 
 from __future__ import annotations
 
+from agent_debate.core.agents.context import (
+    CONTROLLER_IDENTITY,
+    AgentContext,
+    DebateContexts,
+    Role,
+    Turn,
+    create_debate_contexts,
+)
 from agent_debate.core.agents.controller import create_controller
 from agent_debate.core.agents.controller_prompts import (
     CONTROLLER_SKILLS,
@@ -42,12 +57,18 @@ from agent_debate.core.agents.debater import (
 from agent_debate.core.agents.prompts import DEBATER_SKILLS, build_debater_system_prompt
 
 __all__ = [
+    "CONTROLLER_IDENTITY",
     "CONTROLLER_SKILLS",
     "DEBATER_SKILLS",
+    "AgentContext",
+    "DebateContexts",
+    "Role",
+    "Turn",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
     "create_con_debater",
     "create_controller",
+    "create_debate_contexts",
     "create_debater",
     "create_pro_debater",
 ]
