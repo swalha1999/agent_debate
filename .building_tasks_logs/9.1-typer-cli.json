@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 88494
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 75,
+    "duration_ms": 631097,
+    "summary": "75 tool uses · 88.5k tokens · 10m 31s"
   },
   "note": "Added the Typer CLI surface (PRD §6) over the Epic-6 SDK. TDD red-first: wrote packages/cli/tests/test_cli_run.py (6 tests using typer.testing.CliRunner + a recording stub engine so NO network/API key is needed), watched collection fail (no app module), then implemented to green. NEW packages/cli/src/agent_debate/cli/app.py: a typer.Typer app with a `run(topic, --rounds, --max-words, --model, --search-backend)` command. NO hard-coded defaults — every option defaults to None; _resolve_settings() loads get_settings() and model_copy(update=...)s ONLY the flags the user passed, then DebateConfig.from_settings(settings) derives the run config (so config, not the CLI, owns defaults). --model -> debater_model (resolves both PRO/CON via Settings fallback); --search-backend -> search_backend (passed to the engine via settings so the search plug-in is honoured); --rounds/--max-words override the loop budget. Builds DebateEngine(config, settings=settings).run(topic) and prints via render_result. Invalid options (e.g. rounds<=0) surface as a typer.BadParameter from the pydantic ValueError; missing topic is a usage error. Logs cli_run_start via the LOG package (get_logger); the SDK already routes every model call through the Epic-13 gatekeeper so the thin CLI adds no external calls. NEW packages/cli/src/agent_debate/cli/_render.py: render_result(DebateResult) -> readable transcript + verdict block (split out to keep app.py <150 lines; live streaming is 9.2, --json is 9.3). NEW packages/cli/tests/test_cli_render.py (3 tests) covers closing-discussion/failed-marker/no-verdict/plain-string-winner branches -> _render.py 100%. A name-collision gotcha: re-exporting the Typer app as `app` from cli/__init__.py shadowed the cli.app submodule (broke monkeypatching in the full suite); fixed by re-exporting it as `cli_app` instead. pyproject: added typer>=0.12 (pulled typer 0.26.4 + rich) and a [project.scripts] agent-debate = agent_debate.cli.app:app console entry point; relocked (uv lock). Verified `uv run agent-debate --help` and `... run --help` list the topic + all four options. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean; mypy = no issues in 168 source files; pytest --cov = 629 passed, 99.95% total coverage (cli app.py + _render.py at 100%; >=85 required); check_line_limit.py rc=0; secret_scan.py rc=0. Files: NEW cli/app.py, cli/_render.py, tests/test_cli_run.py, tests/test_cli_render.py; EDIT cli/__init__.py (re-export app as cli_app), cli/pyproject.toml (typer dep + entry point), uv.lock, docs/PROMPTS.md (9.1 entry)."
 }
