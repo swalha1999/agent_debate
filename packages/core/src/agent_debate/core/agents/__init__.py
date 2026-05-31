@@ -37,6 +37,13 @@ the opponent's (sanitised) last message as *"Your opponent argued: «…». Rebu
 it."* and :func:`relay_opponent_turn` injects it — together with the side anchor
 — as a ``user`` turn into the agent's OWN context (anti-sycophancy §2 mechanism 1).
 
+Task 5.7 (issue #44) adds **post-generation word-limit enforcement**
+(:mod:`~agent_debate.core.agents.word_limit`): :func:`count_words` (the
+whitespace-split counting rule) and :func:`enforce_word_limit`, which the engine
+(Epic 6) calls after each turn — if the message exceeds ``max_words`` (from
+Settings) it is trimmed to exactly that many words and a ``system`` violation
+event is logged; otherwise the text is returned unchanged.
+
 The re-exports below are the subpackage's public surface.
 """
 
@@ -71,6 +78,11 @@ from agent_debate.core.agents.relay import (
     build_adversarial_relay,
     relay_opponent_turn,
 )
+from agent_debate.core.agents.word_limit import (
+    WordLimitResult,
+    count_words,
+    enforce_word_limit,
+)
 
 __all__ = [
     "ADVERSARIAL_RELAY_TEMPLATE",
@@ -82,15 +94,18 @@ __all__ = [
     "DebateContexts",
     "Role",
     "Turn",
+    "WordLimitResult",
     "anchor_turn",
     "build_adversarial_relay",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
     "build_side_anchor",
+    "count_words",
     "create_con_debater",
     "create_controller",
     "create_debate_contexts",
     "create_debater",
     "create_pro_debater",
+    "enforce_word_limit",
     "relay_opponent_turn",
 ]

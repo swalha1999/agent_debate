@@ -1217,5 +1217,25 @@ outcome/decision it produced.
   agent's own context and never touches the opponent's thread; an "Ignore previous
   instructions…" payload must be neutralised in what reaches the prompt.*
 
+### 5.7 — Word-limit enforcement (Epic 5, PRD §5.2 / §7)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.7-word-limit.json`.
+- **Context:** The prompt already instructs `<= max_words`; this task **verifies after
+  generation** — if a message exceeds `MAX_WORDS`, trim it and log a violation.
+- **Outcome / pattern set:** New module `agents/word_limit.py`. `count_words` defines the
+  one counting rule (`str.split()` — any whitespace run is one separator; empty/whitespace
+  text = 0 words). `enforce_word_limit(text, *, max_words, run_id=None, ...)` returns a
+  frozen `WordLimitResult(text, violated, original_words)`: within the limit (including
+  exactly `max_words`) it returns the text verbatim with `violated=False` and logs nothing;
+  over the limit it **trims to exactly `max_words` words** at a clean word boundary (first
+  N tokens re-joined with single spaces — no sentence heuristic) and, when a `run_id` is
+  given, logs a violation. *Decision: the LOG schema has no `"violation"` event_type, so a
+  word-limit breach is logged as a `system` event with payload `{"violation": "word_limit",
+  "words": N, "limit": max_words, "trimmed": true}`.* `max_words` is config-driven (caller
+  passes `Settings.max_words`; never hard-coded), and the event_type/agent/tag are named
+  constants in `core.constants`. *Pattern: prompt-instruct AND post-verify — the same
+  policy is both stated in the prompt and enforced deterministically after generation; the
+  enforcement helper is a clean reusable seam the Epic-6 engine calls per turn.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
