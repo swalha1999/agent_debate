@@ -36,7 +36,9 @@ from agent_debate.core.skills.models import (
     TranscriptTurn,
     Verdict,
     VerdictRequest,
+    WebSearchInput,
 )
+from agent_debate.core.skills.web_search import web_search
 
 __all__ = [
     "Argument",
@@ -49,9 +51,11 @@ __all__ = [
     "TranscriptTurn",
     "Verdict",
     "VerdictRequest",
+    "WebSearchInput",
     "analyze_opponent_argument",
     "assess_drift",
     "build_argument",
     "nudge",
     "render_verdict",
+    "web_search",
 ]
