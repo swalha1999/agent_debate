@@ -1165,5 +1165,24 @@ outcome/decision it produced.
   "in my opinion the…") AND **does** carry the explicit "never reveal" instruction, so
   any future edit that makes the judge opinionated fails loudly.*
 
+### 5.4 — Independent agent contexts (Epic 5, PRD §5.4 / anti-sycophancy §2)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.4-independent-contexts.json`.
+- **Context:** Plumbing (no LLM prompt) for the core anti-sycophancy property —
+  "Debaters never share a chat thread." Each agent (Pro/Con/Controller) keeps its
+  **own** ordered message history in a separate `AgentContext`; the engine (Epic 6)
+  feeds `AgentContext.message_history()` to `agent.run(message_history=…)`.
+- **Outcome / pattern set:** Representation is a lightweight, typed, frozen `Turn`
+  (`role`/`content`) rather than raw pydantic-ai `ModelMessage`, mapped to a run
+  history via `Turn.to_model_message()` — trivially isolatable and easy for 5.5/5.6
+  to extend. `append_user` is the seam 5.6 uses to drop an *already-framed* opponent
+  message as a `user` turn in the agent's **own** thread (relay framing itself is 5.6,
+  not here). *Pattern: the isolation test is the contract — appending to the Pro
+  context must leave the Con context empty (and the three contexts are distinct
+  objects), so any future change that re-merges the threads fails loudly.* Adding the
+  re-exports would have pushed `core/__init__.py` past 150 lines, so per "split, don't
+  compress" the secondary names (`Role`, `CONTROLLER_IDENTITY`) export only from
+  `agent_debate.core.agents` while the key surface stays on `agent_debate.core`.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
