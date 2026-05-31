@@ -10,21 +10,8 @@ importing across the edge, proving the dependency resolves at runtime.
 
 from __future__ import annotations
 
+from agent_debate.core._agents_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._version import __version__
-from agent_debate.core.agents import (
-    CONTROLLER_SKILLS,
-    DEBATER_SKILLS,
-    AgentContext,
-    DebateContexts,
-    Turn,
-    build_controller_system_prompt,
-    build_debater_system_prompt,
-    create_con_debater,
-    create_controller,
-    create_debate_contexts,
-    create_debater,
-    create_pro_debater,
-)
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
     ApiGatekeeper,
@@ -94,6 +81,8 @@ LIBRARY_VERSION = __version__
 core_version = __version__
 
 __all__ = [
+    "ADVERSARIAL_RELAY_TEMPLATE",
+    "ANTI_CONCESSION_RULE",
     "DEFAULT_MAX_RESULTS",
     "DEFAULT_MAX_UNTRUSTED_LEN",
     "DEFAULT_SERVICE",
@@ -102,6 +91,7 @@ __all__ = [
     "MAX_QUERY_LEN",
     "MAX_TOPIC_LEN",
     "NEUTRALISED_MARKER",
+    "WordLimitResult",
     "AgentContext",
     "ApiGatekeeper",
     "Argument",
@@ -138,11 +128,15 @@ __all__ = [
     "VerdictRequest",
     "__version__",
     "analyze_opponent_argument",
+    "anchor_turn",
     "assess_drift",
     "available_search_backends",
+    "build_adversarial_relay",
     "build_argument",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
+    "build_side_anchor",
+    "count_words",
     "create_con_debater",
     "create_controller",
     "core_version",
@@ -150,6 +144,8 @@ __all__ = [
     "create_debater",
     "create_pro_debater",
     "create_search_provider",
+    "enforce_word_limit",
+    "relay_opponent_turn",
     "get_settings",
     "load_rate_limit_config",
     "normalise_text",
