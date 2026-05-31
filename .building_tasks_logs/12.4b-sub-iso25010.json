@@ -1,0 +1,15 @@
+{
+  "task_id": "12.4b",
+  "title": "ISO/IEC 25010 mapping",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a short table mapping the system to ISO/IEC 25010 characteristics: functional suitability, reliability, performance efficiency, security, maintainability, portability — with how each is addressed.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 55000
+  },
+  "usage": {
+    "summary": "Added an 'ISO/IEC 25010 product-quality mapping' section (§8) to docs/ARCHITECTURE.md: a table covering all eight characteristics (the six named in the prompt plus compatibility and usability), each citing real verified mechanisms/modules (gatekeepers, timeout/retry + FIFO queue, async concurrent_max, sanitiser, 150-line/ruff/mypy/85%-coverage gates, pydantic-ai + pluggable search). Cross-linked from PRD §8/§13. Docs-only change; no code touched."
+  }
+}
