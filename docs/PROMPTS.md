@@ -2081,5 +2081,30 @@ fails → restore → green.
   green in CI without coupling to a developer's local key file. Coverage held at
   99.7% (>=85%).
 
+### Per-package + root READMEs (task 12.2, 2026-05-31)
+- **Prompt:** "Write a README per package and ensure the root README quickstart
+  covers SDK, CLI, API, UI, LOG."
+- **Context:** The root README still carried an Epic-0 "scaffolding" status note
+  and marked CLI/SDK/API/UI runs **(planned)** — stale now that Epics 6/9/10/11
+  shipped the real `DebateEngine`, the `agent-debate` Typer command, the
+  `/debates` FastAPI routes, and the `agent-debate-ui` app. No package had its
+  own README.
+- **Outcome/pattern:** Added a `README.md` per package, each documenting that
+  surface for a new developer against the ACTUAL code — `core` (the `DebateEngine`
+  facade + `DebateConfig`/`DebateResult`/`Settings`/`ApiGatekeeper` surface from
+  `__init__.__all__`), `cli` (the real `run` command + `--rounds/--max-words/
+  --model/--search-backend/--json` options), `api` (the real `POST /debates`,
+  `GET /debates/{id}`, `GET /debates/{id}/stream` routes + the `agent-debate-api`
+  entrypoint), `ui` (`GET /` `/config` `/static`, the `agent-debate-ui` script,
+  config-driven `API_BASE_URL`), and `log` (`get_logger`/`log_event`/`configure`/
+  redaction). Updated the root README status note + Quickstart to be truthful
+  (all five surfaces runnable, dropped the `(planned)` claims and the non-existent
+  `DebateEngine.from_env()` — `DebateEngine()` already derives config from
+  `Settings`), and cross-linked every README to its siblings + `docs/`. Kept the
+  existing `tests/test_readme.py` contract green (System requirements / Install /
+  Quickstart / Troubleshooting / `docs/` links). Docs-only — no Python added.
+  *Pattern: README examples must be copy-pasted from the real entrypoints/`__all__`,
+  never invented; correct stale status truthfully rather than aspirationally.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
