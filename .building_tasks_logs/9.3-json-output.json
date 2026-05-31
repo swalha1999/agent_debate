@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 91572
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 83,
+    "duration_ms": 558770,
+    "summary": "83 tool uses · 91.6k tokens · 9m 18s"
   },
   "note": "Added a `--json` flag to `agent-debate run`. TDD red-first: wrote packages/cli/tests/test_cli_json.py (CliRunner + stub engines, NO network/key) asserting `run \"topic\" --json` prints valid JSON parsing to the DebateResult shape (topic/transcript/verdict), stdout is ONLY the JSON blob, a failing/crashing engine exits non-zero with the error on stderr, and the human path also exits non-zero on failure; watched it fail (no _json module / behaviour), then implemented to green. NEW cli/_json.py (split from app.py to stay <150 code lines): emit_json(result) -> typer.echo(result.model_dump_json()) (the canonical Pydantic serialisation: transcript/nudges/closing/verdict/totals) as ONE stdout line; run_or_fail[R](produce, *, log) -> runs the callable and on a known debate failure (MissingApiKeyError/InvalidInputError/TurnFailedError) OR any other engine error logs `cli_run_failed` via the LOG package, prints `Error: <msg>` to stderr, and raises typer.Exit(code=EXIT_FAILURE) — EXIT_FAILURE is a NAMED constant (=1), no magic number; clean_stdout() context manager diverts sys.stdout -> sys.stderr for the duration of the --json engine run so the LOG package's pretty console sink (which prints to stdout, PRD §5.8) never pollutes the JSON — stdout carries ONLY the blob (verified manually with real get_settings: settings_loaded/cli_run_start land on stderr, stdout parses clean). EDIT cli/app.py: `run` gained the `--json` option and is now split into _run_json (blocking engine.run under clean_stdout, then emit_json) / _run_human (LIVE render_stream via DebateEngine.stream) sharing a _prepare() helper (resolve settings -> DebateConfig.from_settings -> log cli_run_start -> DebateEngine) and an _Options NamedTuple; BOTH paths route through run_or_fail so failure semantics (stderr + non-zero exit) are identical (the human path now also exits non-zero on failure, previously it would surface an unhandled traceback). No new external calls — the SDK still routes every model call through the Epic-13 gatekeeper; the CLI only consumes engine.run / engine.stream. Gates green locally: uv sync clean; ruff check . = All checks passed (used PEP-695 `def run_or_fail[R]` per UP047); ruff format --check . = 174 files formatted; mypy = no issues in 174 source files (run_or_fail returns NoReturn-typed _fail so the except branches don't fall through); pytest --cov = 640 passed, 99.87% total (cli/_json.py + cli/app.py at 100%; >=85 required); check_line_limit.py rc=0; secret_scan.py rc=0. Files: NEW cli/_json.py, tests/test_cli_json.py; EDIT cli/app.py, docs/PROMPTS.md (9.3 entry), .building_tasks_logs/9.3-json-output.json."
 }
