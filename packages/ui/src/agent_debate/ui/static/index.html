@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>agent_debate — Start a debate</title>
+    <!-- Config-driven API base URL: the server swaps this placeholder for the
+         value of API_BASE_URL (or the named default) before serving the page,
+         so the JS never hard-codes where the API lives. -->
+    <meta name="api-base-url" content="__API_BASE_URL__" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>agent_debate</h1>
+      <p class="lead">Enter a topic and start a multi-agent debate.</p>
+
+      <form id="debate-form" class="debate-form" novalidate>
+        <label for="topic">Debate topic</label>
+        <input
+          id="topic"
+          name="topic"
+          type="text"
+          required
+          autocomplete="off"
+          placeholder="e.g. Should cities ban private cars?"
+        />
+        <button type="submit" id="start">Start debate</button>
+      </form>
+
+      <output id="result" class="result" aria-live="polite"></output>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
