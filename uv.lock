@@ -100,12 +100,18 @@ source = { editable = "packages/ui" }
 dependencies = [
     { name = "agent-debate-core" },
     { name = "agent-debate-log" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "agent-debate-core", editable = "packages/core" },
     { name = "agent-debate-log", editable = "packages/log" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "uvicorn", specifier = ">=0.30" },
 ]
 
 [[package]]

@@ -1880,5 +1880,23 @@ outcome/decision it produced.
   configured origin and *not* a disallowed one, config-driven override, key-not-leaked). 100%
   coverage on the new modules; all existing api tests kept green.
 
+- **Task 11.1 — UI topic-input page (#73).** Prompt: *"Build a web page with a topic
+  input that starts a debate via the API. Keep it simple and clean."* Stack call: keep the
+  UI inside the Python package as a small FastAPI app (mirroring the API's `create_app`
+  factory + Uvicorn entrypoint) that **serves a static frontend** (HTML/CSS/JS) — so the
+  serving routes are pytest-testable via `TestClient` with no network, while the
+  browser-side `fetch` to `POST /debates` stays out of the test path. Key design call: the
+  **API base URL is config-driven, never hard-coded** — `config.py` adds
+  `resolve_api_base_url()` (`API_BASE_URL` env → named `DEFAULT_API_BASE_URL`), and the app
+  surfaces it *two* ways: injected into the served HTML via an `__API_BASE_URL__`
+  placeholder swap (zero extra round-trips for the page) **and** exposed at `GET /config`
+  (JSON, for tests + programmatic readers). Host/port likewise from `UI_HOST`/`UI_PORT` or
+  named defaults. CSS uses **logical properties only** (`margin/padding-inline`,
+  `inset-inline`, `text-align: start`) for RTL-readiness (task 11.5 hardens further);
+  semantic, labelled, `aria-live` result. TDD red-first via `TestClient`: `GET /` → 200
+  HTML with the topic input + start control, the injected base URL matches an env override,
+  `/config` returns it (+ named-default fallback), static assets reachable, factory
+  reusable. 100% coverage on the new Python modules; all existing tests kept green.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
