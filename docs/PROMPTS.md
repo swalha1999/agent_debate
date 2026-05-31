@@ -1996,5 +1996,31 @@ deliverable: `test_ui_usability.py` asserts each affordance at the serving level
 TDD red→green: 9 of 11 tests failed first, then the HTML/JS/CSS changes made
 them pass.
 
+### 11.8 — UI smoke test (issue #80)
+
+Prompt: *"Add a smoke test or capture a screenshot of a completed debate for the
+docs/submission."* A real browser render (Playwright/Selenium) is neither
+available nor appropriate in headless CI, so the deliverable is an honest
+end-to-end smoke proof at the serving/integration level, in three parts:
+(1) **UI shell** — `TestClient(create_app())` asserts `GET /` returns the full
+page a user sees (topic input + the three panels + verdict region + status
+indicator); (2) **API completed-debate contract** — the API app, driven by a
+stub *streaming* runner installed via the 10.3 `set_stream_runner` seam (no
+network, no key) that returns a canned completed `DebateResult` (Pro/Con
+transcript + a full verdict with winner/summary/converged + token totals),
+satisfies the exact surface the UI calls: `POST /debates` → `run_id`;
+`GET /debates/{id}` → done + verdict + totals; `GET /debates/{id}/stream` →
+ordered SSE ending with the `done` sentinel; (3) **UI↔API cross-check** — the
+served `app.js` references those exact paths and verdict fields
+(`winner`/`converged`/`summary` + token totals) and those fields exist in the
+API's completed-debate response, so client and server line up. Split a
+`smoke_helpers.py` (rich completed result + canned events + SSE parser) to keep
+the test file under the 150-line cap. Optional artifact: a small committed
+`docs/ui-completed-debate.html` snapshot — the served shell with the verdict
+region pre-filled from the same canned result, as "what a completed debate looks
+like" for the submission (not a live render). TDD red→green demonstrated by
+breaking the verdict contract (drop `summary`/`converged`) → the contract test
+fails → restore → green.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

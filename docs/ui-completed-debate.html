@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- SNAPSHOT ARTIFACT (task 11.8, issue #80): a static 'what a completed
+     debate looks like' capture for the submission. It is the served UI shell
+     (index.html) with the verdict region pre-filled from the canned completed
+     DebateResult used by the smoke test. NOT a live render and NOT served by
+     the app — open it directly in a browser to view a finished debate. The
+     authoritative proof is packages/ui/tests/test_ui_completed_debate_smoke.py. -->
+<!-- ``dir`` makes the document RTL-capable (task 11.5). The layout is styled
+     with CSS *logical* properties only (margin/padding/border-inline, inset-
+     inline, text-align: start) so flipping this to ``dir="rtl"`` mirrors the
+     whole UI correctly — no physical left/right anywhere. Default LTR here. -->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>agent_debate — Start a debate</title>
+    <!-- Config-driven API base URL: the server swaps this placeholder for the
+         value of API_BASE_URL (or the named default) before serving the page,
+         so the JS never hard-codes where the API lives. -->
+    <meta name="api-base-url" content="http://localhost:8000" />
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>agent_debate</h1>
+      <p class="lead">Enter a topic and start a multi-agent debate.</p>
+
+      <!-- Help & documentation (Nielsen #10, task 11.6): a short hint telling
+           the user what the app does and how to use it — minimal, no clutter. -->
+      <p id="help" class="help">
+        A <strong>Pro</strong> and a <strong>Con</strong> agent debate your
+        topic while a <strong>Moderator</strong> keeps them on track. Type a
+        topic and press <kbd>Enter</kbd> (or Start) — the live transcript,
+        moderator nudges and a final <strong>Verdict</strong> appear below.
+      </p>
+
+      <form id="debate-form" class="debate-form" novalidate>
+        <label for="topic">Debate topic</label>
+        <input
+          id="topic"
+          name="topic"
+          type="text"
+          required
+          autocomplete="off"
+          placeholder="e.g. Should cities ban private cars?"
+        />
+        <div class="form-actions">
+          <button type="submit" id="start">Start debate</button>
+          <!-- User control & freedom (Nielsen #3): reset / start over without
+               being trapped. Hidden until a debate has started. -->
+          <button type="button" id="new-debate" class="secondary" hidden>
+            New debate
+          </button>
+        </div>
+      </form>
+
+      <!-- Visibility of system status (Nielsen #1): a clear, always-honest
+           status line — Connecting… / Debating — round N / Complete / Error —
+           with a streaming "live" dot toggled while SSE events arrive. -->
+      <div id="status" class="status" role="status" aria-live="polite" hidden>
+        <span class="status__dot" aria-hidden="true"></span>
+        <span id="status-text" class="status__text"></span>
+      </div>
+
+      <output id="result" class="result" aria-live="polite"></output>
+
+      <!-- Three SEPARATE panels (task 11.3, PRD §6: "separate panels for
+           transcript / controller actions / system log — don't overload one
+           view"). The JS routes each streamed SSE event to its panel by
+           event_type: message → transcript, nudge → controller, and the
+           technical events (system/tool_call/timeout/retry) → system log. -->
+      <div id="panels" class="panels" hidden>
+        <!-- PANEL 1 — Debate transcript: Pro vs Con "message" events. -->
+        <section
+          id="transcript"
+          class="panel transcript"
+          aria-live="polite"
+          aria-label="Debate transcript"
+        >
+          <h2 class="panel__heading">Debate transcript</h2>
+          <div class="transcript__cols">
+            <div class="transcript__col transcript__col--pro">
+              <h3 class="transcript__heading">Pro</h3>
+              <ol id="transcript-pro" class="transcript__turns"></ol>
+            </div>
+            <div class="transcript__col transcript__col--con">
+              <h3 class="transcript__heading">Con</h3>
+              <ol id="transcript-con" class="transcript__turns"></ol>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL 2 — Controller actions / nudges: the moderator's private
+             corrections, kept OUT of the transcript. -->
+        <section
+          id="controller-panel"
+          class="panel controller-panel"
+          aria-live="polite"
+          aria-label="Moderator actions and nudges"
+        >
+          <h2 class="panel__heading">Moderator actions / nudges</h2>
+          <ol id="controller-actions" class="event-list"></ol>
+        </section>
+
+        <!-- PANEL 3 — System log: system / tool_call / timeout / retry. -->
+        <section
+          id="system-log"
+          class="panel system-log"
+          aria-live="polite"
+          aria-label="System log"
+        >
+          <h2 class="panel__heading">System log</h2>
+          <ol id="system-log-list" class="event-list"></ol>
+        </section>
+      </div>
+
+      <!-- VERDICT VIEW (task 11.4, PRD §6): a DISTINCT region rendered once the
+           debate finishes. On the `done` sentinel app.js GETs /debates/{id} for
+           the final DebateResult (verdict + token/cost totals in one place) and
+           fills these containers: who won (Pro/Con/Tie), the debate summary,
+           whether the agents agreed/converged, and the token totals (cost is
+           Epic 15 — tokens shown now). Hidden until the result arrives. -->
+      <section
+        id="verdict"
+        class="verdict panel"
+        aria-live="polite"
+        aria-label="Debate verdict"
+      >
+        <h2 class="panel__heading">Verdict</h2>
+        <p id="verdict-winner" class="verdict__winner">Winner: Pro</p>
+        <p id="verdict-converged" class="verdict__converged">The agents converged / agreed.</p>
+        <div id="verdict-summary" class="verdict__summary">A close debate; the pro side's evidence prevailed.</div>
+        <dl id="verdict-tokens" class="verdict__tokens">
+          <dt>Total tokens</dt><dd>20</dd>
+          <dt>Input tokens</dt><dd>0</dd>
+          <dt>Output tokens</dt><dd>20</dd>
+        </dl>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
