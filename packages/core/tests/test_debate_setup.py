@@ -96,6 +96,14 @@ def test_setup_builds_three_agents_and_three_isolated_contexts() -> None:
     assert contexts.controller.history() == ()
 
 
+def test_setup_injects_topic_into_both_debater_system_prompts() -> None:
+    """Each debater's system prompt states the actual motion (not just 'the topic')."""
+    setup = _setup()
+    for agent in (setup.pro_agent, setup.con_agent):
+        prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
+        assert _TOPIC in prompt
+
+
 def test_setup_carries_no_controller_stance_field() -> None:
     """Controller neutrality: the setup exposes NO stance/opinion field at all."""
     setup = _setup()

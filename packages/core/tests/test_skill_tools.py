@@ -34,6 +34,9 @@ if TYPE_CHECKING:
     from pydantic_ai import Agent, Tool
 
 
+_TOPIC = "Should cities ban private cars from downtown cores?"
+
+
 def _tool_names(agent: Agent[None, str]) -> set[str]:
     """Return the names of the tools registered on ``agent`` (introspection seam)."""
     return set(agent._function_toolset.tools)  # noqa: SLF001 - inspect registered tools
@@ -59,12 +62,12 @@ def test_controller_tools_returns_the_three_controller_skills() -> None:
 
 
 def test_pro_debater_has_the_three_debater_tools_registered() -> None:
-    agent = create_pro_debater(model=TestModel())
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     assert _tool_names(agent) == set(DEBATER_SKILLS)
 
 
 def test_con_debater_has_the_three_debater_tools_registered() -> None:
-    agent = create_con_debater(model=TestModel())
+    agent = create_con_debater(model=TestModel(), topic=_TOPIC)
     assert _tool_names(agent) == set(DEBATER_SKILLS)
 
 
@@ -74,13 +77,13 @@ def test_controller_has_the_three_controller_tools_registered() -> None:
 
 
 def test_debater_and_controller_tool_sets_are_disjoint() -> None:
-    debater = _tool_names(create_pro_debater(model=TestModel()))
+    debater = _tool_names(create_pro_debater(model=TestModel(), topic=_TOPIC))
     controller = _tool_names(create_controller(model=TestModel()))
     assert debater.isdisjoint(controller)
 
 
 def test_debater_has_no_controller_tools() -> None:
-    agent = create_pro_debater(model=TestModel())
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     assert _tool_names(agent) & set(CONTROLLER_SKILLS) == set()
 
 

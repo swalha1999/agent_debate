@@ -151,7 +151,7 @@ def _tool_names(agent: Agent[None, str]) -> set[str]:
 
 def test_debaters_expose_web_search_plus_at_least_two_skills() -> None:
     for factory in (create_pro_debater, create_con_debater):
-        names = _tool_names(factory(model=TestModel()))
+        names = _tool_names(factory(model=TestModel(), topic="Sample debate topic"))
         assert WEB_SEARCH_TOOL in names
         assert len(names - {WEB_SEARCH_TOOL}) >= 2  # >=2 skills beyond web_search
         assert names == set(DEBATER_SKILLS)

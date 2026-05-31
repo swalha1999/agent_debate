@@ -126,8 +126,12 @@ def setup_debate(
     setup = DebateSetup(
         topic=validated_topic,
         config=config,
-        pro_agent=create_pro_debater(resolved_settings, model=injected.get(DebateSide.PRO)),
-        con_agent=create_con_debater(resolved_settings, model=injected.get(DebateSide.CON)),
+        pro_agent=create_pro_debater(
+            resolved_settings, topic=validated_topic, model=injected.get(DebateSide.PRO)
+        ),
+        con_agent=create_con_debater(
+            resolved_settings, topic=validated_topic, model=injected.get(DebateSide.CON)
+        ),
         controller_agent=create_controller(resolved_settings, model=injected.get(_CONTROLLER_KEY)),
         contexts=create_debate_contexts(),
     )
