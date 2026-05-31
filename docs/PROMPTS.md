@@ -2256,5 +2256,31 @@ fails → restore → green.
   durable log artifact, filter non-domain files explicitly, and label any value the
   source can't supply exactly (cost) as an estimate.*
 
+### Analysis notebook (task 14.2, issue #98, 2026-05-31)
+
+- **Prompt intent:** a `notebooks/` analysis presenting who-wins distribution,
+  agree-vs-disagree rate, drift/nudge frequency per side (anti-sycophancy
+  evidence) and tokens/latency per round.
+- **Thin-notebook / tested-module decision:** all reusable analysis logic lives
+  in the *tested* `agent_debate.core.research.analysis` module (pure functions:
+  `who_wins`, `agree_vs_disagree`, `nudges_per_side`, `round_metrics`,
+  `tokens_latency_per_topic`); the `notebooks/analysis.ipynb` notebook just
+  imports them and prints tables. This keeps the analyses under the TDD/coverage
+  gate (a notebook can't be unit-tested cleanly) and the notebook's code cells
+  minimal. Note: ruff/mypy in `pyproject.toml` only scan `packages/*/src` + tests
+  + select scripts, so the notebook is outside the type/lint gate — its cells are
+  kept clean regardless and committed with **cleared outputs** so no stale numbers
+  or accidental secrets land in the repo (a stdlib smoke test asserts this).
+- **Tables, not charts — no new deps:** `matplotlib`/`pandas` are not workspace
+  dependencies, and rich visualisation is the separate task **14.3**, so 14.2
+  stays stdlib-only and presents the analyses as printed tables. Jupyter is pulled
+  in on demand via `uv run --with jupyter` rather than added as a permanent dep.
+- **Round-level detail from the JSONL:** the 14.1 `RunSummary` only carries
+  run-level totals, so `round_metrics` parses per-round tokens/latency (with a
+  per-side split) straight from the durable LOG event log — reusing the 14.1
+  source-of-truth rather than re-implementing parsing. *Pattern: put the analysis
+  in a covered module, keep the notebook a thin presentation layer, and only reach
+  into the raw log for detail the aggregated dataset can't supply.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

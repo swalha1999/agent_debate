@@ -18,14 +18,32 @@ from agent_debate.core.research._dataset import (
 )
 from agent_debate.core.research._parse import parse_run
 from agent_debate.core.research._summary import NO_VERDICT, RunSummary
+from agent_debate.core.research.analysis import (
+    NudgeStats,
+    RoundMetric,
+    TopicMetric,
+    agree_vs_disagree,
+    nudges_per_side,
+    round_metrics,
+    tokens_latency_per_topic,
+    who_wins,
+)
 
 __all__ = [
     "DATASET_COLUMNS",
     "NO_VERDICT",
     "RUN_GLOB",
+    "NudgeStats",
+    "RoundMetric",
     "RunSummary",
+    "TopicMetric",
     "aggregate_runs",
+    "agree_vs_disagree",
+    "nudges_per_side",
     "parse_run",
+    "round_metrics",
     "summary_to_row",
+    "tokens_latency_per_topic",
+    "who_wins",
     "write_dataset",
 ]
