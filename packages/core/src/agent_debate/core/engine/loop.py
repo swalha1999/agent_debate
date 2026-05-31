@@ -32,23 +32,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agent_debate.core import constants
+from agent_debate.core.engine._cost import price_result
+from agent_debate.core.engine._verdict import render_loop_verdict
 from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.drift import run_drift_check
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import CostTotals, DebateMessage, DebateResult
 from agent_debate.core.engine.setup import DebateSetup
-from agent_debate.core.engine.stream import EventSink, emit_event
+from agent_debate.core.engine.stream import EventSink
 from agent_debate.core.engine.turn import run_debate_turn
 from agent_debate.core.gatekeeper import ApiGatekeeper, load_rate_limit_config
-from agent_debate.core.skills import (
-    DebateSide,
-    NudgeMessage,
-    TranscriptTurn,
-    Verdict,
-    render_verdict,
-)
+from agent_debate.core.pricing import PriceTable
+from agent_debate.core.skills import DebateSide, NudgeMessage
 from agent_debate.log import DEFAULT_RUNS_DIR
 
 
@@ -60,6 +56,7 @@ def run_debate_loop(
     run_id: str,
     runs_dir: Path | str = DEFAULT_RUNS_DIR,
     sink: EventSink | None = None,
+    price_table: PriceTable | None = None,
 ) -> DebateResult:
     """Run the ``config.rounds``-round Pro/Con loop into a :class:`DebateResult` (§3.2).
 
@@ -79,6 +76,9 @@ def run_debate_loop(
         sink: An optional :class:`~agent_debate.core.engine.stream.EventSink` that
             receives every emitted event live, in order, as it happens (§6, task
             6.6). ``None`` (the default) keeps the log-only behaviour unchanged.
+        price_table: Per-model price table used to price the run's cost-breakdown
+            (PRD §10/§11); when ``None`` the config-driven ``config/model_prices.
+            json`` is loaded. Injected in tests to pin costs to known prices.
 
     Returns:
         The assembled :class:`DebateResult` (transcript + nudges + closing
@@ -119,15 +119,15 @@ def run_debate_loop(
     closing = run_closing_discussion(
         setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir, sink=sink
     )
-    verdict = _verdict(transcript + closing, run_id, runs_dir, sink)
-    return DebateResult(
+    result = DebateResult(
         topic=setup.topic,
         transcript=transcript,
         nudges=nudges,
         closing_discussion=closing,
-        verdict=verdict,
+        verdict=render_loop_verdict(transcript + closing, run_id, runs_dir, sink),
         totals=CostTotals.from_messages(transcript + closing),
     )
+    return price_result(result, config, price_table)
 
 
 def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutable state).
@@ -194,44 +194,6 @@ def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared muta
     )
     if correction is not None:
         nudges.append(correction)
-
-
-def _verdict(
-    messages: list[DebateMessage],
-    run_id: str,
-    runs_dir: Path | str,
-    sink: EventSink | None,
-) -> Verdict | None:
-    """Render the final verdict from the debate transcript, log + stream it (§3.2).
-
-    After the closing discussion the controller renders a debate-DERIVED verdict
-    (:func:`~agent_debate.core.skills.render_verdict`): a summary, whether the agents
-    converged/agreed, the result and WHO WON with reasoning — judged on
-    argumentation/rebuttal/engagement, never factual correctness (PRD §3). Failed
-    turns (markers, not real arguments) are excluded; an all-failed run yields no
-    verdict (``None``). The verdict is logged + streamed as a ``verdict`` event so
-    live consumers render it.
-    """
-    turns = [TranscriptTurn(side=m.side, text=m.content) for m in messages if not m.failed]
-    if not turns:
-        return None
-    verdict = render_verdict(turns)
-    label = verdict.winner.value if isinstance(verdict.winner, DebateSide) else verdict.winner
-    emit_event(
-        sink,
-        run_id=run_id,
-        agent=constants.LOOP_VERDICT_LOG_AGENT,
-        event_type=constants.LOOP_VERDICT_EVENT_TYPE,
-        round=constants.CLOSING_ROUND,
-        payload={
-            "winner": label,
-            "converged": verdict.converged,
-            "summary": verdict.summary,
-            "rationale": verdict.rationale,
-        },
-        runs_dir=runs_dir,
-    )
-    return verdict
 
 
 __all__ = ["run_debate_loop"]

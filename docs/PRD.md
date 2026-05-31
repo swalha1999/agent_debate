@@ -339,7 +339,18 @@ visualizations (in `notebooks/` and `runs/`) covering:
 ## 10. Costs & pricing (guideline §11)
 
 - **Cost-breakdown table** per run and aggregate: input/output tokens × price per
-  model → total cost (per model and overall).
+  model → total cost (per model and overall). Implemented in task 15.2: a completed
+  `DebateResult` carries a per-model `cost_breakdown` (`CostBreakdown` / `ModelCostRow`)
+  plus the overall total in `totals.cost_usd`, priced from the config-driven price
+  table (§15.1, `config/model_prices.json`). `format_cost_table(breakdown)` renders
+  the markdown table (model | input tokens | output tokens | $input | $output |
+  $total, with an overall row); `aggregate_costs([...])` sums many runs into one
+  table. Example (one run, opus debaters):
+
+  | Model | Input tokens | Output tokens | $ Input | $ Output | $ Total |
+  | --- | --- | --- | --- | --- | --- |
+  | anthropic:claude-opus-4-8 | 1000000 | 200000 | $15.000000 | $15.000000 | $30.000000 |
+  | Overall | 1000000 | 200000 | $15.000000 | $15.000000 | $30.000000 |
 - **Budget management**: real-time token accounting in the LOG package, a configurable
   budget cap, and an over-budget alert. Cost behaviour vs. scale (rounds × word limit)
   documented.

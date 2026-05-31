@@ -2022,5 +2022,21 @@ like" for the submission (not a live render). TDD red→green demonstrated by
 breaking the verdict contract (drop `summary`/`converged`) → the contract test
 fails → restore → green.
 
+### Cost-breakdown table (task 15.2, 2026-05-31)
+- **Prompt:** "Generate a cost-breakdown table per run and aggregate: input/output
+  tokens × price → total, per model and overall (guideline §11). Surface in the
+  result and docs."
+- **Context:** 6.7 captured per-turn tokens (by side); 15.1 shipped the config-driven
+  per-model price table + `compute_cost`. This task turned tokens into money.
+- **Outcome/pattern:** Added `CostBreakdown` / `ModelCostRow` value objects +
+  `cost_breakdown_from_result` (maps each turn's side → its configured model via
+  `config.pro_model`/`con_model`, sums tokens per model, prices via the table),
+  `format_cost_table` (markdown), and `aggregate_costs` (sum many runs). The engine
+  loop now prices the completed run: `DebateResult.cost_breakdown` + a non-zero
+  `totals.cost_usd`, with an optional `price_table` injection for tests. Set the
+  convention that runtime cost is priced at finalisation from config — no hard-coded
+  prices — and that the loop is split (`_cost.py`, `_verdict.py`) to hold the 150-line
+  cap.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
