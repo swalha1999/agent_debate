@@ -1258,5 +1258,25 @@ outcome/decision it produced.
   shim (explicit imports + an explicit, mypy-checked `__all__`), pulled in via a single `*`
   import, with a scoped `per-file-ignores = [F403, F405]` for that one re-export `__init__`.
 
+### 6.1 — DebateConfig + DebateResult (Epic 6, orchestration sub-PRD §2, issue #46)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.1-debate-models.json`.
+- **Context:** First task of Epic 6 (the orchestration engine) — the **typed models only**,
+  building clean seams for the 10-vs-10 loop, timeout wrapper, closing discussion, event
+  streaming and SDK entrypoint that follow (6.2+). No loop is built here.
+- **Outcome / pattern set:** New `engine/` subpackage — `engine/models.py` (`DebateConfig`,
+  the input contract) and `engine/result.py` (`DebateResult` output + `DebateMessage`,
+  `ToolCallRecord`, `CostTotals`). **Config-driven:** `DebateConfig.from_settings(settings)`
+  lifts every tunable (rounds/max_words/timeout/retries/models, incl. the resolved per-side
+  pro/con fallback) from `Settings` — no hard-coded defaults; the model only validates bounds
+  (`rounds/max_words/turn_timeout_s > 0`, `max_retries >= 0`). `DebateResult` reuses the
+  existing skills `NudgeMessage` / `Verdict` / `DebateSide` rather than re-modelling them, and
+  `CostTotals.from_messages` aggregates token/cost/latency (mirroring `GatekeeperStatus.
+  from_services`). `DebateMessage.word_count` is a computed field, so the message model uses
+  `extra="ignore"` to let the JSON dump round-trip cleanly. *Pattern (split, not compress):*
+  the hub `__init__` sat at the 150-line cap, so the engine re-export group was factored into
+  a `_engine_public.py` shim (mirroring `_agents_public.py`); the hub splices the shim's
+  `__all__` via `*_engine_public.__all__` (no new literal entries) to stay under the cap.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
