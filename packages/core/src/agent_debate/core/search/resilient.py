@@ -70,6 +70,7 @@ class ResilientSearchProvider:
         sleep_fn: Callable[[float], None] = time.sleep,
         timeout_runner: TimeoutRunner = _default_timeout_runner,
     ) -> None:
+        """Wrap ``inner`` with the configured timeout/retry/backoff policy."""
         self._inner = inner
         self._limits = limits
         self._timeout_s = timeout_s

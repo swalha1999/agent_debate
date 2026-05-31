@@ -210,7 +210,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [x] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
 - [ ] **12.3** Cost report: see Epic 15 (cost-breakdown table + budget). · P1 · dep: 15.2
 - [x] **12.4** Architecture/decisions doc (or expand PRD §5) for a new team member. · P1
-- [ ] **12.4a** Docstrings on all public modules/classes/functions; meaningful comments where logic is non-obvious (guideline §3.3). · P1
+- [x] **12.4a** Docstrings on all public modules/classes/functions; meaningful comments where logic is non-obvious (guideline §3.3). · P1
 - [ ] **12.4b** Map the system to **ISO/IEC 25010 product-quality characteristics** (functional suitability, reliability, performance, security, maintainability, portability) in a short table (guideline §13). · P2
 - [ ] **12.5** **Generate sample debate runs and commit them to the repo** so the teacher can see real runs: save each run's transcript + verdict + token/cost totals under `runs/` (e.g. `runs/<run_id>.jsonl` plus a readable `runs/<run_id>.md`). Aim for a few varied topics. · P0 · Owner: __ · dep: 6.8, 8.3
 - [ ] **12.6** Add an `examples/` or `runs/README.md` index listing the saved debates (topic, who won, link) and link it from the root README. · P1 · dep: 12.5

@@ -75,6 +75,10 @@ def run_debate_turn(
         runs_dir: Directory holding the per-run JSONL sink.
         opponent_message: The opponent's latest message to rebut, or ``None`` on
             the very first turn (no opponent has spoken yet).
+        sleep_fn: Sleep primitive used between retries; injectable so tests can
+            run without real delays (defaults to :func:`time.sleep`).
+        timeout_runner: Optional injected timeout+retry runner (task 6.4);
+            ``None`` uses the default wrapper.
         sink: Optional live event sink (§6, task 6.6); ``None`` logs only.
 
     Returns:

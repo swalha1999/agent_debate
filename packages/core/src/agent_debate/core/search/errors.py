@@ -20,6 +20,7 @@ class UnknownSearchBackendError(LookupError):
     """
 
     def __init__(self, backend: str, available: Sequence[str]) -> None:
+        """Record the unknown ``backend`` key and the ``available`` names."""
         self.backend = backend
         self.available = list(available)
         listed = ", ".join(self.available) if self.available else "<none registered>"

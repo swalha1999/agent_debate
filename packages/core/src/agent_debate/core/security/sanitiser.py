@@ -120,6 +120,7 @@ class SecurityGatekeeper:
         run_id: str | None = None,
         runs_dir: Path | str | None = None,
     ) -> None:
+        """Bind the ``max_length`` cap and optional ``run_id``/``runs_dir``."""
         self._max_length = max_length
         self._run_id = run_id
         self._runs_dir = runs_dir

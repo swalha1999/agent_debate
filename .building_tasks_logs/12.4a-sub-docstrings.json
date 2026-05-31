@@ -1,0 +1,15 @@
+{
+  "task_id": "12.4a",
+  "title": "Docstrings & comments",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add docstrings to all public modules/classes/functions and meaningful comments where logic is non-obvious. Optionally enforce with ruff pydocstyle rules.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 78000
+  },
+  "usage": {
+    "summary": "Enabled ruff pydocstyle (D) rules with the google convention; fixed the 11 surfaced gaps (7 missing __init__ docstrings, 3 raw-string docstrings, 1 missing arg descriptions). Existing docstring coverage was already near-complete."
+  }
+}

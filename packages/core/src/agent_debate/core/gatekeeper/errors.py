@@ -19,6 +19,7 @@ class RateLimitExceededError(RuntimeError):
     """
 
     def __init__(self, service: str, window: str) -> None:
+        """Record the offending ``service`` and ``window`` on the error."""
         self.service = service
         self.window = window
         super().__init__(f"rate limit exceeded for service {service!r} ({window})")
@@ -34,6 +35,7 @@ class QueueFullError(RuntimeError):
     """
 
     def __init__(self, service: str, max_depth: int) -> None:
+        """Record the offending ``service`` and ``max_depth`` ceiling."""
         self.service = service
         self.max_depth = max_depth
         super().__init__(f"overflow queue full for service {service!r} (max_depth={max_depth})")

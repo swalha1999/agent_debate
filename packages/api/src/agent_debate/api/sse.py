@@ -1,9 +1,9 @@
-"""Server-Sent Events (SSE) formatting helpers (task 10.3, issue #70).
+r"""Server-Sent Events (SSE) formatting helpers (task 10.3, issue #70).
 
 PRD §6: ``GET /debates/{id}/stream`` streams a debate's live events as SSE so a
 browser/CLI can render the debate round by round. This module is the tiny,
 dependency-free wire-format layer: it turns a typed :class:`~agent_debate.log.
-LogEvent` into one SSE record (``event: <event_type>\\ndata: <json>\\n\\n``) and
+LogEvent` into one SSE record (``event: <event_type>\ndata: <json>\n\n``) and
 emits the terminal ``done`` sentinel that closes the stream.
 
 No hard-coded values scattered in the route: the media type, the field labels and
@@ -30,7 +30,7 @@ DONE_EVENT = "done"
 
 
 def format_event(name: str, data: str) -> str:
-    """Render one SSE record: ``event: <name>\\ndata: <data>\\n\\n``.
+    r"""Render one SSE record: ``event: <name>\ndata: <data>\n\n``.
 
     Args:
         name: The SSE event name (the event's ``event_type``, or ``done``).

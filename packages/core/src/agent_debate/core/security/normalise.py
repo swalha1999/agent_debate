@@ -44,7 +44,7 @@ _WHITESPACE_RUN = re.compile(r"\s+")
 
 
 def _strip_control_chars(text: str) -> str:
-    """Remove C0/C1 control characters, keeping only normal whitespace.
+    r"""Remove C0/C1 control characters, keeping only normal whitespace.
 
     Unicode category ``C`` covers control/format/surrogate/private-use chars;
     we drop them all *except* the whitespace forms (tab/newline/CR) that the

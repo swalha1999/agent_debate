@@ -32,6 +32,7 @@ class EventBuffer:
     """
 
     def __init__(self) -> None:
+        """Create an empty, open buffer with its producer/consumer lock."""
         self._events: list[LogEvent] = []
         self._closed = False
         self._cond = threading.Condition()
