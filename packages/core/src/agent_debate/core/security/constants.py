@@ -21,6 +21,18 @@ from __future__ import annotations
 #: override so callers (e.g. a future Settings field) can tighten it per context.
 DEFAULT_MAX_UNTRUSTED_LEN = 4000
 
+#: Maximum length (characters) the user-supplied **debate topic** may have
+#: (task 7.2 input validation, PRD §5.7). Unlike :data:`DEFAULT_MAX_UNTRUSTED_LEN`
+#: (a *sanitiser* truncation cap), this is a *validation* cap: a topic over this
+#: length is **rejected** with a clear error, not silently truncated. A topic is
+#: a short proposition, so the cap is deliberately tight to surface abuse early.
+MAX_TOPIC_LEN = 500
+
+#: Maximum length (characters) a **web-search query** may have before it is
+#: rejected (task 7.2; PRD §5.7: "web-search queries length-capped"). Queries are
+#: short keyword strings, so this is tighter still; over-length input is rejected.
+MAX_QUERY_LEN = 256
+
 #: Replacement token substituted for each neutralised injection match. Chosen to
 #: be visibly inert: it reads as redaction metadata, never as an instruction, so
 #: a downstream model treats it as data. Single source of truth for the marker.
@@ -64,5 +76,7 @@ __all__ = [
     "INJECTION_PATTERNS",
     "LOG_AGENT",
     "LOG_EVENT_TYPE",
+    "MAX_QUERY_LEN",
+    "MAX_TOPIC_LEN",
     "NEUTRALISED_MARKER",
 ]
