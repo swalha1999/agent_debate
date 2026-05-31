@@ -29,6 +29,26 @@
       </form>
 
       <output id="result" class="result" aria-live="polite"></output>
+
+      <!-- Live transcript (task 11.2): the JS opens an EventSource to the API's
+           GET /debates/{id}/stream and appends each Pro/Con message here as it
+           streams. The two side columns make Pro vs Con read distinctly. -->
+      <section
+        id="transcript"
+        class="transcript"
+        aria-live="polite"
+        aria-label="Live debate transcript"
+        hidden
+      >
+        <div class="transcript__col transcript__col--pro">
+          <h2 class="transcript__heading">Pro</h2>
+          <ol id="transcript-pro" class="transcript__turns"></ol>
+        </div>
+        <div class="transcript__col transcript__col--con">
+          <h2 class="transcript__heading">Con</h2>
+          <ol id="transcript-con" class="transcript__turns"></ol>
+        </div>
+      </section>
     </main>
 
     <script src="/static/app.js"></script>

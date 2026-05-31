@@ -1,0 +1,15 @@
+{
+  "task_id": "11.2",
+  "title": "Live streaming transcript",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Consume GET /debates/{id}/stream and render the Pro vs Con transcript live as it streams.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "summary": "usage to be filled by main loop from harness report"
+  }
+}

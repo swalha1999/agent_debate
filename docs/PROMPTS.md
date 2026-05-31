@@ -1898,5 +1898,23 @@ outcome/decision it produced.
   `/config` returns it (+ named-default fallback), static assets reachable, factory
   reusable. 100% coverage on the new Python modules; all existing tests kept green.
 
+- **Task 11.2 — Live streaming transcript (#74).** Prompt: *"Consume GET
+  /debates/{id}/stream and render the Pro vs Con transcript live as it streams."* Stack
+  call: the live render is browser JS (`EventSource` over the API's SSE endpoint), so — as
+  with 11.1 — it's **tested at the serving level**, not in a real browser. `app.js` opens
+  `new EventSource(${apiBaseUrl()}/debates/{id}/stream)` (reusing 11.1's config-driven
+  `apiBaseUrl()`, so the origin is **never hard-coded**), listens for `message` events,
+  `JSON.parse`s each `LogEvent`, routes it into a Pro or Con column by `event.agent`
+  (matching the engine's `DebateSide` `"pro"`/`"con"` values) and appends a turn in arrival
+  order (live); it **closes on the `done` sentinel** (and on `error`). `index.html` gains a
+  two-column `#transcript` region; `style.css` gives Pro vs Con distinct palettes
+  (`--pro`/`--con`) using **logical properties only** (`border-inline-start`,
+  `padding-inline`, `text-align: start`) for RTL-readiness. TDD red-first via `TestClient`:
+  the served `app.js` wires `EventSource` + the `/debates/{id}/stream` path + the
+  config-driven base URL + `message`/`done` dispatch + Pro/Con render; the page has the
+  transcript container; the CSS distinguishes the two sides and uses no physical
+  left/right. Honest scope: browser behaviour itself is the UI smoke test (11.8); dedicated
+  nudge/system + verdict panels are 11.3/11.4.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
