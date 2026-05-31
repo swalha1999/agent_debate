@@ -39,6 +39,7 @@ source = { editable = "packages/cli" }
 dependencies = [
     { name = "agent-debate-core" },
     { name = "agent-debate-log" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -46,6 +47,7 @@ dependencies = [
 requires-dist = [
     { name = "agent-debate-core", editable = "packages/core" },
     { name = "agent-debate-log", editable = "packages/log" },
+    { name = "rich", specifier = ">=13" },
     { name = "typer", specifier = ">=0.12" },
 ]
 

@@ -20,7 +20,7 @@ key is required.
 from __future__ import annotations
 
 import typer
-from agent_debate.cli._render import render_result
+from agent_debate.cli._live import render_stream
 from agent_debate.core import DebateConfig, DebateEngine, Settings, get_settings
 from agent_debate.log import get_logger
 
@@ -86,7 +86,13 @@ def run(
         None, "--search-backend", help="Search backend plug-in (e.g. duckduckgo/tavily)."
     ),
 ) -> None:
-    """Run a full debate on TOPIC and print the transcript + verdict."""
+    """Run a full debate on TOPIC, rendering the LIVE transcript + verdict.
+
+    Consumes :meth:`DebateEngine.stream` and renders each event LIVE via Rich
+    (Pro/Con messages per round, inline controller nudges, the final verdict) as
+    it arrives — the default human view. The structured ``--json`` output is a
+    separate task (9.3) and is intentionally not built here.
+    """
     settings = _resolve_settings(rounds, max_words, model, search_backend)
     try:
         config = DebateConfig.from_settings(settings)
@@ -94,8 +100,7 @@ def run(
         raise typer.BadParameter(str(exc)) from exc
     _LOG.info("cli_run_start", topic=topic, rounds=config.rounds, max_words=config.max_words)
     engine = DebateEngine(config, settings=settings)
-    result = engine.run(topic)
-    typer.echo(render_result(result))
+    render_stream(topic, engine.stream(topic))
 
 
 __all__ = ["app", "run"]
