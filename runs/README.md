@@ -26,17 +26,27 @@ path). The debaters now argue the stated motion and rebut each other's actual wo
 | `policy-congestion-pricing` | policy | Should governments impose congestion pricing to enter city centers? | 4 | Pro |
 | `techethics-ai-art` | tech-ethics | Should AI-generated art be eligible for copyright protection? | 3 | Con |
 | `lifestyle-morning-routine` | lifestyle | Is waking up at 5am the key to a productive life? | 3 | tie |
+| `capitalism` | economics | Capitalism is, on balance, a force for good in society. | 10 | Pro |
 
 (A fuller index with links is task 12.6.)
 
+The `capitalism` run is a **full 10-round** debate at the **default 150-word** message
+limit — a complete exercise of the system's PRD default (PRD §2, §7). The original
+three runs (`policy-congestion-pricing`, `techethics-ai-art`,
+`lifestyle-morning-routine`) were instead run at a **reduced 3-4 rounds** with a
+120-word limit purely to save real-API cost; see the section below.
+
 ## Reduced rounds for cost — the system supports the full 10
 
-These sample runs were generated with a reduced round count (**4 rounds** for the
-policy run, **3 rounds** for the other two) and a **120-word** message limit
+The original three runs (`policy-congestion-pricing`, `techethics-ai-art`,
+`lifestyle-morning-routine`) were generated with a reduced round count (**4 rounds**
+for the policy run, **3 rounds** for the other two) and a **120-word** message limit
 (`--rounds {3,4} --max-words 120`) to keep total real-API cost to roughly a dollar
-across all three. This is *deliberate cost control*, not a limitation: the system's
-default is the full **10 rounds × 150 words** (PRD §2, §7), and a 3-4 round debate
-already exercises the entire mechanism — Pro/Con
+across all three. The `capitalism` run, by contrast, is a **full 10-round** debate at
+the **default 150-word** limit (no reducing flags), so it demonstrates the system at
+its PRD default end-to-end. This is *deliberate cost control*, not a limitation: the
+system's default is the full **10 rounds × 150 words** (PRD §2, §7), and even a 3-4
+round debate already exercises the entire mechanism — Pro/Con
 alternation, rebuttal of the opponent's actual words, the controller drift-check /
 nudge path, the closing discussion, the debate-derived verdict, and the
 token/cost-breakdown table. To reproduce at the full default, drop the flags:
@@ -60,6 +70,11 @@ uv run python scripts/generate_sample_runs.py --rounds 3 --max-words 120 \
 uv run python scripts/generate_sample_runs.py --rounds 3 --max-words 120 \
     --run-id lifestyle-morning-routine \
     --topic "Is waking up at 5am the key to a productive life?"
+
+# Full 10-round debate at the default 150-word limit (no reducing flags):
+uv run python scripts/generate_sample_runs.py \
+    --run-id capitalism \
+    --topic "Capitalism is, on balance, a force for good in society."
 ```
 
 Every model call routes through the Epic-13 API gatekeeper inside the SDK; the
