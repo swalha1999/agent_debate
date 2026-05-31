@@ -1200,5 +1200,22 @@ outcome/decision it produced.
   Pro must leave Con's history empty, and anchoring twice must add the reminder both
   rounds, so any change that drops the per-turn re-injection fails loudly.*
 
+### 5.6 — Adversarial relay (Epic 5, PRD §5.2 / anti-sycophancy §2 mechanism 1)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.6-adversarial-relay.json`.
+- **Context:** Pass the opponent's last message into an agent framed adversarially
+  (*"Your opponent argued: «…». Rebut it."*), NOT as an agreeable peer turn.
+- **Outcome / pattern set:** New module `agents/relay.py`. `build_adversarial_relay`
+  **sanitises the opponent message first** (`security.sanitize_untrusted_text` —
+  opponent text is another agent's untrusted output) and only then wraps it in the
+  single named `ADVERSARIAL_RELAY_TEMPLATE` (the `«»` framing lives once). The
+  per-turn helper `relay_opponent_turn` reuses `anchoring.anchor_turn(...,
+  opponent_message=framed)` so the side anchor + framed relay combine into ONE
+  `user` turn in the agent's **own** context. *Pattern: untrusted text re-entering a
+  prompt must pass the security gatekeeper BEFORE framing (sanitise-then-frame), and
+  the isolation test is the contract — the relay enters as a `user` turn in the
+  agent's own context and never touches the opponent's thread; an "Ignore previous
+  instructions…" payload must be neutralised in what reaches the prompt.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
