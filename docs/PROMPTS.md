@@ -1526,5 +1526,34 @@ outcome/decision it produced.
   aggregate into typed per-slice breakdowns — leave pricing to the downstream epic
   so token capture has no hard-coded values.*
 
+## 6.8 — Public SDK entrypoint (`engine/sdk.py`)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.8-sdk-entrypoint.json`.
+- **Context:** the engine seams already existed — `setup_debate` (validate +
+  prepare), `run_debate_loop` (rounds + closing → `DebateResult`), and
+  `stream_debate` (threaded generator yielding events then the result). This task
+  ties them into ONE ergonomic facade other packages (CLI/API/UI) drive.
+- **Outcome / pattern set:** TDD red-first (`tests/test_debate_engine.py`, 7 tests,
+  watched fail on the missing `DebateEngine` export). `DebateEngine(config).run(
+  topic) -> DebateResult` is the blocking call; `.stream(topic)` is the streaming
+  variant — yields each `LogEvent` live then the final `DebateResult` as the last
+  item of one iterator (documented contract). Config-driven: `config=None` builds
+  from `Settings` via `DebateConfig.from_settings`; the gatekeeper is injected or
+  left `None` so the loop builds its own rate-limited default **bound to the run
+  id** (the gatekeeper needs `run_id` at construction, so it can't be built in
+  `__init__` before a run id exists — the facade holds only an *optional injected*
+  keeper and defers the default to the loop). `run_id` defaults to `uuid4().hex`.
+  **Subtlety:** `run()` logs the one `system` setup event for observability, but
+  `stream()` skips it (`log_setup=False`) so the streamed sequence stays identical
+  to the JSONL log — the setup event precedes the threaded worker and would
+  otherwise not flow through the live sink. Canonical import is `from
+  agent_debate.core import DebateEngine` (the SDK is the `agent_debate.core`
+  namespace package — no top-level `agent_debate.__init__` shim; this is THE
+  documented surface, matching the PRD's `from agent_debate import DebateEngine`
+  intent). Re-exported alongside `__version__`, `DebateConfig`, `DebateResult`.
+  *Pattern: a public facade owns the config + injectables and composes existing
+  seams; when a dependency (gatekeeper) needs per-run state it can't hold at
+  construction, defer its default to the seam that has that state — never bypass it.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

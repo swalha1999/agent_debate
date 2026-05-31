@@ -13,6 +13,7 @@ from __future__ import annotations
 from agent_debate.core.engine import (
     CostTotals,
     DebateConfig,
+    DebateEngine,
     DebateMessage,
     DebateResult,
     DebateSetup,
@@ -27,6 +28,7 @@ from agent_debate.core.engine import (
 __all__ = [
     "CostTotals",
     "DebateConfig",
+    "DebateEngine",
     "DebateMessage",
     "DebateResult",
     "DebateSetup",
