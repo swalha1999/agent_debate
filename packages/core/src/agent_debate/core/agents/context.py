@@ -33,6 +33,7 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     ModelResponse,
+    SystemPromptPart,
     TextPart,
     UserPromptPart,
 )
@@ -73,14 +74,24 @@ class Turn:
 class AgentContext:
     """One agent's **own** conversation history — isolated from every other agent.
 
-    Holds an ``identity`` (``"pro"``/``"con"``/``"controller"``) and a private,
-    ordered list of :class:`Turn` records. Appending to one context never affects
-    another (no shared thread — the core anti-sycophancy property). Pass
-    :meth:`message_history` to ``agent.run`` to thread this agent's OWN history
-    back into ITS next run.
+    Holds an ``identity`` (``"pro"``/``"con"``/``"controller"``), the agent's own
+    ``system_prompt`` text and a private, ordered list of :class:`Turn` records.
+    Appending to one context never affects another (no shared thread — the core
+    anti-sycophancy property). Pass :meth:`message_history` to ``agent.run`` to
+    thread this agent's OWN history back into ITS next run.
+
+    **System-prompt delivery (issue: system-prompt-delivery).** pydantic-ai only
+    injects an :class:`~pydantic_ai.Agent`'s configured ``system_prompt`` when a
+    run STARTS with no ``message_history``; once a history is supplied it is NOT
+    re-injected. Because the engine always runs debaters with ``message_history``,
+    the configured prompt would never reach the model. So the agent's own prompt
+    text is stored HERE and :meth:`message_history` embeds it as the leading
+    :class:`~pydantic_ai.messages.SystemPromptPart` of the FIRST request — exactly
+    once — keeping each agent's prompt isolated to its own thread (§5.4).
     """
 
     identity: str
+    system_prompt: str | None = None
     _turns: list[Turn] = field(default_factory=list)
 
     def append_user(self, content: str) -> None:
@@ -96,8 +107,34 @@ class AgentContext:
         return tuple(self._turns)
 
     def message_history(self) -> list[ModelMessage]:
-        """Render this agent's history as pydantic-ai ``message_history`` for a run."""
-        return [turn.to_model_message() for turn in self._turns]
+        """Render this agent's history as pydantic-ai ``message_history`` for a run.
+
+        When a :attr:`system_prompt` is set it is prepended as a
+        :class:`~pydantic_ai.messages.SystemPromptPart` on the FIRST
+        :class:`~pydantic_ai.messages.ModelRequest` (the leading ``user`` turn), so
+        pydantic-ai delivers the agent's full system prompt to the model exactly
+        once — not repeated on every turn (see the class docstring).
+        """
+        history = [turn.to_model_message() for turn in self._turns]
+        if self.system_prompt is not None:
+            self._prepend_system_prompt(history)
+        return history
+
+    def _prepend_system_prompt(self, history: list[ModelMessage]) -> None:
+        """Insert the system prompt at the head of the first ``ModelRequest``.
+
+        The leading request is the very first inbound turn of the run history; it
+        is rebuilt with the prompt part in front (``ModelRequest.parts`` is a typed
+        sequence, so we replace the request rather than mutate it in place). A
+        history with no ``ModelRequest`` yet (e.g. a not-yet-prompted thread) gets a
+        standalone request carrying only the prompt.
+        """
+        prompt_part = SystemPromptPart(content=self.system_prompt or "")
+        for index, message in enumerate(history):
+            if isinstance(message, ModelRequest):
+                history[index] = ModelRequest(parts=[prompt_part, *message.parts])
+                return
+        history.insert(0, ModelRequest(parts=[prompt_part]))
 
 
 @dataclass(frozen=True, slots=True)

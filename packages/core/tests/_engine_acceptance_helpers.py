@@ -62,6 +62,21 @@ def capturing_model(text: str, seen: list[str]) -> FunctionModel:
     return FunctionModel(_fn)
 
 
+def message_capturing_model(text: str, captured: list[list[ModelMessage]]) -> FunctionModel:
+    """Return ``text`` and append the FULL ``ModelMessage`` list of each call.
+
+    Unlike :func:`capturing_model` (which records only the last user text), this
+    records the complete message history the model receives so a test can assert
+    the leading ``SystemPromptPart`` the engine now delivers on the history path.
+    """
+
+    def _fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        captured.append(list(messages))
+        return ModelResponse(parts=[TextPart(content=text)])
+
+    return FunctionModel(_fn)
+
+
 def _last_user_text(messages: list[ModelMessage]) -> str:
     """Concatenate the text parts of the last ``ModelRequest`` (the live prompt)."""
     for message in reversed(messages):

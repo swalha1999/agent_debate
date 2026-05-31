@@ -20,7 +20,13 @@ from agent_debate.core import (
     Turn,
     create_debate_contexts,
 )
-from pydantic_ai.messages import ModelRequest, ModelResponse, TextPart, UserPromptPart
+from pydantic_ai.messages import (
+    ModelRequest,
+    ModelResponse,
+    SystemPromptPart,
+    TextPart,
+    UserPromptPart,
+)
 
 
 def test_new_context_history_starts_empty() -> None:
@@ -126,6 +132,39 @@ def test_message_history_renders_own_turns_in_order() -> None:
     ctx.append_assistant("a")
     history = ctx.message_history()
     assert [type(m) for m in history] == [ModelRequest, ModelResponse]
+
+
+def test_no_system_prompt_emits_no_system_part() -> None:
+    # Default context (no prompt set) must render exactly its turns, unchanged.
+    ctx = AgentContext(identity="pro")
+    ctx.append_user("q")
+    history = ctx.message_history()
+    assert not any(
+        isinstance(p, SystemPromptPart) for m in history for p in getattr(m, "parts", [])
+    )
+
+
+def test_system_prompt_leads_the_first_request() -> None:
+    ctx = AgentContext(identity="pro", system_prompt="SYS")
+    ctx.append_user("q")
+    ctx.append_assistant("a")
+    history = ctx.message_history()
+    first = history[0]
+    assert isinstance(first, ModelRequest)
+    assert isinstance(first.parts[0], SystemPromptPart)
+    assert first.parts[0].content == "SYS"
+    # Exactly one across the whole history (not duplicated onto later requests).
+    parts = [p for m in history for p in getattr(m, "parts", [])]
+    assert sum(isinstance(p, SystemPromptPart) for p in parts) == 1
+
+
+def test_system_prompt_added_when_history_has_no_request_yet() -> None:
+    # A not-yet-prompted thread still delivers the prompt as a standalone request.
+    ctx = AgentContext(identity="pro", system_prompt="SYS")
+    ctx.append_assistant("a")
+    history = ctx.message_history()
+    assert isinstance(history[0], ModelRequest)
+    assert history[0].parts[0].content == "SYS"
 
 
 def test_append_opponent_message_lands_in_own_thread_as_user_turn() -> None:
