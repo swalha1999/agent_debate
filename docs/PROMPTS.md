@@ -1058,5 +1058,29 @@ outcome/decision it produced.
   input — distinct postures sharing one named-constant config; expose both a
   function and a Pydantic model so every surface validates identically.*
 
+### 7.4 — Secret hygiene check (PRD §7.4)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/7.4-secret-hygiene.json`.
+- **Context:** Two secret defences already existed independently — the build-time
+  scanner `scripts/secret_scan.py` (0.11) and the runtime LOG redactor (1.4).
+  7.4 makes their *coverage explicit and coordinated*: the scan must cover logs
+  too, and one test must prove a single planted fake key is caught by BOTH.
+- **Outcome / pattern set:** Added `.jsonl` to the scanner's `SCANNED_SUFFIXES`
+  so a stray committed `runs/*.jsonl` log artifact is covered (logs are normally
+  gitignored, but the scan must not silently miss one). Added
+  `tests/test_secret_hygiene.py` (5 tests) proving coordination: (a) `log_event`
+  with the fake key in its payload → the on-disk JSONL omits the key and carries
+  the `REDACTED` marker; (b) the same key written to a tmp source file and a tmp
+  `runs/*.jsonl` is flagged by `find_secrets`. The planted key is assembled from
+  string PARTS at runtime (`"sk-" + "ant-" + …`) so no `sk-ant-…` literal is
+  committed — the live CI secret-scan gate still exits 0. TDD red-first: the
+  log-coverage assertion failed (`.jsonl` absent from `SCANNED_SUFFIXES`), then
+  green after the one-line config addition. Gates: ruff/format clean, mypy clean
+  (97 files), 372 passed, 100% coverage, line-limit + secret-scan exit 0.
+  *Pattern: a build-time gate and a runtime filter share ONE detector config and
+  ONE integration test that plants a single fake key — proving both layers catch
+  it by design, not coincidence; build the fake secret from parts so the
+  coordination test never trips the very gate it exercises.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
