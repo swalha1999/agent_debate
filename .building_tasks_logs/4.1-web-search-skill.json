@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 127449
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 80,
+    "duration_ms": 416149,
+    "summary": "80 tool uses · 127.4k tokens · 6m 56s"
   },
   "note": "The web_search skill (PRD §5.2, search-plugin §5) — first Epic-4 skill that makes an EXTERNAL call, so it threads BOTH gatekeepers. TDD red-first: wrote packages/core/tests/test_web_search.py (9 tests), watched it fail on the missing import, then implemented to green. New skills/web_search.py::web_search(query, *, settings=None, gatekeeper=None, max_results=None, run_id=None, runs_dir=DEFAULT_RUNS_DIR) -> list[SearchResult]. Flow: (1) VALIDATE the query via validate_search_query (7.2) — rejects oversized/blank/control-char with InvalidInputError BEFORE any network hop; (2) build the active provider via create_search_provider(settings, gatekeeper=...) so its live external call routes THROUGH ApiGatekeeper.execute(service='search') (Epic 13, rate-limited), then wrap in ResilientSearchProvider so a flaky/failed search degrades to [] (never raises); provider-agnostic (whatever SEARCH_BACKEND selects — a test proves it works with the tavily stub too); (3) run provider.search(query, max_results=...); (4) SANITISE each result through sanitize_search_result (7.5) BEFORE returning — defends against prompt-injection embedded in crawled text (title+snippet neutralised, url left as structural provenance); (5) LOG one tool_call event (run_id, query, result count) via agent_debate.log. Provider assembly split into skills/_web_search_build.py so web_search.py stays a thin policy flow under the 150-line limit (split, don't compress). Tool-ready: WebSearchInput (skills/models.py, frozen + extra='forbid') reuses the 7.2 validate_search_query so a bad query raises before any call; FULL Pydantic AI tool registration onto the agents is task 4.5 (not over-built here). No hard-coded values: query cap from 7.2 constants; max_results defaults to DEFAULT_MAX_RESULTS; resilience retry knobs from the 'search' ServiceLimits in config/rate_limits.json and timeout from Settings.turn_timeout_s; service name = SEARCH_SERVICE constant; new named log constants WEB_SEARCH_EVENT_TYPE/_TOOL/_DEFAULT_RUN_ID in constants.py. Re-exported web_search + WebSearchInput from agent_debate.core.skills and agent_debate.core. While wiring those re-exports, core/__init__.py crossed the 150-code-line cap; fixed STRUCTURALLY by switching the skills re-export to the existing `from ... import *` + `*skills.__all__` splat shim (same pattern _engine_public/_agents_public already use), which REDUCED the file to 121 lines rather than hacking the threshold. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean; mypy = no issues in 138 source files; pytest --cov = 522 passed, 100% total coverage (new web_search.py / _web_search_build.py / models.py at 100%, >=85 required); check_line_limit.py rc=0 (web_search.py ~22 code lines, _web_search_build.py ~11, both well under 150; core/__init__.py back to 121); secret_scan.py rc=0. docs/PROMPTS.md entry added. Flow confirmed: validate query -> gatekeeper-routed provider -> sanitise results -> log; provider-agnostic."
 }
