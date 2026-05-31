@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 78127
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 51,
+    "duration_ms": 317677,
+    "summary": "51 tool uses · 78.1k tokens · 5m 18s"
   },
   "note": "Epic 8.4 adds the anti-sycophancy §4 STAGED-DRIFT FIXTURE: a reusable, offline (no-network) fixture that forces a debater to PARROT/CONCEDE to the opponent and asserts end-to-end that the staged drift is DETECTED and NUDGED back >=1. Test-only task (detection/nudge pipeline already exists from 8.1/8.2/orchestration 6.x); no source change was needed — staging drift through the real engine path surfaced NO gap. NEW reusable helper tests/_staged_drift_helpers.py: drifting_model(side, concede_round) builds a pydantic-ai FunctionModel whose concede_round-th turn deterministically emits a clearly-conceding line (CONCEDING_LINE, sourced from DRIFT_CONCEDE_PHRASES so no literal duplication) while every other turn stays on-side; staged_run() drives a full debate through the public DebateEngine SDK with an injected ApiGatekeeper (Epic 13) + per-run JSONL sink under tmp_path; nudge_events() reads the run's 'nudge' events; capturing_drifting_model() records prompts to prove private-context injection. NEW tests/test_staged_drift.py (5 tests): assess_drift flags the staged concession (captured=True, confidence>=0.5); the engine records >=1 Pro nudge in DebateResult.nudges AND logs a matching 'nudge' event in runs/<id>.jsonl; the nudge is PRIVATE (10-vs-10 invariant holds — exactly rounds Pro + rounds Con turns, is_debate_turn=False, correction never leaks into the opponent's transcript); a NON-drifting control debate yields ZERO nudges (the red->green guard); the private correction is injected into the captured agent's OWN later prompt. TDD red->green shown honestly: asserting capture for an on-side line FAILS (on-side captured=False) while the staged conceding line is captured=True — codified by the zero-nudge control test, proving the nudges come from the STAGED concession, not noise. Caps (rounds/max_words) come from DebateConfig.from_settings (no hard-coding); fixture is reusable for future drift-staging tests. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . clean (164 files); mypy = no issues in 164 files; pytest --cov = 620 passed, 99.95% total coverage (>=85 required); check_line_limit.py rc=0 (helpers 130 lines, test 99 lines — both split under 150); secret_scan.py rc=0. Files: NEW tests/_staged_drift_helpers.py, tests/test_staged_drift.py; EDIT docs/PROMPTS.md (8.4 entry)."
 }
