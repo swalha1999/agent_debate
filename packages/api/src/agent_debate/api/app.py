@@ -13,6 +13,8 @@ routes through the Epic-13 gatekeeper, so the API adds no new external edges.
 
 from __future__ import annotations
 
+from agent_debate.api.debate_routes import create_debate_router
+from agent_debate.api.debate_store import DebateStore
 from agent_debate.core import __version__, get_settings
 from agent_debate.log import get_logger
 from fastapi import FastAPI
@@ -52,7 +54,9 @@ def create_app() -> FastAPI:
         summary="FastAPI surface over the agent_debate SDK (PRD §6).",
     )
     app.state.settings = settings
+    app.state.debate_store = DebateStore()
     _register_routes(app)
+    app.include_router(create_debate_router(app.state.debate_store))
 
     get_logger(_LOG_RUN_ID).info("api_app_created", service=SERVICE_NAME, version=__version__)
     return app

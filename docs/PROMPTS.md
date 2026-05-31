@@ -1799,5 +1799,31 @@ outcome/decision it produced.
   entrypoint resolves env/default host-port and invokes a patched `uvicorn.run`. 100%
   coverage on the api package.
 
+### Debate endpoints — `POST /debates` + `GET /debates/{id}` (task 10.2, issue #69)
+- **Prompt (verbatim):** see `.building_tasks_logs/10.2-debate-endpoints.json`.
+- **Context:** Builds on the 10.1 FastAPI skeleton: adds the first real endpoints over the
+  SDK. The challenge is testability — a full debate is long-running and makes model calls,
+  but tests must be fast with NO network/key.
+- **Outcome / pattern set:** Split into four small modules (all ≤150 code lines).
+  `debate_store.py` — a thread-safe in-memory `DebateStore` (run_id → `DebateRecord`) +
+  a `DebateStatus` `StrEnum` (`running`/`done`/`failed`) so status strings are a single
+  source of truth, not inline magic; storage is in-memory only (durable persistence out of
+  scope). `debate_runner.py` — the **injectable seam**: a `DebateRunner` Protocol
+  `(topic, overrides) -> DebateResult`; `default_runner` drives `DebateEngine` (every model
+  call routes through the Epic-13 gatekeeper inside the engine) applying overrides to
+  `Settings.model_copy`; `set_debate_runner(app, ...)`/`get_debate_runner(app)` store/read
+  it on `app.state` so **tests substitute a stub** returning a canned `DebateResult`
+  instantly. `debate_models.py` — `DebateRequest` (topic reuses the 7.2 `validate_topic`
+  field validator → oversized/empty/control-char topics become a clean 422; optional
+  `rounds`/`max_words`/`model`/`search_backend` overrides) + `DebateStarted`/`DebateState`
+  responses. `debate_routes.py` — `POST /debates` validates, mints a uuid4 `run_id`,
+  registers a `running` record, schedules the run on `BackgroundTasks`, returns
+  `{run_id,status}` (201); the worker flips the record to `done`/`failed` and never crashes;
+  `GET /debates/{id}` returns status + result (or 404). Wired into `create_app()` (per-app
+  store on `app.state`, router included). TDD red-first via `TestClient` + the injected
+  stub: POST returns a non-empty run_id; GET returns status and the result when done; unknown
+  id → 404; oversized/empty/missing topic → 4xx; overrides reach the runner; a raising runner
+  → `failed`. 100% coverage on the new endpoint code.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
