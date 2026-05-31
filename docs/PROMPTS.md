@@ -2225,5 +2225,36 @@ fails → restore → green.
   re-implementing it; and "cost-conscious" means smoke-test-then-reduce, never
   loop-on-error against a paid API.*
 
+### Aggregate runs dataset (task 14.1, issue #97, 2026-05-31)
+
+- **Prompt intent:** read `runs/*.jsonl` and aggregate per-topic outcomes,
+  drift/nudge counts per side, tokens and latency into a tidy dataset (CSV/parquet).
+- **Source-of-truth decision:** the dataset is built *only* from the committed
+  `runs/<run_id>.jsonl` LOG event logs — the same machine log the teacher reviews —
+  not from a re-run engine or the `.md` files. Reading one log end-to-end first
+  (the 12.5 lesson) revealed the exact shape: per-`message` `tokens` is a combined
+  count (no input/output split, no per-model id), the topic lives in the
+  `debate_setup` system event, and the winner/`converged` flag in the `verdict`
+  event. The runs dir *also* holds package LOG chatter files (`api.jsonl`, …) with
+  no `event_type`; an `is_debate_run` filter (has a setup or verdict) cleanly
+  excludes them so only the three real debates land in the dataset.
+- **Cost is an honest estimate, not a fabrication:** because the JSONL lacks the
+  input/output split, `est_cost_usd` prices `total_tokens` at the configured
+  debater model's *input* rate from `config/model_prices.json` (config-driven, no
+  hard-coded price). Input tokens dominate (~99.8k vs ~8k output on the policy run),
+  so the estimate tracks the real billed cost closely; the *exact* per-model cost
+  still lives in each `<run_id>.md`. The column README documents this caveat rather
+  than silently presenting an approximation as the truth.
+- **Outcome/pattern:** TDD red-first (`packages/core/tests/test_runs_aggregation.py`
+  with synthetic in-memory JSONL fixtures, never the committed runs), then a small
+  `core/research/` package split four ways under the 150-line cap (`_summary` value
+  object, `_parse` fold, `_aggregate` dir-walk, `_dataset` stdlib-CSV io) plus a thin
+  `scripts/aggregate_runs.py` CLI. **Stdlib `csv`, not parquet** — pandas/pyarrow are
+  not workspace deps and the acceptance criteria only need a dataset to *exist*; a
+  heavy dep just for this would violate "don't add deps you don't need". No external
+  API calls, so the Epic-13 gatekeeper rule is N/A. *Pattern: aggregate from the
+  durable log artifact, filter non-domain files explicitly, and label any value the
+  source can't supply exactly (cost) as an estimate.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
