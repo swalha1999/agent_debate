@@ -1825,5 +1825,31 @@ outcome/decision it produced.
   id → 404; oversized/empty/missing topic → 4xx; overrides reach the runner; a raising runner
   → `failed`. 100% coverage on the new endpoint code.
 
+### SSE stream endpoint — `GET /debates/{id}/stream` (task 10.3, issue #70)
+- **Prompt (verbatim):** see `.building_tasks_logs/10.3-sse-stream.json`.
+- **Context:** Builds on 10.2: stream a debate's ordered, typed events to live consumers as
+  Server-Sent Events. The run executes on a background worker, so the challenge is the
+  worker→consumer hand-off, plus testing live streaming with NO network.
+- **Outcome / pattern set:** Three small new modules (all ≤150 code lines). `event_buffer.py`
+  — a thread-safe, append-only `EventBuffer` per run (one `threading.Condition`): the worker
+  `publish()`-es each event, each SSE consumer `stream()`-s from index 0 (blocking for live
+  events, terminating on `close()`). Append-only ⇒ the **same code path** serves a live tail
+  and a faithful **replay** of a finished run; each consumer keeps its own cursor so nothing
+  is dropped/double-counted. `sse.py` — the dependency-free wire format: named constants
+  (`SSE_MEDIA_TYPE = "text/event-stream"`, the field labels, the `done` sentinel — no inline
+  magic) + `format_log_event` (SSE `event:` = the event's `event_type`, `data:` = its JSON).
+  `stream_runner.py` — a streaming seam `(topic, overrides, publish, run_id) -> DebateResult`;
+  `default_stream_runner` drives `DebateEngine.stream` (model calls still through the Epic-13
+  gatekeeper), forwarding each `LogEvent` to `publish` and keeping the final `DebateResult`;
+  `get_stream_runner` resolves an injected streaming stub first, else **adapts** a 10.2 plain
+  `DebateRunner` (backward compatible), else the default. The `DebateRecord` gained an
+  `events: EventBuffer`; the 10.2 worker now drives the streaming runner and `mark_done`/
+  `mark_failed` `close()` the buffer so attached streams terminate. The route is a plain
+  `StreamingResponse(media_type=SSE_MEDIA_TYPE)` yielding each event then a `done` sentinel;
+  unknown id → 404. TDD red-first via `TestClient` (it buffers the full body) + a stub runner
+  publishing canned events: the SSE body parses to ordered, typed records ending in `done`;
+  unknown id → 404; a finished run replays. No network in any test. 98–100% coverage on the
+  new modules.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
