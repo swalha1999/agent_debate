@@ -1690,5 +1690,27 @@ outcome/decision it produced.
   through the SDK; pair the staged assertion with an on-side control so the fixture's
   trigger is proven, not assumed.*
 
+### Typer CLI app — `agent-debate run` (task 9.1, issue #64)
+- **Prompt (verbatim):** "Build a Typer CLI with a run command taking a topic and
+  options (--rounds, --max-words, --model, --search-backend). It drives the SDK
+  (DebateEngine)."
+- **Context:** Epic 9 opens the CLI surface (PRD §6: `agent-debate run "<topic>"
+  [--rounds 10] [--max-words 150] [--model …]`). The Epic-6 SDK (`DebateEngine`,
+  `DebateConfig.from_settings`, `Settings`/`get_settings`) was already the documented
+  facade; 9.1 is the thin Typer shell over it (live streaming is 9.2, `--json` is 9.3).
+- **Outcome / pattern set:** A `typer.Typer` app (`cli/app.py`) with a `run` command
+  whose every option defaults to `None`; `_resolve_settings()` loads `get_settings()`
+  and `model_copy(update=…)`s ONLY the flags the user passed, then
+  `DebateConfig.from_settings()` derives the run config — so **config, not the CLI,
+  owns the defaults** (no hard-coded magic). `--model` sets `debater_model` (resolving
+  both sides via the Settings fallback); `--search-backend` flows to the engine via
+  `settings=`; rendering split into `_render.py` to keep files <150 lines. Tests drive
+  the app with `typer.testing.CliRunner` + a recording stub engine so **no network/API
+  key** is touched (the SDK already routes real calls through the Epic-13 gatekeeper).
+  *Gotcha worth remembering: re-exporting the Typer app as `app` from the package
+  `__init__` shadows the `cli.app` submodule (breaks monkeypatching in the full suite)
+  — re-export it under a different name (`cli_app`). Console entry point registered as
+  `[project.scripts] agent-debate = agent_debate.cli.app:app`.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
