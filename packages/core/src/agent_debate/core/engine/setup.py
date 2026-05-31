@@ -34,6 +34,8 @@ from pathlib import Path
 from agent_debate.core import constants
 from agent_debate.core.agents import (
     DebateContexts,
+    build_controller_system_prompt,
+    build_debater_system_prompt,
     create_con_debater,
     create_controller,
     create_debate_contexts,
@@ -135,9 +137,30 @@ def setup_debate(
         controller_agent=create_controller(resolved_settings, model=injected.get(_CONTROLLER_KEY)),
         contexts=create_debate_contexts(),
     )
+    _attach_system_prompts(setup, resolved_settings, validated_topic)
     if run_id is not None:
         _log_setup(setup, run_id, runs_dir)
     return setup
+
+
+def _attach_system_prompts(setup: DebateSetup, settings: Settings, topic: str) -> None:
+    """Store each agent's system-prompt text on its OWN isolated context.
+
+    pydantic-ai does not re-inject an agent's configured ``system_prompt`` once a
+    run is given a ``message_history`` (which the engine always supplies), so the
+    prompt is recorded on the per-agent :class:`~agent_debate.core.agents.context.
+    AgentContext`; its ``message_history`` then embeds it as the leading
+    ``SystemPromptPart`` (delivered to the model exactly once). The text is built
+    from the SAME builders the agents use (single source of truth), so each side's
+    own side/rules/skills/topic prompt stays isolated to its own thread (§5.4).
+    """
+    setup.contexts.pro.system_prompt = build_debater_system_prompt(
+        DebateSide.PRO, topic=topic, max_words=settings.max_words
+    )
+    setup.contexts.con.system_prompt = build_debater_system_prompt(
+        DebateSide.CON, topic=topic, max_words=settings.max_words
+    )
+    setup.contexts.controller.system_prompt = build_controller_system_prompt()
 
 
 def _log_setup(setup: DebateSetup, run_id: str, runs_dir: Path | str | None) -> None:
