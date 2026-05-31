@@ -1,0 +1,4 @@
+run_id,topic,rounds,winner,converged,total_tokens,est_cost_usd,pro_messages,con_messages,pro_nudges,con_nudges,total_latency_ms,avg_latency_ms,timeouts,retries
+lifestyle-morning-routine,Is waking up at 5am the key to a productive life?,3,tie,False,76344,0.229032,4,4,0,0,110594.0,18432.333,0,0
+policy-congestion-pricing,Should governments impose congestion pricing to enter city centers?,4,pro,False,107744,0.323232,5,5,0,0,159204.0,19900.5,0,0
+techethics-ai-art,Should AI-generated art be eligible for copyright protection?,3,con,False,67173,0.201519,4,4,0,0,93985.0,15664.167,0,0
