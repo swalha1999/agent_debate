@@ -1,0 +1,18 @@
+{
+  "task_id": "5.2",
+  "title": "Con debater agent — mirror of Pro with side=AGAINST, same skill list and rules (Epic 5)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Create the Con debater mirroring Pro (task 5.1) with side=AGAINST and the same skill list and rules.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Second agent of Epic 5 (PRD §5.2). Task 5.1 already built the side-parameterizable create_debater(side, settings=None, *, model=None) seam plus the _SIDE_MODEL_ATTR map (PRO->pro_model / CON->con_model, per-side->DEBATER_MODEL fallback resolved in Settings) and the shared build_debater_system_prompt(side, *, max_words, skills=DEBATER_SKILLS) builder — so 5.2 is intentionally SMALL and fully DRY. Added create_con_debater(settings=None, *, model=None) -> pydantic_ai.Agent to packages/core/src/agent_debate/core/agents/debater.py as a thin wrapper that simply returns create_debater(DebateSide.CON, settings, model=model), exactly mirroring create_pro_debater (only the side flips to CON/AGAINST). NO prompt-building logic duplicated — the Con prompt reuses the same rules (<= max_words from Settings, MUST rebut, do NOT concede merely because the opponent sounds convincing — anti-sycophancy §2) and the same DEBATER_SKILLS list as Pro; SIDE_LABEL[CON] = 'AGAINST' is the only difference. con_model resolves CON_MODEL falling back to DEBATER_MODEL (already in Settings). Re-exported create_con_debater from agent_debate.core.agents and agent_debate.core. No new files in src (wrapper added to existing debater.py, still well under 150 lines). API gatekeeper (Epic 13): N/A — the factory only constructs Agent/model objects offline, no external call. Logs via the existing get_logger('agents') debater_created event. TDD red-first: wrote packages/core/tests/test_con_debater.py (14 tests), watched it fail (ImportError: cannot import name 'create_con_debater'), then implemented to green. Tests use an injected pydantic-ai TestModel (no network, no API key); they assert the Con prompt/agent states 'AGAINST', the word-limit number, 'rebut', the do-not-concede/'convincing' instruction, and all three skill names, AND explicitly assert the Con prompt MIRRORS Pro except the side (con.replace('AGAINST','FOR') == pro) at both the builder and the constructed-agent level; one test sets dummy ANTHROPIC_API_KEY + CON_MODEL to cover the no-injected-model offline resolve path, and one asserts con_model falls back to debater_model when CON_MODEL is unset. Gates green locally (see PR CI for authoritative result)."
+}

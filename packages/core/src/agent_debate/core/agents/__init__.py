@@ -11,20 +11,28 @@ Task 5.1 (issue #38) ships the **Pro** debater:
   rebut, do not concede merely because the opponent is convincing — anti-sycophancy §2)
   and the explicit named skill list (:data:`DEBATER_SKILLS`).
 * :func:`~agent_debate.core.agents.debater.create_pro_debater` — the factory that builds
-  the PRO agent, over a side-parameterizable :func:`create_debater` seam the Con debater
-  (task 5.2) reuses.
+  the PRO agent, over a side-parameterizable :func:`create_debater` seam.
+
+Task 5.2 (issue #39) adds :func:`~agent_debate.core.agents.debater.create_con_debater` —
+the **Con** (AGAINST) debater, a thin mirror of the Pro wrapper over the same
+:func:`create_debater` seam (same rules and skill list, only the side flips).
 
 The re-exports below are the subpackage's public surface.
 """
 
 from __future__ import annotations
 
-from agent_debate.core.agents.debater import create_debater, create_pro_debater
+from agent_debate.core.agents.debater import (
+    create_con_debater,
+    create_debater,
+    create_pro_debater,
+)
 from agent_debate.core.agents.prompts import DEBATER_SKILLS, build_debater_system_prompt
 
 __all__ = [
     "DEBATER_SKILLS",
     "build_debater_system_prompt",
+    "create_con_debater",
     "create_debater",
     "create_pro_debater",
 ]
