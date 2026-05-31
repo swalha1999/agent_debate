@@ -303,17 +303,28 @@ class VerdictRequest(BaseModel):
 
 
 class Verdict(BaseModel):
-    """The structured outcome produced by :func:`render_verdict` (issue #35).
+    """The structured outcome produced by :func:`render_verdict` (issue #35, 8.3).
 
     The controller **never reveals its own stance** (PRD §5.3): the verdict carries
-    only debate-derived fields — the winning side (or a ``tie``), a rationale, and
-    the per-side score tally — never a pre-held controller opinion.
+    only debate-derived fields — never a pre-held controller opinion. Per PRD §3.2
+    step 4 it states a SUMMARY of the debate, whether the agents CONVERGED/agreed,
+    the RESULT (winning side or a ``tie``), and the REASONING — judged on
+    ARGUMENTATION / REBUTTAL quality / ENGAGEMENT, explicitly **not** factual
+    correctness (PRD §3: no fact-checking).
+
+    The ``summary`` / ``converged`` / ``criteria_scores`` fields are additive (8.3
+    deepening) with backward-compatible defaults, so existing :class:`Verdict`
+    usage keeps validating.
 
     Attributes:
         winner: The winning :class:`DebateSide`, or the tie label when neither side
             outscored the other.
-        rationale: The debate-derived justification for the outcome.
-        scores: The per-side score totals the outcome was derived from.
+        rationale: The debate-derived reasoning for the outcome (argument quality).
+        scores: The per-side aggregate score totals the outcome was derived from.
+        summary: A short summary of the debate and its result.
+        converged: ``True`` when the agents converged/agreed by the end.
+        criteria_scores: The per-side breakdown across the three judged criteria
+            (argumentation / rebuttal / engagement); empty for a bare-tally verdict.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -321,6 +332,9 @@ class Verdict(BaseModel):
     winner: DebateSide | str
     rationale: str = Field(min_length=1)
     scores: dict[DebateSide, float]
+    summary: str = ""
+    converged: bool = False
+    criteria_scores: dict[DebateSide, dict[str, float]] = Field(default_factory=dict)
 
 
 class WebSearchInput(BaseModel):
