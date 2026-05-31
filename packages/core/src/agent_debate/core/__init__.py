@@ -25,6 +25,15 @@ from agent_debate.core.gatekeeper import (
     load_rate_limit_config,
 )
 from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
+from agent_debate.core.pricing import (
+    DEFAULT_MODEL,
+    MODEL_PRICES_FILENAME,
+    ModelPrice,
+    PriceTable,
+    compute_cost,
+    get_model_price,
+    load_price_table,
+)
 from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
     DuckDuckGoSearchProvider,
@@ -72,12 +81,19 @@ __all__ = [
     "ANTI_CONCESSION_RULE",
     "DEFAULT_MAX_RESULTS",
     "DEFAULT_MAX_UNTRUSTED_LEN",
+    "DEFAULT_MODEL",
     "DEFAULT_SERVICE",
     "INJECTION_PATTERNS",
     "LIBRARY_VERSION",
     "MAX_QUERY_LEN",
     "MAX_TOPIC_LEN",
+    "MODEL_PRICES_FILENAME",
+    "ModelPrice",
+    "PriceTable",
     "NEUTRALISED_MARKER",
+    "compute_cost",
+    "get_model_price",
+    "load_price_table",
     "WordLimitResult",
     "AgentContext",
     "ApiGatekeeper",

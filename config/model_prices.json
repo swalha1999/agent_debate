@@ -1,0 +1,24 @@
+{
+  "model_prices": {
+    "version": "1.00",
+    "note": "Per-model prices in USD per 1,000,000 tokens (input/output). These are INDICATIVE Anthropic public list prices as of the 2026-01 knowledge cutoff and MUST be confirmed against the provider's current pricing page (https://www.anthropic.com/pricing) before being relied on for billing. Unknown models fall back to the 'default' entry. Prices are public list prices, not secrets.",
+    "models": {
+      "default": {
+        "input_per_1m": 3.0,
+        "output_per_1m": 15.0
+      },
+      "anthropic:claude-opus-4-8": {
+        "input_per_1m": 15.0,
+        "output_per_1m": 75.0
+      },
+      "anthropic:claude-sonnet-4-6": {
+        "input_per_1m": 3.0,
+        "output_per_1m": 15.0
+      },
+      "anthropic:claude-haiku-4-5-20251001": {
+        "input_per_1m": 1.0,
+        "output_per_1m": 5.0
+      }
+    }
+  }
+}
