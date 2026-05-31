@@ -1,0 +1,17 @@
+{
+  "task_id": "11.5",
+  "title": "RTL-safe styling",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Style the UI using CSS logical properties (text-start/end, ps-/pe-, ms-/me-, items-start/end) for RTL support; never left/right.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 42515
+  },
+  "usage": {
+    "tool_uses": 22,
+    "duration_ms": 194805,
+    "summary": "22 tool uses · 42.5k tokens · 3m 15s"
+  }
+}
