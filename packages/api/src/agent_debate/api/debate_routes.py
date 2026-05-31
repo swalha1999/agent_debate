@@ -29,6 +29,7 @@ from collections.abc import Iterator
 
 from agent_debate.api.debate_models import DebateRequest, DebateStarted, DebateState
 from agent_debate.api.debate_store import DebateRecord, DebateStore
+from agent_debate.api.preflight import get_preflight
 from agent_debate.api.sse import SSE_MEDIA_TYPE, format_done, format_log_event
 from agent_debate.api.stream_runner import DebateStreamRunner, get_stream_runner
 from agent_debate.log import get_logger
@@ -72,7 +73,15 @@ def create_debate_router(store: DebateStore) -> APIRouter:
     async def start_debate(
         request: DebateRequest, background: BackgroundTasks, http_request: Request
     ) -> DebateStarted:
-        """Validate + start a debate; return its ``run_id`` and initial status."""
+        """Validate + start a debate; return its ``run_id`` and initial status.
+
+        Runs the synchronous preflight first (e.g. provider-key validation) so a
+        misconfiguration fails the request with a clear, safe error *before* a
+        doomed run is scheduled — the error handlers map it to a consistent
+        envelope (a missing key -> 503; anything unexpected -> 500). The
+        background worker, by contrast, only handles faults *during* a run.
+        """
+        get_preflight(http_request.app)()
         run_id = uuid.uuid4().hex
         record = store.create(run_id)
         runner = get_stream_runner(http_request.app)

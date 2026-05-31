@@ -15,6 +15,8 @@ from __future__ import annotations
 from agent_debate.api.app import app, create_app
 from agent_debate.api.debate_runner import DebateRunner, set_debate_runner
 from agent_debate.api.debate_store import DebateStatus
+from agent_debate.api.errors import ErrorType, register_exception_handlers
+from agent_debate.api.preflight import Preflight, set_preflight
 from agent_debate.api.stream_runner import DebateStreamRunner, set_stream_runner
 from agent_debate.core import core_version
 from agent_debate.log import log_version
@@ -27,10 +29,14 @@ __all__ = [
     "DebateRunner",
     "DebateStatus",
     "DebateStreamRunner",
+    "ErrorType",
+    "Preflight",
     "app",
     "core_version",
     "create_app",
     "log_version",
+    "register_exception_handlers",
     "set_debate_runner",
+    "set_preflight",
     "set_stream_runner",
 ]
