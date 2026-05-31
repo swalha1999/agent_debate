@@ -37,6 +37,13 @@ function streamUrl(runId) {
   return `${apiBaseUrl()}/debates/${encodeURIComponent(runId)}/stream`;
 }
 
+// The final result endpoint (no `/stream` suffix): GET /debates/{id} returns the
+// DebateState whose `result` is the completed DebateResult — verdict + token/cost
+// totals together (11.4). The verdict view reads it once on the `done` sentinel.
+function resultUrl(runId) {
+  return `${apiBaseUrl()}/debates/${encodeURIComponent(runId)}`;
+}
+
 function setResult(el, message, isError) {
   el.textContent = message;
   el.classList.toggle("error", Boolean(isError));
@@ -139,12 +146,87 @@ function appendSystemEvent(event) {
   }
 }
 
+// --- Verdict view rendering (11.4) ---------------------------------------
+
+// Human labels for the winner side. The engine emits "pro"/"con"/"tie"; we map
+// to clear Pro / Con / Tie copy here (single source of truth, no scattered
+// inline strings). Anything unexpected falls back to the raw value.
+const WINNER_LABELS = { pro: "Pro", con: "Con", tie: "Tie" };
+
+function winnerLabel(winner) {
+  return WINNER_LABELS[winner] || String(winner || "—");
+}
+
+// Render the token totals as labelled rows into a <dl>. Cost is Epic 15 — until
+// the price table lands cost_usd is 0.0, so we surface TOKENS now.
+function renderTokens(container, totals) {
+  container.replaceChildren();
+  const rows = [
+    ["Total tokens", String(totals.total_tokens)],
+    ["Input tokens", String(totals.input_tokens)],
+    ["Output tokens", String(totals.output_tokens)],
+  ];
+  for (const [label, value] of rows) {
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    container.append(dt, dd);
+  }
+}
+
+// Fill the verdict view from a completed DebateResult: who won (Pro/Con/Tie),
+// whether the agents agreed/converged, the debate summary, and token totals.
+function renderVerdict(result) {
+  const view = document.getElementById("verdict");
+  const verdict = (result && result.verdict) || {};
+  const totals = (result && result.totals) || {};
+
+  document.getElementById("verdict-winner").textContent = `Winner: ${winnerLabel(
+    verdict.winner,
+  )}`;
+  document.getElementById("verdict-converged").textContent = verdict.converged
+    ? "The agents converged / agreed."
+    : "The agents did not converge.";
+  document.getElementById("verdict-summary").textContent =
+    verdict.summary || verdict.rationale || "";
+  renderTokens(document.getElementById("verdict-tokens"), {
+    total_tokens: totals.total_tokens || 0,
+    input_tokens: totals.input_tokens || 0,
+    output_tokens: totals.output_tokens || 0,
+  });
+
+  if (view) {
+    view.hidden = false;
+  }
+}
+
+// On the `done` sentinel, GET /debates/{id} once and render the verdict view
+// from the final DebateResult (verdict + totals in one place). Failures leave
+// the view hidden rather than throwing.
+async function showVerdict(runId) {
+  try {
+    const response = await fetch(resultUrl(runId));
+    if (!response.ok) {
+      return;
+    }
+    const state = await response.json();
+    renderVerdict(state.result || {});
+  } catch (err) {
+    /* Leave the verdict view hidden on fetch/parse failure. */
+  }
+}
+
 // Open an EventSource to the API SSE endpoint and render messages live. The
 // stream ends with a `done` sentinel event, on which we close the connection.
 function streamTranscript(runId) {
   const panels = document.getElementById("panels");
   if (panels) {
     panels.hidden = false;
+  }
+  const verdictView = document.getElementById("verdict");
+  if (verdictView) {
+    verdictView.hidden = true;
   }
   clearPanels();
 
@@ -167,8 +249,11 @@ function streamTranscript(runId) {
     });
   }
 
+  // On the `done` sentinel, close the stream then fetch the final result and
+  // render the verdict view (verdict + token totals — task 11.4).
   source.addEventListener("done", () => {
     source.close();
+    showVerdict(runId);
   });
 
   source.addEventListener("error", () => {

@@ -79,6 +79,26 @@
           <ol id="system-log-list" class="event-list"></ol>
         </section>
       </div>
+
+      <!-- VERDICT VIEW (task 11.4, PRD §6): a DISTINCT region rendered once the
+           debate finishes. On the `done` sentinel app.js GETs /debates/{id} for
+           the final DebateResult (verdict + token/cost totals in one place) and
+           fills these containers: who won (Pro/Con/Tie), the debate summary,
+           whether the agents agreed/converged, and the token totals (cost is
+           Epic 15 — tokens shown now). Hidden until the result arrives. -->
+      <section
+        id="verdict"
+        class="verdict panel"
+        aria-live="polite"
+        aria-label="Debate verdict"
+        hidden
+      >
+        <h2 class="panel__heading">Verdict</h2>
+        <p id="verdict-winner" class="verdict__winner"></p>
+        <p id="verdict-converged" class="verdict__converged"></p>
+        <div id="verdict-summary" class="verdict__summary"></div>
+        <dl id="verdict-tokens" class="verdict__tokens"></dl>
+      </section>
     </main>
 
     <script src="/static/app.js"></script>

@@ -284,3 +284,54 @@ button:disabled {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Verdict view (task 11.4, PRD §6): a DISTINCT region shown when the debate
+   finishes — who won (Pro/Con/Tie), the summary, whether the agents converged,
+   and token totals. RTL-safe — logical properties only (margin/padding-inline,
+   text-align: start, border-inline-start), never left/right (task 11.5). */
+.verdict {
+  margin-block-start: 1.5rem;
+  border-inline-start: 4px solid var(--accent);
+}
+
+.verdict[hidden] {
+  display: none;
+}
+
+.verdict__winner {
+  margin-block: 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.verdict__converged {
+  margin-block: 0 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.verdict__summary {
+  margin-block: 0 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.verdict__tokens {
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.verdict__tokens dt {
+  font-weight: 600;
+  color: var(--muted);
+  text-align: start;
+}
+
+.verdict__tokens dd {
+  margin: 0;
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+}
