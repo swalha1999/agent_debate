@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent_debate.core import constants
-from agent_debate.log import log_event
+from agent_debate.log import EventSink, emit_event
 
 #: Separator used when re-joining the kept tokens after a trim (single space).
 _TRIM_JOINER = " "
@@ -86,6 +86,7 @@ def enforce_word_limit(
     runs_dir: Path | str | None = None,
     agent: str = constants.WORD_LIMIT_LOG_AGENT,
     round_: int = _VIOLATION_ROUND,
+    sink: EventSink | None = None,
 ) -> WordLimitResult:
     """Verify ``text`` against ``max_words``, trimming + logging on a breach.
 
@@ -106,6 +107,8 @@ def enforce_word_limit(
             :data:`~agent_debate.core.constants.WORD_LIMIT_LOG_AGENT`).
         round_: Round recorded on the violation event (the engine may pass the
             real debate round).
+        sink: Optional live event sink (§6, task 6.6); the violation event is
+            streamed to it as well as logged. ``None`` logs only.
 
     Returns:
         A :class:`WordLimitResult` with the enforced text and violation flag.
@@ -116,17 +119,18 @@ def enforce_word_limit(
         return WordLimitResult(text=text, violated=False, original_words=count)
     trimmed = _TRIM_JOINER.join(words[:max_words])
     if run_id is not None:
-        _log_violation(count, max_words, run_id, runs_dir, agent, round_)
+        _log_violation(count, max_words, run_id, runs_dir, agent, round_, sink)
     return WordLimitResult(text=trimmed, violated=True, original_words=count)
 
 
-def _log_violation(
+def _log_violation(  # noqa: PLR0913 — explicit per-event deps (no shared state).
     words: int,
     limit: int,
     run_id: str,
     runs_dir: Path | str | None,
     agent: str,
     round_: int,
+    sink: EventSink | None,
 ) -> None:
     """Emit one ``system`` event describing the word-limit breach (observability)."""
     payload: dict[str, object] = {
@@ -136,7 +140,8 @@ def _log_violation(
         "trimmed": True,
     }
     kwargs = {"runs_dir": runs_dir} if runs_dir is not None else {}
-    log_event(
+    emit_event(
+        sink,
         run_id=run_id,
         agent=agent,
         event_type=constants.WORD_LIMIT_LOG_EVENT_TYPE,

@@ -1474,5 +1474,32 @@ outcome/decision it produced.
   documented round marker (0) rather than inventing a new `event_type`, and drive
   the count from one named constant — never an inline `2`.*
 
+## 6.6 — Event streaming (`engine/stream.py` + LOG `_stream.py`)
+
+- **Prompt:** "Make the engine yield/stream events as they happen so CLI/API/UI
+  can render live. Events are ordered and typed."
+- **Outcome / pattern set:** TDD red-first (`tests/test_event_stream.py`, watched
+  fail on the missing `CollectingSink`/`stream_debate` imports). The streamed event
+  IS the LOG event — ONE schema (`LogEvent`), already typed + JSON-serialisable for
+  SSE. Rather than build events twice, the sink primitives live in the LOG package
+  (`log/_stream.py`): `EventSink` (Protocol), `CollectingSink`, and `emit_event(
+  sink, …)` — the single DRY chokepoint that calls `log_event` AND forwards the
+  SAME validated record to an optional sink (`sink=None` ⇒ identical log-only
+  behaviour, backward compatible). Every engine site that logged an event
+  (`turn._record`, `drift`, `closing`, `_call_log`, agents `word_limit`) swapped
+  its bare `log_event(...)` for `emit_event(sink, ...)`, and an optional
+  `sink: EventSink | None` is threaded through `run_debate_loop` → turn/drift/
+  closing/`generate_turn_output`. A thin GENERATOR `stream_debate(...)` sits on top:
+  it runs the debate on a daemon thread whose sink `Queue.put`s each event, yields
+  them live in order, then yields the final `DebateResult` (and re-raises a worker
+  error). "Ordered + complete" is asserted by equality to the JSONL sequence
+  (minus the gatekeeper's OWN infra `tool_call`/`retry`/`system` events, which come
+  from its independently-bound run_id — an Epic 13 concern, not the debate stream).
+  *Pattern: to add a live STREAM to a synchronous engine that already logs, don't
+  invent a second event type — make ONE emit helper that logs + forwards the same
+  validated record to an opt-in sink, thread the sink (default `None`) through the
+  call tree so it stays backward compatible, and put the generator/thread wrapper
+  on top of the sink rather than re-plumbing the engine.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

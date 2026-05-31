@@ -21,8 +21,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent_debate.core import constants
+from agent_debate.core.engine.stream import EventSink, emit_event
 from agent_debate.core.skills import DebateSide, NudgeMessage, assess_drift, nudge
-from agent_debate.log import log_event
 
 
 def run_drift_check(
@@ -32,6 +32,7 @@ def run_drift_check(
     round_: int,
     run_id: str,
     runs_dir: Path | str,
+    sink: EventSink | None = None,
 ) -> NudgeMessage | None:
     """Drift-check ``message`` for ``side``; nudge + log on capture, else ``None``.
 
@@ -45,6 +46,7 @@ def run_drift_check(
         round_: The 1-based round the checked turn belongs to.
         run_id: The run id stamped on the nudge event.
         runs_dir: Directory holding the per-run JSONL sink.
+        sink: Optional live event sink (§6, task 6.6); ``None`` logs only.
 
     Returns:
         The :class:`NudgeMessage` when the agent drifted, else ``None``.
@@ -53,7 +55,8 @@ def run_drift_check(
     if not assessment.captured:
         return None
     correction = nudge(side, assessment.reason)
-    log_event(
+    emit_event(
+        sink,
         run_id=run_id,
         agent=constants.LOOP_NUDGE_LOG_AGENT,
         event_type=constants.LOOP_NUDGE_EVENT_TYPE,

@@ -36,8 +36,8 @@ from agent_debate.core.engine._call import TimeoutRunner, TurnFailedError, gener
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import DebateMessage
+from agent_debate.core.engine.stream import EventSink, emit_event
 from agent_debate.core.skills import DebateSide
-from agent_debate.log import log_event
 from pydantic_ai import Agent
 
 
@@ -54,6 +54,7 @@ def run_debate_turn(
     opponent_message: str | None,
     sleep_fn: Callable[[float], None] = time.sleep,
     timeout_runner: TimeoutRunner | None = None,
+    sink: EventSink | None = None,
 ) -> DebateMessage:
     """Run one debater turn for ``side`` and return its :class:`DebateMessage` (§3.2).
 
@@ -73,6 +74,7 @@ def run_debate_turn(
         runs_dir: Directory holding the per-run JSONL sink.
         opponent_message: The opponent's latest message to rebut, or ``None`` on
             the very first turn (no opponent has spoken yet).
+        sink: Optional live event sink (§6, task 6.6); ``None`` logs only.
 
     Returns:
         The enforced, word-limited :class:`DebateMessage` for the turn.
@@ -96,6 +98,7 @@ def run_debate_turn(
             agent=side.value,
             runs_dir=runs_dir,
             sleep_fn=sleep_fn,
+            sink=sink,
             **runner_kw,
         )
     except TurnFailedError:
@@ -111,9 +114,10 @@ def run_debate_turn(
         runs_dir=runs_dir,
         agent=side.value,
         round_=round_,
+        sink=sink,
     )
     context.append_assistant(enforced.text)
-    return _record(side, round_, enforced.text, output, latency_ms, run_id, runs_dir)
+    return _record(side, round_, enforced.text, output, latency_ms, run_id, runs_dir, sink)
 
 
 def _failed_turn(side: DebateSide, round_: int, run_id: str, runs_dir: Path | str) -> DebateMessage:
@@ -146,7 +150,7 @@ def _inject_prompt(
         )
 
 
-def _record(
+def _record(  # noqa: PLR0913 — explicit per-record deps (no shared mutable state).
     side: DebateSide,
     round_: int,
     content: str,
@@ -154,8 +158,9 @@ def _record(
     latency_ms: float,
     run_id: str,
     runs_dir: Path | str,
+    sink: EventSink | None,
 ) -> DebateMessage:
-    """Build the :class:`DebateMessage`, logging one ``message`` event for it."""
+    """Build the :class:`DebateMessage`, logging + streaming one ``message`` event."""
     usage = getattr(output, "usage", None)
     input_tokens = int(getattr(usage, "input_tokens", 0) or 0)
     output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
@@ -167,7 +172,8 @@ def _record(
         output_tokens=output_tokens,
         latency_ms=latency_ms,
     )
-    log_event(
+    emit_event(
+        sink,
         run_id=run_id,
         agent=side.value,
         event_type=constants.LOOP_MESSAGE_EVENT_TYPE,

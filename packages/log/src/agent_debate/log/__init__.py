@@ -36,6 +36,7 @@ from agent_debate.log._api import (
     log_event,
 )
 from agent_debate.log._setup import DEFAULT_RUNS_DIR, configure
+from agent_debate.log._stream import CollectingSink, EventSink, emit_event
 from agent_debate.log.event import EVENT_TYPES, EventType, LogEvent
 from agent_debate.log.redaction import (
     MAX_VALUE_LEN,
@@ -58,12 +59,15 @@ __all__ = [
     "MAX_VALUE_LEN",
     "REDACTED",
     "TRUNCATED_SUFFIX",
+    "CollectingSink",
+    "EventSink",
     "EventType",
     "LogEvent",
     "bind_context",
     "bind_round",
     "clear_context",
     "configure",
+    "emit_event",
     "get_logger",
     "log_event",
     "log_version",

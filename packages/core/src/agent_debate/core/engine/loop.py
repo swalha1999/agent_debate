@@ -34,6 +34,7 @@ from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import CostTotals, DebateMessage, DebateResult
 from agent_debate.core.engine.setup import DebateSetup
+from agent_debate.core.engine.stream import EventSink
 from agent_debate.core.engine.turn import run_debate_turn
 from agent_debate.core.gatekeeper import ApiGatekeeper, load_rate_limit_config
 from agent_debate.core.skills import DebateSide, NudgeMessage
@@ -47,6 +48,7 @@ def run_debate_loop(
     gatekeeper: Gatekeeper | None = None,
     run_id: str,
     runs_dir: Path | str = DEFAULT_RUNS_DIR,
+    sink: EventSink | None = None,
 ) -> DebateResult:
     """Run the ``config.rounds``-round Pro/Con loop into a :class:`DebateResult` (§3.2).
 
@@ -63,6 +65,9 @@ def run_debate_loop(
             rate-limit config when ``None`` (Epic 13).
         run_id: The run id stamped on every emitted event.
         runs_dir: Directory holding the per-run JSONL sink.
+        sink: An optional :class:`~agent_debate.core.engine.stream.EventSink` that
+            receives every emitted event live, in order, as it happens (§6, task
+            6.6). ``None`` (the default) keeps the log-only behaviour unchanged.
 
     Returns:
         The assembled :class:`DebateResult` (transcript + nudges + closing
@@ -75,15 +80,33 @@ def run_debate_loop(
     last_con: str | None = None
     for round_ in range(1, config.rounds + 1):
         last_pro = _turn(
-            setup, config, keeper, run_id, runs_dir, DebateSide.PRO, round_, last_con, transcript
+            setup,
+            config,
+            keeper,
+            run_id,
+            runs_dir,
+            DebateSide.PRO,
+            round_,
+            last_con,
+            transcript,
+            sink,
         )
-        _drift(transcript[-1], DebateSide.PRO, round_, run_id, runs_dir, nudges)
+        _drift(transcript[-1], DebateSide.PRO, round_, run_id, runs_dir, nudges, sink)
         last_con = _turn(
-            setup, config, keeper, run_id, runs_dir, DebateSide.CON, round_, last_pro, transcript
+            setup,
+            config,
+            keeper,
+            run_id,
+            runs_dir,
+            DebateSide.CON,
+            round_,
+            last_pro,
+            transcript,
+            sink,
         )
-        _drift(transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges)
+        _drift(transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges, sink)
     closing = run_closing_discussion(
-        setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir
+        setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir, sink=sink
     )
     return DebateResult(
         topic=setup.topic,
@@ -104,6 +127,7 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
     round_: int,
     opponent_message: str | None,
     transcript: list[DebateMessage],
+    sink: EventSink | None,
 ) -> str | None:
     """Run one debater turn, append it to ``transcript`` and return its content.
 
@@ -123,6 +147,7 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
         run_id=run_id,
         runs_dir=runs_dir,
         opponent_message=opponent_message,
+        sink=sink,
     )
     transcript.append(message)
     return None if message.failed else message.content
@@ -135,10 +160,16 @@ def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared muta
     run_id: str,
     runs_dir: Path | str,
     nudges: list[NudgeMessage],
+    sink: EventSink | None,
 ) -> None:
     """Drift-check ``message`` and record a nudge when the agent was captured."""
     correction = run_drift_check(
-        message=message.content, side=side, round_=round_, run_id=run_id, runs_dir=runs_dir
+        message=message.content,
+        side=side,
+        round_=round_,
+        run_id=run_id,
+        runs_dir=runs_dir,
+        sink=sink,
     )
     if correction is not None:
         nudges.append(correction)

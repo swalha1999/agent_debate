@@ -38,8 +38,8 @@ from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import DebateMessage
 from agent_debate.core.engine.setup import DebateSetup
+from agent_debate.core.engine.stream import EventSink, emit_event
 from agent_debate.core.skills import DebateSide
-from agent_debate.log import log_event
 
 
 def run_closing_discussion(
@@ -49,6 +49,7 @@ def run_closing_discussion(
     gatekeeper: Gatekeeper,
     run_id: str,
     runs_dir: Path | str,
+    sink: EventSink | None = None,
 ) -> list[DebateMessage]:
     """Run the freer closing exchange after the main loop, before judgement (§3.3).
 
@@ -63,6 +64,7 @@ def run_closing_discussion(
         gatekeeper: The API gatekeeper every model call routes through (Epic 13).
         run_id: The run id stamped on every emitted event.
         runs_dir: Directory holding the per-run JSONL sink.
+        sink: Optional live event sink (§6, task 6.6); ``None`` logs only.
 
     Returns:
         The ordered closing turns (Pro then Con, per exchange).
@@ -70,7 +72,7 @@ def run_closing_discussion(
     closing: list[DebateMessage] = []
     for _ in range(constants.CLOSING_EXCHANGES):
         for side in (DebateSide.PRO, DebateSide.CON):
-            message = _closing_turn(setup, config, gatekeeper, run_id, runs_dir, side)
+            message = _closing_turn(setup, config, gatekeeper, run_id, runs_dir, side, sink)
             if message is not None:
                 closing.append(message)
     return closing
@@ -83,6 +85,7 @@ def _closing_turn(  # noqa: PLR0913 — explicit per-turn deps (no shared mutabl
     run_id: str,
     runs_dir: Path | str,
     side: DebateSide,
+    sink: EventSink | None,
 ) -> DebateMessage | None:
     """Run one freer closing statement for ``side`` (gatekept, word-limited, logged).
 
@@ -104,6 +107,7 @@ def _closing_turn(  # noqa: PLR0913 — explicit per-turn deps (no shared mutabl
             round_=constants.CLOSING_ROUND,
             agent=side.value,
             runs_dir=runs_dir,
+            sink=sink,
         )
     except TurnFailedError:
         return None
@@ -114,9 +118,10 @@ def _closing_turn(  # noqa: PLR0913 — explicit per-turn deps (no shared mutabl
         runs_dir=runs_dir,
         agent=side.value,
         round_=constants.CLOSING_ROUND,
+        sink=sink,
     )
     context.append_assistant(enforced.text)
-    return _record_closing(side, enforced.text, run_id, runs_dir)
+    return _record_closing(side, enforced.text, run_id, runs_dir, sink)
 
 
 def _inject_closing_prompt(context: AgentContext, side: DebateSide, config: DebateConfig) -> None:
@@ -127,11 +132,12 @@ def _inject_closing_prompt(context: AgentContext, side: DebateSide, config: Deba
 
 
 def _record_closing(
-    side: DebateSide, content: str, run_id: str, runs_dir: Path | str
+    side: DebateSide, content: str, run_id: str, runs_dir: Path | str, sink: EventSink | None
 ) -> DebateMessage:
-    """Build the closing :class:`DebateMessage`, logging one tagged ``message`` event."""
+    """Build the closing :class:`DebateMessage`, logging + streaming a tagged event."""
     message = DebateMessage(round=constants.CLOSING_ROUND + 1, side=side, content=content)
-    log_event(
+    emit_event(
+        sink,
         run_id=run_id,
         agent=side.value,
         event_type=constants.LOOP_MESSAGE_EVENT_TYPE,
