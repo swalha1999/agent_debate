@@ -15,6 +15,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from agent_debate.core.engine._usage import (
+    UsageBreakdown,
+    usage_by_agent,
+    usage_by_round,
+)
 from agent_debate.core.skills.models import DebateSide, NudgeMessage, Verdict
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
@@ -80,8 +85,11 @@ class CostTotals(BaseModel):
         input_tokens: Sum of every turn's prompt tokens.
         output_tokens: Sum of every turn's completion tokens.
         total_tokens: ``input_tokens + output_tokens``.
-        cost_usd: Sum of every turn's estimated USD cost.
+        cost_usd: Sum of every turn's estimated USD cost (``0.0`` until Epic 15's
+            per-model price table prices the captured tokens; 6.7 only sums tokens).
         latency_ms: Sum of every turn's wall-clock latency, in milliseconds.
+        by_agent: Token breakdown per side label (``pro``/``con``) — PRD §5.8.
+        by_round: Token breakdown per 1-based round number — PRD §5.8.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -91,10 +99,17 @@ class CostTotals(BaseModel):
     total_tokens: int = Field(ge=0, default=0)
     cost_usd: float = Field(ge=0.0, default=0.0)
     latency_ms: float = Field(ge=0.0, default=0.0)
+    by_agent: dict[str, UsageBreakdown] = Field(default_factory=dict)
+    by_round: dict[int, UsageBreakdown] = Field(default_factory=dict)
 
     @classmethod
     def from_messages(cls, messages: list[DebateMessage]) -> CostTotals:
-        """Aggregate totals by summing each message's token/cost/latency."""
+        """Aggregate totals + per-agent / per-round breakdowns from each message.
+
+        Sums the grand token/cost/latency totals and folds the same messages into
+        the per-agent and per-round token breakdowns (PRD §5.8). Cost stays ``0.0``
+        — Epic 15 prices the captured tokens via its per-model price table.
+        """
         input_tokens = sum(m.input_tokens for m in messages)
         output_tokens = sum(m.output_tokens for m in messages)
         return cls(
@@ -103,6 +118,8 @@ class CostTotals(BaseModel):
             total_tokens=input_tokens + output_tokens,
             cost_usd=sum(m.cost_usd for m in messages),
             latency_ms=sum(m.latency_ms for m in messages),
+            by_agent=usage_by_agent(messages),
+            by_round=usage_by_round(messages),
         )
 
 
@@ -139,4 +156,5 @@ __all__ = [
     "DebateMessage",
     "DebateResult",
     "ToolCallRecord",
+    "UsageBreakdown",
 ]

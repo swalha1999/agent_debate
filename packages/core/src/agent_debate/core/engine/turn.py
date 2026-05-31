@@ -33,6 +33,7 @@ from agent_debate.core import constants
 from agent_debate.core.agents import anchor_turn, enforce_word_limit, relay_opponent_turn
 from agent_debate.core.agents.context import AgentContext
 from agent_debate.core.engine._call import TimeoutRunner, TurnFailedError, generate_turn_output
+from agent_debate.core.engine._usage import call_tokens
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import DebateMessage
@@ -161,9 +162,7 @@ def _record(  # noqa: PLR0913 — explicit per-record deps (no shared mutable st
     sink: EventSink | None,
 ) -> DebateMessage:
     """Build the :class:`DebateMessage`, logging + streaming one ``message`` event."""
-    usage = getattr(output, "usage", None)
-    input_tokens = int(getattr(usage, "input_tokens", 0) or 0)
-    output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
+    input_tokens, output_tokens = call_tokens(output)
     message = DebateMessage(
         round=round_,
         side=side,

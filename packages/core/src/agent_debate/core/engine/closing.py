@@ -34,6 +34,7 @@ from agent_debate.core.agents import enforce_word_limit
 from agent_debate.core.agents.context import AgentContext
 from agent_debate.core.agents.prompts import SIDE_LABEL
 from agent_debate.core.engine._call import TurnFailedError, generate_turn_output
+from agent_debate.core.engine._usage import call_tokens
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import DebateMessage
@@ -121,7 +122,7 @@ def _closing_turn(  # noqa: PLR0913 — explicit per-turn deps (no shared mutabl
         sink=sink,
     )
     context.append_assistant(enforced.text)
-    return _record_closing(side, enforced.text, run_id, runs_dir, sink)
+    return _record_closing(side, enforced.text, output, run_id, runs_dir, sink)
 
 
 def _inject_closing_prompt(context: AgentContext, side: DebateSide, config: DebateConfig) -> None:
@@ -131,11 +132,27 @@ def _inject_closing_prompt(context: AgentContext, side: DebateSide, config: Deba
     context.append_user(f"{prompt} {limit}")
 
 
-def _record_closing(
-    side: DebateSide, content: str, run_id: str, runs_dir: Path | str, sink: EventSink | None
+def _record_closing(  # noqa: PLR0913 — explicit per-record deps (no shared state).
+    side: DebateSide,
+    content: str,
+    output: object,
+    run_id: str,
+    runs_dir: Path | str,
+    sink: EventSink | None,
 ) -> DebateMessage:
-    """Build the closing :class:`DebateMessage`, logging + streaming a tagged event."""
-    message = DebateMessage(round=constants.CLOSING_ROUND + 1, side=side, content=content)
+    """Build the closing :class:`DebateMessage`, logging + streaming a tagged event.
+
+    Captures the closing call's token usage (task 6.7) so the closing phase feeds
+    the run's token totals and the ``message`` event's ``tokens`` field (LOG).
+    """
+    input_tokens, output_tokens = call_tokens(output)
+    message = DebateMessage(
+        round=constants.CLOSING_ROUND + 1,
+        side=side,
+        content=content,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+    )
     emit_event(
         sink,
         run_id=run_id,
@@ -147,6 +164,7 @@ def _record_closing(
             "word_count": message.word_count,
             constants.CLOSING_MESSAGE_TAG: True,
         },
+        tokens=input_tokens + output_tokens,
         runs_dir=runs_dir,
     )
     return message

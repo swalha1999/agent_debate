@@ -19,6 +19,7 @@ from agent_debate.core.engine import (
     Gatekeeper,
     SetupModels,
     ToolCallRecord,
+    UsageBreakdown,
     run_debate_loop,
     setup_debate,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "Gatekeeper",
     "SetupModels",
     "ToolCallRecord",
+    "UsageBreakdown",
     "run_debate_loop",
     "setup_debate",
 ]
