@@ -27,6 +27,7 @@ from agent_debate.core.engine.result import (
     DebateResult,
     ToolCallRecord,
 )
+from agent_debate.core.engine.sdk import DebateEngine
 from agent_debate.core.engine.setup import DebateSetup, SetupModels, setup_debate
 from agent_debate.core.engine.stream import (
     CollectingSink,
@@ -39,6 +40,7 @@ __all__ = [
     "CollectingSink",
     "CostTotals",
     "DebateConfig",
+    "DebateEngine",
     "DebateMessage",
     "DebateResult",
     "DebateSetup",
