@@ -47,6 +47,7 @@ class GatekeptSearchProvider:
     """
 
     def __init__(self, inner: SearchProvider, *, gatekeeper: Gatekeeper) -> None:
+        """Wrap ``inner`` so its external calls route through ``gatekeeper``."""
         self._inner = inner
         self._gatekeeper = gatekeeper
         #: The wrapped provider's registry name, surfaced transparently. A plain

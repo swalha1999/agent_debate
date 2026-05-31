@@ -2126,5 +2126,25 @@ fails → restore → green.
   `gatekeeper/_gatekeeper.py::ApiGatekeeper`, `search/registry.py`,
   `security/sanitiser.py`) so the doc cannot drift from reality.*
 
+### Docstrings & comments (task 12.4a, 2026-05-31)
+- **Prompt:** "Add docstrings to all public modules/classes/functions and
+  meaningful comments where logic is non-obvious. Optionally enforce with ruff
+  pydocstyle rules."
+- **Context:** PRD §3.3 mandates documented public APIs + comments on non-obvious
+  logic. The tree's docstring coverage was already near-complete (88 of ~108
+  source files used Google-style `Args:`/`Returns:`/`Raises:` sections), so the
+  job was to *standardise + enforce* rather than rewrite working code.
+- **Outcome/pattern:** Turned the guideline into a **machine-enforced gate** by
+  enabling ruff's pydocstyle family (`select += ["D"]`) with
+  `convention = "google"` to match the existing style, plus a `"**/tests/**"`
+  per-file ignore (tests document themselves through names + assertions, and
+  §3.3 targets the public surface). Ruff then surfaced exactly 11 real gaps:
+  7 undocumented `__init__` (D107), 3 docstrings with backslashes needing the
+  `r"""` prefix (D301), and 1 function missing two arg descriptions (D417). All
+  fixed with concise one-line docstrings / argument entries — no behaviour
+  change, no new comments that merely restate code. *Pattern: line-limit check
+  counts CODE lines only (tokenize excludes docstring/comment lines), so adding
+  docstrings can never push a file over the 150-line guideline.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
