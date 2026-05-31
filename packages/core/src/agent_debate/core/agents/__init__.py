@@ -44,6 +44,13 @@ whitespace-split counting rule) and :func:`enforce_word_limit`, which the engine
 Settings) it is trimmed to exactly that many words and a ``system`` violation
 event is logged; otherwise the text is returned unchanged.
 
+Task 4.5 (issue #36) registers the skills as real Pydantic AI **tools**
+(:mod:`~agent_debate.core.agents.tools`): :func:`debater_tools` and
+:func:`controller_tools` return the two disjoint tool sets (each tool's argument is a
+Pydantic input model, so a malformed payload is rejected at the tool boundary), wired
+into :func:`create_debater` / :func:`create_controller` so each returned agent actually
+carries its skills as callable tools.
+
 The re-exports below are the subpackage's public surface.
 """
 
@@ -78,6 +85,7 @@ from agent_debate.core.agents.relay import (
     build_adversarial_relay,
     relay_opponent_turn,
 )
+from agent_debate.core.agents.tools import controller_tools, debater_tools
 from agent_debate.core.agents.word_limit import (
     WordLimitResult,
     count_words,
@@ -100,12 +108,14 @@ __all__ = [
     "build_controller_system_prompt",
     "build_debater_system_prompt",
     "build_side_anchor",
+    "controller_tools",
     "count_words",
     "create_con_debater",
     "create_controller",
     "create_debate_contexts",
     "create_debater",
     "create_pro_debater",
+    "debater_tools",
     "enforce_word_limit",
     "relay_opponent_turn",
 ]

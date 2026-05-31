@@ -199,6 +199,29 @@ class DriftAssessment(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+class NudgeRequest(BaseModel):
+    """Validated input for the :func:`nudge` skill's tool boundary (issue #36).
+
+    ``nudge`` takes loose ``(agent, reason)`` params; this model gives the registered
+    Pydantic AI tool (task 4.5) a single validated argument, so a bad side or an empty
+    reason is rejected with a ``ValidationError`` before any correction is built.
+
+    Attributes:
+        agent: The captured agent's side (``pro``/``con``); a bad value is rejected.
+        reason: Why the nudge is issued (the drift reason); non-empty after trimming.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    agent: DebateSide
+    reason: str = Field(min_length=1)
+
+    @field_validator("reason")
+    @classmethod
+    def _reason_non_empty(cls, value: str) -> str:
+        return _strip_non_empty(value)
+
+
 class NudgeMessage(BaseModel):
     """A private controller correction for a captured agent (anti-sycophancy §4).
 
@@ -318,6 +341,7 @@ __all__ = [
     "DriftAssessment",
     "DriftRequest",
     "NudgeMessage",
+    "NudgeRequest",
     "OpponentAnalysis",
     "OpponentAnalysisRequest",
     "TranscriptTurn",

@@ -8,14 +8,16 @@ controller model from :class:`~agent_debate.core.Settings` (``CONTROLLER_MODEL``
 :func:`~agent_debate.core.agents.controller_prompts.build_controller_system_prompt`.
 
 A ``model`` may be **injected** (e.g. a pydantic-ai ``TestModel``) so tests construct the
-agent with no network call and no API key. Registering the controller skills as real
-Pydantic AI tools is a later task; here the deliverable is the agent carrying the correct
-moderator/judge **system prompt** (both sides, neutrality, drift/nudge/verdict, skills).
+agent with no network call and no API key. The controller skills are registered as real
+Pydantic AI tools via :func:`~agent_debate.core.agents.tools.controller_tools`, so the
+agent carries both the moderator/judge **system prompt** (both sides, neutrality,
+drift/nudge/verdict, skills) AND those skills as validated, callable tools.
 """
 
 from __future__ import annotations
 
 from agent_debate.core.agents.controller_prompts import build_controller_system_prompt
+from agent_debate.core.agents.tools import controller_tools
 from agent_debate.core.models import resolve_model
 from agent_debate.core.settings import Settings, get_settings
 from agent_debate.log import get_logger
@@ -51,7 +53,7 @@ def create_controller(
     )
     prompt = build_controller_system_prompt()
     _LOG.debug("controller_created", model=resolved_settings.controller_model)
-    return Agent(agent_model, system_prompt=prompt)
+    return Agent(agent_model, system_prompt=prompt, tools=controller_tools())
 
 
 __all__ = ["create_controller"]
