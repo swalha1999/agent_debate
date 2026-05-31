@@ -2146,5 +2146,28 @@ fails → restore → green.
   counts CODE lines only (tokenize excludes docstring/comment lines), so adding
   docstrings can never push a file over the 150-line guideline.*
 
+### ISO/IEC 25010 mapping (task 12.4b, 2026-05-31)
+- **Prompt:** "Add a short table mapping the system to ISO/IEC 25010
+  characteristics: functional suitability, reliability, performance efficiency,
+  security, maintainability, portability — with how each is addressed."
+- **Context:** PRD §8/§13 mandate (guideline §13) that the system be mapped to
+  the ISO/IEC 25010 product-quality characteristics, but only a one-line
+  *reference* existed — no actual mapping. The quality docs already live in
+  `ARCHITECTURE.md` (§7 quality standards, §6 decisions), so the mapping belongs
+  there rather than in a separate file.
+- **Outcome/pattern:** Added `ARCHITECTURE.md` **§8 "ISO/IEC 25010
+  product-quality mapping"** — a table covering all **eight** characteristics
+  (the six named in the prompt plus **compatibility** and **usability**). Each
+  row names the characteristic and *how the system concretely addresses it*,
+  citing the REAL mechanism/module already documented in §3–§5: async +
+  `concurrent_max` (performance), timeout/retry + the FIFO overflow queue that
+  never drops (reliability), both gatekeepers + sanitiser + log redaction + no
+  secrets (security), the 150-line/ruff/mypy/≥85%-coverage/TDD gates
+  (maintainability), pydantic-ai + pluggable `SearchProvider` + `uv` workspace
+  (portability), and Nielsen heuristics + RTL (usability). Cross-linked from
+  PRD §8/§13. *Pattern: a quality-attribute mapping is only credible if every
+  cell points at a verified, already-shipped mechanism — so each claim reuses a
+  module/test name confirmed against the tree, never an aspiration.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

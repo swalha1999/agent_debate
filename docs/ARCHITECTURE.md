@@ -299,7 +299,27 @@ see the [root README](../README.md) "Contributing & quality gates".
 
 ---
 
-## 8. See also
+## 8. ISO/IEC 25010 product-quality mapping
+
+The lecturer's guidelines (§13) require the system to be mapped to the
+[ISO/IEC 25010](https://iso25000.com/index.php/en/iso-25000-standards/iso-25010)
+product-quality characteristics. Each row names the characteristic and **how
+this system concretely addresses it**, citing the real mechanism/module (all
+verified against the tree — see §3 for the code map). Referenced from
+[`PRD.md`](PRD.md) §8/§13.
+
+| Characteristic | How this system addresses it (real mechanisms) |
+| --- | --- |
+| **Functional suitability** | The mandated debate behaviour is implemented and **acceptance-tested**: a full 10-vs-10 alternating loop (`engine/loop.py::run_debate_loop`), debaters that *rebut* via the adversarial relay (`agents/relay.py`), each turn within `MAX_WORDS` (`engine/turn.py`), web search as a skill (`skills/web_search`), and a Controller that produces summary + agree/disagree + winner (`skills/controller.py::render_verdict`). PRD §11 acceptance criteria are covered by `tests/` (Epic 12.1). |
+| **Performance efficiency** | **Async concurrency** throughout — turns, model calls, and searches are `async`; the API gatekeeper bounds parallelism with a config-driven `concurrent_max` (`config/rate_limits.json`, `gatekeeper/_limiter.py`) and a sliding-window rate limit so the system uses capacity without overrunning provider limits. Token/latency are accounted per turn (`engine/_usage.py`) and cost scales predictably with `ROUNDS`/`MAX_WORDS` (PRD §10). |
+| **Compatibility** | Five-package `uv` workspace with a strict one-way dependency graph (§2) — `core` is the heart, `LOG` a shared leaf, CLI/API/UI thin shells; **no business logic duplicated** across surfaces (no co-existence conflicts). Interop is over stable contracts: the `DebateEngine` facade, the FastAPI HTTP/SSE API, and the typed `LogEvent` schema the UI/CLI consume identically. |
+| **Usability** | The web UI is designed and documented against **Nielsen's 10 heuristics** ([`UI.md`](UI.md), task 11.6) — always-honest status line (#1), cancel/user-control (#3), error prevention/recovery (#5, #9), minimalist help (#10) — plus **RTL** support (task 11.5). The CLI renders a live transcript and offers `--json` for machine use. |
+| **Reliability** | **Fault tolerance by design.** Every external call is wrapped with a **timeout + retry** with backoff (`engine/turn.py`, `engine/_call.py`, `gatekeeper/_retry.py`, up to `MAX_RETRIES`); an exhausted turn is recorded as *failed*, never crashes the run (graceful degradation, §4.5). The API gatekeeper **never drops** an over-limit call — it enqueues into a bounded per-service FIFO **overflow queue** and drains as windows reset (`gatekeeper/_queue.py`), raising `QueueFullError` only as explicit backpressure. Search is wrapped by `search/resilient.py` (timeout + retry + empty-result fallback). |
+| **Security** | **Two gatekeepers + no secrets.** The **security gatekeeper** sanitises all untrusted text — topic, web-search results, model output — before it re-enters a prompt (`security/sanitiser.py`: NFKC normalise, strip control/zero-width chars, neutralise injection phrasings, length-cap) and validates tool inputs with Pydantic (`security/validation.py`); **no code execution from model output** (test-enforced, `tests/test_no_code_execution.py`). The **API gatekeeper** is the sole audited egress point. Secrets live only in git-ignored `.env`, are **redacted** from logs (`log/redaction.py`), and a CI secret scan fails on committed key-like strings. |
+| **Maintainability** | Enforced **mechanically**, not by convention: **≤150 lines per code file** (CI `scripts/check_line_limit.py` — "split, don't compress", §2), **ruff = 0 violations + mypy clean**, **TDD** (failing test first) with a **≥85% coverage gate** (`fail_under = 85`). SDK-centric architecture with **no duplication** (all logic in `core`, surfaces are thin), config-driven behaviour (no hard-coded values), and public APIs documented with Google-style docstrings (task 12.4a). The ADR-style decisions table (§6) records the *why*. |
+| **Portability** | **No vendor lock-in.** [Pydantic AI](https://ai.pydantic.dev/) abstracts the LLM provider — swap models with a config string (D1); search vendors are **pluggable** behind the `SearchProvider` protocol + registry (one-line `SEARCH_BACKEND` swap, no engine edits — §4.4). The project is a portable `uv` workspace (`pyproject.toml` as single source of truth, pinned Python, no `requirements.txt`); all operational settings come from the environment/`.env` + JSON config (§5), so it relocates across machines without code changes. |
+
+## 9. See also
 
 - [`PRD.md`](PRD.md) — the full product/architecture spec (§5 is the long form
   of §1–§4 here).

@@ -326,7 +326,10 @@ These are hard requirements from the lecturer's guidelines; we adopt them explic
   gatekeeper enforces `concurrent_max`. Thread-safety documented for shared state.
 - **Code comments/docstrings** (§3.3): public APIs documented; non-obvious logic commented.
 - **UI usability** (§10): assessed against **Nielsen's 10 heuristics**; interface documented.
-- **ISO/IEC 25010** (§13): system mapped to the product-quality characteristics.
+- **ISO/IEC 25010** (§13): system mapped to the product-quality characteristics —
+  functional suitability, performance efficiency, compatibility, usability,
+  reliability, security, maintainability, portability — in
+  [`ARCHITECTURE.md` §8](ARCHITECTURE.md#8-isoiec-25010-product-quality-mapping).
 - **CI gates established first** (§6, §7): tests, ruff (0), coverage (≥85%), 150-line
   check, and secret scan run on every push **before** feature work — see TASKS Epic 0.
 
