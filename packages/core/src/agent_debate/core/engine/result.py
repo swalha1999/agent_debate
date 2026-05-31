@@ -30,6 +30,8 @@ class DebateMessage(BaseModel):
         output_tokens: Completion tokens the turn produced (0 when unknown).
         cost_usd: Estimated USD cost of the turn.
         latency_ms: Wall-clock latency of the turn, in milliseconds.
+        failed: ``True`` when the turn was abandoned after its model call exhausted
+            the timeout + retry budget (issue #49); a marker, not a real reply.
     """
 
     # ``word_count`` is a computed (read-only) field, so it appears in the JSON
@@ -44,6 +46,7 @@ class DebateMessage(BaseModel):
     output_tokens: int = Field(ge=0, default=0)
     cost_usd: float = Field(ge=0.0, default=0.0)
     latency_ms: float = Field(ge=0.0, default=0.0)
+    failed: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property

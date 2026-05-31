@@ -135,6 +135,25 @@ LOOP_NUDGE_LOG_AGENT = "controller"
 #: model call — the gatekeeper falls back to ``default`` when unconfigured (§13).
 LOOP_MODEL_SERVICE = "anthropic"
 
+#: ``event_type`` for each per-turn model call that exceeds ``turn_timeout_s`` and
+#: is cancelled before a retry (orchestration §4, the LOG schema's ``timeout`` kind).
+TURN_TIMEOUT_EVENT_TYPE = "timeout"
+
+#: ``event_type`` for each scheduled retry of a timed-out/transient turn call (§4).
+TURN_RETRY_EVENT_TYPE = "retry"
+
+#: ``event_type`` informing the controller a turn was abandoned after exhausting
+#: retries. The LOG schema has no "failed" kind, so it is a ``system`` event whose
+#: payload carries the ``turn_failed`` tag the controller/loop reacts to (§4).
+TURN_FAILED_EVENT_TYPE = "system"
+
+#: Stable ``payload["turn_failed"]`` tag marking the abandoned-turn record (§4).
+TURN_FAILED_TAG = "model_call"
+
+#: Placeholder content recorded in the transcript for a turn abandoned after the
+#: timeout/retry budget was exhausted (a marker, not a debater message).
+TURN_FAILED_CONTENT = "[turn failed: model call exhausted timeout + retries]"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -173,6 +192,11 @@ __all__ = [
     "SETUP_EVENT_TAG",
     "SETUP_LOG_AGENT",
     "SETUP_LOG_EVENT_TYPE",
+    "TURN_FAILED_CONTENT",
+    "TURN_FAILED_EVENT_TYPE",
+    "TURN_FAILED_TAG",
+    "TURN_RETRY_EVENT_TYPE",
+    "TURN_TIMEOUT_EVENT_TYPE",
     "VERDICT_RATIONALE_TEMPLATE",
     "VERDICT_TIE",
     "WORD_LIMIT_LOG_AGENT",
