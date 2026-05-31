@@ -7,12 +7,12 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 74356
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 52,
+    "duration_ms": 354239,
+    "summary": "52 tool uses · 74.4k tokens · 5m 54s"
   },
   "note": "Epic-9 acceptance/consolidation test pass (mirrors prior epics' *_acceptance modules). Added packages/cli/tests/test_cli_acceptance.py driving the Typer app via typer.testing.CliRunner against a MOCKED engine (NO network/key), with stubs split into packages/cli/tests/_acceptance_helpers.py to keep both files under the 150-line code cap. The module ties the headline Epic-9 behaviours together END-TO-END: (1) `agent-debate run \"<topic>\"` runs a mocked debate and PRINTS the full transcript (Pro AND Con messages) AND the verdict in live-render order (human path); (2) `--json` prints a single machine-readable DebateResult JSON that parses (topic/transcript/verdict); (3) exit codes correct — 0 on success, non-zero on failure for BOTH the human and --json paths (MissingApiKeyError surfaced on stderr; --json keeps stdout clean of partial JSON; invalid --rounds rejected); (4) the --rounds/--max-words/--model/--search-backend flags reach the engine config, read from a frozen Settings (no hard-coded numbers — FIXED_ROUNDS/FIXED_MAX_WORDS constants); (5) --help lists the run command + every option incl --json. TDD red-first demonstrated on the net-new integrated transcript assertion (test_run_prints_transcript_and_verdict_end_to_end): removing the streamed CON message from the stub turned it red (assert 'con rebuttal point' in out failed), then restored to green. HONEST net-new vs already-covered: the per-task suites (9.1 test_cli_run.py / 9.2 test_cli_live.py / 9.3 test_cli_json.py) already cover each behaviour and the CLI was ~99% covered before this; net-new value is the integrated acceptance composition asserting the CLI is a thin, correct driver of the SDK — coverage was already near-100% so no source gap/bug was found. NO source change (test-only). Stubs route nothing externally — the real SDK still routes every model call through the Epic-13 gatekeeper; the CLI only consumes engine.run/engine.stream. Gates green locally: uv sync clean; ruff check . = All checks passed; ruff format --check . = 176 files formatted; mypy = no issues in 176 source files (typed patch_engine fixture param as type[RecordingEngine]); pytest --cov = 648 passed, 99.87% total (>=85 required); check_line_limit.py rc=0 (test_cli_acceptance.py + _acceptance_helpers.py both under cap); secret_scan.py rc=0. Files: NEW packages/cli/tests/test_cli_acceptance.py, packages/cli/tests/_acceptance_helpers.py; EDIT docs/PROMPTS.md (9.4 entry), .building_tasks_logs/9.4-cli-tests.json."
 }
