@@ -31,6 +31,12 @@ pydantic-ai ``message_history``), the :class:`DebateContexts` holder and
 :func:`create_debate_contexts` — three ISOLATED contexts so the two debaters never
 share a chat thread (anti-sycophancy §2).
 
+Task 5.6 (issue #43) adds the **adversarial relay**
+(:mod:`~agent_debate.core.agents.relay`): :func:`build_adversarial_relay` frames
+the opponent's (sanitised) last message as *"Your opponent argued: «…». Rebut
+it."* and :func:`relay_opponent_turn` injects it — together with the side anchor
+— as a ``user`` turn into the agent's OWN context (anti-sycophancy §2 mechanism 1).
+
 The re-exports below are the subpackage's public surface.
 """
 
@@ -60,8 +66,14 @@ from agent_debate.core.agents.debater import (
     create_pro_debater,
 )
 from agent_debate.core.agents.prompts import DEBATER_SKILLS, build_debater_system_prompt
+from agent_debate.core.agents.relay import (
+    ADVERSARIAL_RELAY_TEMPLATE,
+    build_adversarial_relay,
+    relay_opponent_turn,
+)
 
 __all__ = [
+    "ADVERSARIAL_RELAY_TEMPLATE",
     "ANTI_CONCESSION_RULE",
     "CONTROLLER_IDENTITY",
     "CONTROLLER_SKILLS",
@@ -71,6 +83,7 @@ __all__ = [
     "Role",
     "Turn",
     "anchor_turn",
+    "build_adversarial_relay",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
     "build_side_anchor",
@@ -79,4 +92,5 @@ __all__ = [
     "create_debate_contexts",
     "create_debater",
     "create_pro_debater",
+    "relay_opponent_turn",
 ]
