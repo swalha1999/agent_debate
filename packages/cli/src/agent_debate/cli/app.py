@@ -29,6 +29,10 @@ app = typer.Typer(
     help="Run a structured multi-agent debate from the terminal (PRD §6).",
     no_args_is_help=True,
     add_completion=False,
+    # Plain Click help (no rich panels): rich wraps long option names like
+    # ``--search-backend`` across its help box at narrow terminal widths, which
+    # is brittle to assert on and to read in piped/CI output.
+    rich_markup_mode=None,
 )
 
 _LOG = get_logger("cli")

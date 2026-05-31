@@ -63,13 +63,8 @@ def _patch_engine(monkeypatch: pytest.MonkeyPatch) -> type[_RecordingEngine]:
 
 
 def test_help_lists_run_options() -> None:
-    """``run --help`` documents the topic + every option.
-
-    A wide ``COLUMNS`` keeps each long option name on one line so the assertion
-    is not defeated by rich wrapping ``--search-backend`` across the help box
-    (the default 80-col CI terminal would otherwise split it).
-    """
-    result = runner.invoke(cli_app.app, ["run", "--help"], env={"COLUMNS": "200"})
+    """``run --help`` documents the topic + every option (plain Click help)."""
+    result = runner.invoke(cli_app.app, ["run", "--help"])
     assert result.exit_code == 0
     for token in ("--rounds", "--max-words", "--model", "--search-backend"):
         assert token in result.output
