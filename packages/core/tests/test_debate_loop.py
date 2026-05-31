@@ -27,6 +27,7 @@ from agent_debate.core import (
     load_rate_limit_config,
     setup_debate,
 )
+from agent_debate.core.constants import CLOSING_EXCHANGES
 from agent_debate.core.engine import run_debate_loop
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
 from pydantic_ai.models import Model
@@ -153,7 +154,12 @@ def test_loop_logs_every_message_in_order(tmp_path: Path) -> None:
     run_debate_loop(
         setup, config, gatekeeper=_gatekeeper("r4", runs_dir), run_id="r4", runs_dir=runs_dir
     )
-    messages = [e for e in _events(runs_dir, "r4") if e["event_type"] == "message"]
+    # Scope to the main-loop turns; the closing discussion (round 0) is separate.
+    messages = [
+        e
+        for e in _events(runs_dir, "r4")
+        if e["event_type"] == "message" and not e["payload"].get("closing")
+    ]
     assert len(messages) == 4
     assert [(m["round"], m["agent"]) for m in messages] == [
         (1, "pro"),
@@ -172,8 +178,8 @@ def test_loop_routes_every_model_call_through_gatekeeper(tmp_path: Path) -> None
         _TOPIC, config, models=_models(pro=_text_model("pro point"), con=_text_model("con rebut"))
     )
     run_debate_loop(setup, config, gatekeeper=spy, run_id="r5", runs_dir=runs_dir)
-    # One execute() per debater turn: rounds * 2 sides.
-    assert len(spy.calls) == config.rounds * 2
+    # One execute() per turn: rounds*2 main turns + the gatekept closing exchange.
+    assert len(spy.calls) == config.rounds * 2 + CLOSING_EXCHANGES * 2
 
 
 def test_loop_default_gatekeeper_when_not_injected(tmp_path: Path) -> None:

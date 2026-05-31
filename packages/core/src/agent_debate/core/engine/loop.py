@@ -15,8 +15,10 @@ in order:
 4. **Controller drift-check on Con** — as for Pro.
 
 Result: exactly ``config.rounds`` Pro + ``config.rounds`` Con messages, alternating,
-each ≤ ``config.max_words``. The verdict + closing discussion are 6.4/6.5/6.8 — left
-as seams (``verdict=None``, ``closing_discussion=[]``). EVERY debater model call
+each ≤ ``config.max_words``. After the main rounds — and before the verdict — a
+freer **closing discussion** runs (task 6.5, :mod:`~agent_debate.core.engine.
+closing`), its turns stored in ``DebateResult.closing_discussion`` (separate from
+the main transcript). The verdict is a 6.8 seam (``verdict=None``). EVERY model call
 routes through the API gatekeeper (Epic 13); the per-turn helper (:mod:`turn`) marks
 the seam where 6.4's timeout/retry slots in. Caps come from ``config`` (no
 hard-coding); every message / nudge is logged via the LOG package.
@@ -26,6 +28,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.drift import run_drift_check
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
@@ -62,8 +65,8 @@ def run_debate_loop(
         runs_dir: Directory holding the per-run JSONL sink.
 
     Returns:
-        The assembled :class:`DebateResult` (transcript + nudges + totals); the
-        verdict (``None``) and closing discussion (``[]``) are left as 6.4+ seams.
+        The assembled :class:`DebateResult` (transcript + nudges + closing
+        discussion + totals); the verdict (``None``) is left as the 6.8 seam.
     """
     keeper = gatekeeper or ApiGatekeeper(load_rate_limit_config(), run_id=run_id, runs_dir=runs_dir)
     transcript: list[DebateMessage] = []
@@ -79,11 +82,15 @@ def run_debate_loop(
             setup, config, keeper, run_id, runs_dir, DebateSide.CON, round_, last_pro, transcript
         )
         _drift(transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges)
+    closing = run_closing_discussion(
+        setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir
+    )
     return DebateResult(
         topic=setup.topic,
         transcript=transcript,
         nudges=nudges,
-        totals=CostTotals.from_messages(transcript),
+        closing_discussion=closing,
+        totals=CostTotals.from_messages(transcript + closing),
     )
 
 
