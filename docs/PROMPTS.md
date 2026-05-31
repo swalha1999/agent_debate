@@ -2058,5 +2058,28 @@ fails → restore → green.
   (matching `skills`/`_engine_public`) to hold the 150-line cap rather than trimming
   the public surface.
 
+### Acceptance-criteria tests (task 12.1, 2026-05-31)
+- **Prompt:** "Write/aggregate tests covering each PRD §11 acceptance criterion.
+  Ensure coverage on the engine and both gatekeepers keeps total >=85%."
+- **Context:** Every epic already shipped its own per-task + consolidated
+  acceptance suite (1.5 / 2.5 / … / 13.7). PRD §11 is the lecturer-facing
+  ~15-bullet checklist, but nothing mapped each bullet to a single, named,
+  greppable test — so "is §11 box N covered?" had no one answer.
+- **Outcome/pattern:** Added a consolidated §11 acceptance pass —
+  `packages/core/tests/test_acceptance_criteria.py` (behavioural bullets 1-7, 9,
+  end-to-end through `DebateEngine` + both gatekeepers) and
+  `test_acceptance_criteria_meta.py` (surfaces + hygiene/meta bullets 8, 10-15),
+  split with `_acceptance_criteria_helpers.py` to hold the 150-line cap. Every
+  test is named `test_cN_*` and the module docstring carries the explicit
+  criterion→test map, so the §11 checklist is provably green at a glance. Set the
+  convention to **aggregate, not duplicate**: reuse the existing offline helpers
+  (`_engine_acceptance_helpers`, `_staged_drift_helpers`, `_gatekeeper_acceptance_helpers`,
+  `_skills_acceptance_helpers`) and the scripted gates (`secret_scan`,
+  `check_line_limit`) rather than re-implementing them. Hygiene bullets that
+  depend on the *local* `.env` (secret-scan over the real tree) are verified via a
+  synthetic-tree mechanism check + a `.gitignore` assertion, so the suite stays
+  green in CI without coupling to a developer's local key file. Coverage held at
+  99.7% (>=85%).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
