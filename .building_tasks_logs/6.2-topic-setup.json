@@ -1,0 +1,18 @@
+{
+  "task_id": "6.2",
+  "title": "Topic setup & private side assignment (Epic 6, orchestration §3.1)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Implement setup: controller receives/sets the topic, privately assigns Pro=FOR and Con=AGAINST, and keeps its own stance hidden from everyone.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 93003
+  },
+  "usage": {
+    "tool_uses": 63,
+    "duration_ms": 327623,
+    "summary": "63 tool uses · 93.0k tokens · 5m 28s"
+  },
+  "note": "SETUP step of the debate (orchestration §3.1) — NOT the loop (6.3). New engine/setup.py (160 lines incl. docstrings; under the 150 CODE-line cap) defines: setup_debate(topic, config, *, settings=None, models=None, run_id=None, runs_dir=None) -> DebateSetup. (1) VALIDATES the untrusted topic via the 7.2 security validator (validate_topic — rejects empty/control-char/oversized topics with the typed InvalidInputError). (2) Privately ASSIGNS Pro=FOR, Con=AGAINST as a fixed STRUCTURED mapping keyed by DebateSide constants (pro_side=DebateSide.PRO, con_side=DebateSide.CON; side_assignment property -> {PRO:'FOR', CON:'AGAINST'} via the existing SIDE_LABEL constant — no hard-coded side strings). (3) Builds the three agents (create_pro_debater / create_con_debater / create_controller) on injected per-agent models (TestModel keyed by DebateSide + 'controller' so tests are offline, no network/key) + three ISOLATED contexts (create_debate_contexts). NO model call is made (setup only prepares state; the loop's calls route through the API gatekeeper Epic 13 in 6.3). CONTROLLER NEUTRALITY: DebateSetup is a frozen slotted dataclass with deliberately NO stance/opinion/winner/lean/bias field — test_setup_carries_no_controller_stance_field asserts none of those names appear in dataclasses.fields(setup); the controller's own 'never reveal stance' is already enforced by its 5.3 system prompt. LOG: _log_setup emits ONE 'system' event via agent_debate.log.log_event (new constants SETUP_LOG_EVENT_TYPE='system', SETUP_LOG_AGENT='controller', SETUP_EVENT_TAG='debate_setup') carrying {event, topic (re-sanitised via sanitize_untrusted_text), assignment:{pro:'FOR',con:'AGAINST'}} — round=0 since setup precedes the loop (LogEvent requires round); test_setup_event_logs_no_controller_stance greps the JSONL to assert no stance/opinion/winner leaks. RE-EXPORTS (split, not compress): engine/__init__ + _engine_public.py shim now export DebateSetup / SetupModels / setup_debate (top-level via the existing core hub splice). TDD red-first: wrote packages/core/tests/test_debate_setup.py (11 tests), watched it fail (ImportError: cannot import name 'DebateSetup'), then implemented. Gates green locally: uv sync clean; ruff check = All checks passed; ruff format --check clean; mypy = no issues in 124 source files; pytest --cov = 337 passed, total 99% (engine/setup.py 100%, >=85); check_line_limit pass; secret_scan pass. See PR CI for the authoritative result."
+}

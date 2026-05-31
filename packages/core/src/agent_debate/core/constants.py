@@ -110,6 +110,18 @@ WORD_LIMIT_LOG_AGENT = "word_limit"
 #: Stable ``payload["violation"]`` tag identifying a word-limit breach in the log.
 WORD_LIMIT_VIOLATION_TAG = "word_limit"
 
+#: ``event_type`` recorded when the debate setup step prepares a run (task 6.2).
+#: The LOG schema has no dedicated "setup" type, so it is a ``system`` event whose
+#: payload carries the topic + the side assignment (orchestration §3.1).
+SETUP_LOG_EVENT_TYPE = "system"
+
+#: ``agent`` label recorded on the setup event — the controller owns the setup step
+#: (it receives the topic and assigns the sides). A name, not a stance.
+SETUP_LOG_AGENT = "controller"
+
+#: ``payload["event"]`` tag identifying the debate-setup record in the run log.
+SETUP_EVENT_TAG = "debate_setup"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -141,6 +153,9 @@ __all__ = [
     "PROVIDER_KEY_ENV_VARS",
     "REBUTTAL_LEAD_IN",
     "REBUTTAL_LEAD_OUT",
+    "SETUP_EVENT_TAG",
+    "SETUP_LOG_AGENT",
+    "SETUP_LOG_EVENT_TYPE",
     "VERDICT_RATIONALE_TEMPLATE",
     "VERDICT_TIE",
     "WORD_LIMIT_LOG_AGENT",

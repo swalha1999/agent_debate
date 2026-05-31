@@ -15,7 +15,10 @@ from agent_debate.core.engine import (
     DebateConfig,
     DebateMessage,
     DebateResult,
+    DebateSetup,
+    SetupModels,
     ToolCallRecord,
+    setup_debate,
 )
 
 __all__ = [
@@ -23,5 +26,8 @@ __all__ = [
     "DebateConfig",
     "DebateMessage",
     "DebateResult",
+    "DebateSetup",
+    "SetupModels",
     "ToolCallRecord",
+    "setup_debate",
 ]
