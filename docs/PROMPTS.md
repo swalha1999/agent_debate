@@ -1777,5 +1777,27 @@ outcome/decision it produced.
   transcript assertion (dropping the streamed Con message turns it red, then restored).
   Test-only change — no source fix needed; the CLI was already a thin, correct driver.
 
+### FastAPI app skeleton (task 10.1, issue #68)
+- **Prompt:** "Create a FastAPI app with a Uvicorn entrypoint in packages/api, wired to the
+  SDK." (full standards prompt: TDD, 150-line cap, ruff/mypy clean, no hard-coded values,
+  gatekeeper for external calls, LOG package, coverage ≥85%).
+- **Context:** Epic-10 kickoff — the API package was a bare version-re-export shell. This
+  task lays the FastAPI foundation the debate endpoints (10.2), SSE (10.3) and
+  CORS/validation (10.4) build on, without adding any real endpoints/network yet.
+- **Outcome / pattern set:** Added `fastapi`/`uvicorn`/`httpx` to `packages/api` and
+  relocked. New `app.py` with a `create_app()` **factory** (reusable, config-driven —
+  loads `Settings` via `get_settings()` onto `app.state` for later routes) plus a
+  module-level `app = create_app()` for Uvicorn; skeleton routes `GET /health` →
+  `{"status":"ok","version":__version__}` and `GET /` → service info. `config.py` resolves
+  host/port from `API_HOST`/`API_PORT` env with single named-constant defaults
+  (`DEFAULT_API_HOST`/`DEFAULT_API_PORT`) — no scattered magic. `__main__.py` exposes
+  `run_server()`/`main()` (the `agent-debate-api` console script + `python -m
+  agent_debate.api`) calling `uvicorn.run`. LOG package used at app/server startup; the SDK
+  already routes every external call through the Epic-13 gatekeeper, so the API adds no new
+  edges. TDD red-first via `fastapi.testclient.TestClient` (no port bind, no network):
+  factory returns a `FastAPI` and is reusable; `/health`/`/` return the version; the
+  entrypoint resolves env/default host-port and invokes a patched `uvicorn.run`. 100%
+  coverage on the api package.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

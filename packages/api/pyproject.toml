@@ -13,7 +13,19 @@ name = "agent_debate_api"
 version = "1.00"
 description = "agent_debate API — FastAPI surface over the SDK (skeleton)."
 requires-python = ">=3.12"
-dependencies = ["agent_debate_core", "agent_debate_log"]
+dependencies = [
+    "agent_debate_core",
+    "agent_debate_log",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+# Console entry point (PRD §6): serve the FastAPI app via Uvicorn. Host/port are
+# config-driven (``run_server`` reads ``API_HOST`` / ``API_PORT`` env or the
+# named ``DEFAULT_API_HOST`` / ``DEFAULT_API_PORT`` constants).
+agent-debate-api = "agent_debate.api.__main__:main"
 
 [tool.uv.sources]
 agent_debate_core = { workspace = true }
