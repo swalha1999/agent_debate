@@ -13,7 +13,7 @@ name = "agent_debate_cli"
 version = "1.00"
 description = "agent_debate CLI — Typer surface over the SDK."
 requires-python = ">=3.12"
-dependencies = ["agent_debate_core", "agent_debate_log", "typer>=0.12"]
+dependencies = ["agent_debate_core", "agent_debate_log", "rich>=13", "typer>=0.12"]
 
 [project.scripts]
 # Console entry point (PRD §6): ``agent-debate run "<topic>"`` drives the SDK.

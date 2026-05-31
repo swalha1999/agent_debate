@@ -15,18 +15,26 @@ the transcript + verdict are printed; and invalid input is rejected.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import agent_debate.cli.app as cli_app
 import pytest
 from agent_debate.core import DebateConfig, Settings
-from agent_debate.core.engine.result import DebateMessage, DebateResult
+from agent_debate.core.engine.result import DebateResult
 from agent_debate.core.skills.models import DebateSide, Verdict
+from agent_debate.log import LogEvent
 from typer.testing import CliRunner
 
 runner = CliRunner()
 
 
 class _RecordingEngine:
-    """Stand-in for :class:`DebateEngine` that records its config + topic."""
+    """Stand-in for :class:`DebateEngine` that records its config + topic.
+
+    The ``run`` command now consumes :meth:`DebateEngine.stream` (live render,
+    task 9.2), so the stub yields a canned event sequence (a Pro message + the
+    verdict) ending with the final :class:`DebateResult` — no network/key needed.
+    """
 
     last_config: DebateConfig | None = None
     last_topic: str | None = None
@@ -36,11 +44,28 @@ class _RecordingEngine:
         type(self).last_config = config
         type(self).last_settings = kwargs.get("settings")  # type: ignore[assignment]
 
-    def run(self, topic: str) -> DebateResult:
+    def stream(self, topic: str) -> Iterator[LogEvent | DebateResult]:
         type(self).last_topic = topic
-        return DebateResult(
+        yield LogEvent(
+            run_id="r",
+            round=1,
+            agent=DebateSide.PRO.value,
+            event_type="message",
+            payload={"content": "hello world", "word_count": 2},
+        )
+        yield LogEvent(
+            run_id="r",
+            round=0,
+            agent="controller",
+            event_type="verdict",
+            payload={
+                "winner": DebateSide.PRO.value,
+                "summary": "pro won",
+                "rationale": "stronger arguments",
+            },
+        )
+        yield DebateResult(
             topic=topic,
-            transcript=[DebateMessage(round=1, side=DebateSide.PRO, content="hello world")],
             verdict=Verdict(
                 winner=DebateSide.PRO,
                 rationale="stronger arguments",

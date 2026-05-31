@@ -1712,5 +1712,25 @@ outcome/decision it produced.
   — re-export it under a different name (`cli_app`). Console entry point registered as
   `[project.scripts] agent-debate = agent_debate.cli.app:app`.*
 
+### Rich LIVE transcript rendering (task 9.2, issue #65)
+- **Prompt (verbatim):** "Use Rich to render the live transcript: Pro and Con
+  messages per round with inline controller nudges, and the final verdict."
+- **Context:** Epic 9 continues the CLI surface (PRD §6). 9.1 was a blocking
+  `DebateEngine.run()` + plain-text `render_result`; 9.2 switches the default human
+  view to render the transcript LIVE as events arrive, consuming `DebateEngine.stream`
+  (ordered typed `LogEvent`s, then the final `DebateResult` as the last item, 6.6/6.8).
+- **Outcome / pattern set:** A Rich renderer split across three files (each <150 lines):
+  `_live.py` (`render_stream(topic, events)` — prints a topic header then iterates the
+  stream, rendering EACH event the instant it arrives and capturing the final
+  `DebateResult`), `_live_events.py` (a dispatch table on `event_type` → per-kind
+  handlers; `message` → side-coloured `Panel`, `nudge` → distinct dim/italic inline
+  `moderator nudge` marker, `verdict` → final `Panel`; unsurfaced kinds like
+  `tool_call`/`retry` silently ignored), and `_live_style.py` (every label/colour/style
+  a NAMED constant — Pro=green, Con=red — so no hard-coded values; Rich terminal output,
+  so the global RTL/CSS rules don't apply). Wired into `run` as the default (`--json` is
+  separate, 9.3). Tests drive it with `CliRunner` + a stub engine yielding a CANNED
+  sequence (Pro msg, Con msg, nudge, verdict, result) so **no network/key** — asserting
+  Pro/Con distinguished, the nudge inline (ordered after the turns), the verdict last.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
