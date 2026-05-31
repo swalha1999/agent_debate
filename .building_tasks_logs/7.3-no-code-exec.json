@@ -1,0 +1,17 @@
+{
+  "task_id": "7.3",
+  "title": "No code execution from output (audit + test-enforced guarantee, PRD §5.7)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Audit that no model/tool output is ever eval'd/exec'd or used to build shell/SQL. Ensure all tool args are strictly typed Pydantic models.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  }
+}
