@@ -1851,5 +1851,34 @@ outcome/decision it produced.
   unknown id → 404; a finished run replays. No network in any test. 98–100% coverage on the
   new modules.
 
+### 2026-05-31 — Task 10.4: Validation, errors, CORS (#71)
+
+- **Prompt (verbatim):** "Add request validation, consistent error responses, and CORS
+  configured for the UI origin." (+ repo standards: TDD, ≤150 code lines/file, ruff 0 + mypy
+  clean, no hard-coded values, gatekeeper, LOG, coverage ≥85%).
+- **Context:** Hardening the FastAPI surface (10.1–10.3). The endpoints already validated the
+  topic (7.2 + Pydantic) and 404'd unknown ids, but errors used FastAPI's default ad-hoc
+  shapes and there was no CORS — the UI (a separate browser origin) could not call the API.
+- **Outcome / pattern set:** One consistent error envelope —
+  `{"error": {"type": <machine label>, "message": <safe human text>, "detail": <extra|null>}}`
+  — with `type` a `StrEnum` (`ErrorType`, single source of truth) and `ERROR_KEY` named, no
+  inline magic. New `errors.py` registers handlers (most→least specific) via
+  `app.add_exception_handler` in `create_app`: `RequestValidationError`→422 (field errors made
+  JSON-safe with `jsonable_encoder` so a raw `InvalidInputError` in a rule's `ctx` serialises),
+  the 7.2 `InvalidInputError`→422, `MissingApiKeyError`→**503 with a fixed safe message that
+  never echoes the key**, `HTTPException`→re-wrapped (404 vs internal), and a catch-all
+  `Exception`→**500 with a fixed message + the real fault logged via LOG, never a stack
+  trace/secret in the body**. CORS: `config.py` gained `resolve_cors_origins()` reading
+  `CORS_ORIGINS` (comma-separated) with a named `DEFAULT_UI_ORIGIN = http://localhost:5173`
+  default — config-driven, never a wildcard; `create_app` wires `CORSMiddleware` for those
+  origins + the GET/POST/OPTIONS the JSON+SSE endpoints need. Key design call: the background
+  worker swallows exceptions (must not crash), so a *pre-run* misconfiguration like a missing
+  key can't reach the client that way — added a synchronous `preflight.py` seam the `POST`
+  route runs *before* scheduling; `default_preflight` validates provider keys (2.3),
+  injected-runner apps get a no-op (their stub owns preconditions), tests inject a raising
+  stub. TDD red-first via `TestClient` (error envelope shape, CORS allow-origin for the
+  configured origin and *not* a disallowed one, config-driven override, key-not-leaked). 100%
+  coverage on the new modules; all existing api tests kept green.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

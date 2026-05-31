@@ -13,11 +13,14 @@ routes through the Epic-13 gatekeeper, so the API adds no new external edges.
 
 from __future__ import annotations
 
+from agent_debate.api.config import resolve_cors_origins
 from agent_debate.api.debate_routes import create_debate_router
 from agent_debate.api.debate_store import DebateStore
+from agent_debate.api.errors import register_exception_handlers
 from agent_debate.core import __version__, get_settings
 from agent_debate.log import get_logger
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 #: Human-readable service identifier surfaced by the root endpoint.
 SERVICE_NAME = "agent_debate.api"
@@ -40,6 +43,24 @@ def _register_routes(app: FastAPI) -> None:
         return {"service": SERVICE_NAME, "version": __version__}
 
 
+def _configure_cors(app: FastAPI) -> None:
+    """Attach CORS for the config-driven UI origin(s) (no hard-coded list).
+
+    The allow-list comes from :func:`resolve_cors_origins` (``CORS_ORIGINS`` env,
+    defaulting to the named UI dev origin). All methods/headers the JSON + SSE
+    endpoints need are allowed for those origins only — never a wildcard.
+    """
+    origins = resolve_cors_origins()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+        allow_credentials=True,
+    )
+    get_logger(_LOG_RUN_ID).info("api_cors_configured", origins=origins)
+
+
 def create_app() -> FastAPI:
     """Build and return a fresh FastAPI app wired to the SDK.
 
@@ -55,6 +76,8 @@ def create_app() -> FastAPI:
     )
     app.state.settings = settings
     app.state.debate_store = DebateStore()
+    _configure_cors(app)
+    register_exception_handlers(app)
     _register_routes(app)
     app.include_router(create_debate_router(app.state.debate_store))
 
