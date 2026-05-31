@@ -53,7 +53,7 @@ def test_both_debater_prompts_list_their_named_skills() -> None:
     """Pro AND Con agents' system prompts name every declared skill (PRD §5.2)."""
     factories = (create_pro_debater, create_con_debater)
     for factory in factories:
-        prompt = _system_prompt(factory(model=TestModel()))
+        prompt = _system_prompt(factory(model=TestModel(), topic="Sample debate topic"))
         for skill in DEBATER_SKILLS:
             assert skill in prompt, f"{skill} missing from {factory.__name__} prompt"
 

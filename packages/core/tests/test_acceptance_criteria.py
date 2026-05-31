@@ -98,7 +98,7 @@ def test_c2_debaters_rebut_opponent_via_adversarial_relay(tmp_path: Path) -> Non
 
 def test_c3_each_debater_has_web_search_plus_two_named_skills() -> None:
     for factory in (create_pro_debater, create_con_debater):
-        agent: Agent[None, str] = factory(model=TestModel())
+        agent: Agent[None, str] = factory(model=TestModel(), topic="Sample debate topic")
         names = set(agent._function_toolset.tools)  # noqa: SLF001 - inspect registered tools
         assert WEB_SEARCH_TOOL in names
         assert len(names - {WEB_SEARCH_TOOL}) >= 2

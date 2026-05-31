@@ -25,12 +25,18 @@ from agent_debate.core.settings import Settings
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.test import TestModel
 
+_TOPIC = "Should cities ban private cars from downtown cores?"
+
 
 def _prompt(**overrides: object) -> str:
-    """Build a PRO system prompt with a default word limit, overriding selected kwargs."""
-    fields: dict[str, object] = {"max_words": 150}
+    """Build a PRO system prompt with a default word limit + topic, overriding kwargs."""
+    fields: dict[str, object] = {"max_words": 150, "topic": _TOPIC}
     fields.update(overrides)
     return build_debater_system_prompt(DebateSide.PRO, **fields)  # type: ignore[arg-type]
+
+
+def test_prompt_states_the_actual_topic_text() -> None:
+    assert _TOPIC in _prompt()
 
 
 def test_skill_constant_lists_all_three_named_skills() -> None:
@@ -69,12 +75,12 @@ def test_prompt_word_limit_is_config_driven() -> None:
 
 
 def test_create_pro_debater_returns_an_agent_without_network() -> None:
-    agent = create_pro_debater(model=TestModel())
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     assert isinstance(agent, pydantic_ai.Agent)
 
 
 def test_pro_agent_system_prompt_has_side_rules_and_skills() -> None:
-    agent = create_pro_debater(model=TestModel())
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert "FOR" in prompt
     assert "rebut" in prompt.lower()
@@ -83,15 +89,21 @@ def test_pro_agent_system_prompt_has_side_rules_and_skills() -> None:
         assert skill in prompt
 
 
+def test_pro_agent_system_prompt_states_the_topic() -> None:
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
+    prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
+    assert _TOPIC in prompt
+
+
 def test_pro_agent_word_limit_comes_from_settings() -> None:
     settings = Settings(max_words=77)
-    agent = create_pro_debater(settings, model=TestModel())
+    agent = create_pro_debater(settings, model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert "77" in prompt
 
 
 def test_pro_agent_defaults_to_process_settings_word_limit() -> None:
-    agent = create_pro_debater(model=TestModel())
+    agent = create_pro_debater(model=TestModel(), topic=_TOPIC)
     prompt = "\n".join(agent._system_prompts)  # noqa: SLF001 - inspect static prompt
     assert str(Settings().max_words) in prompt
 
@@ -105,5 +117,5 @@ def test_pro_agent_resolves_side_model_from_settings_when_not_injected(
     monkeypatch.setenv("PRO_MODEL", "anthropic:claude-sonnet-4-6")
     settings = Settings()
     assert settings.pro_model == "anthropic:claude-sonnet-4-6"
-    agent = create_pro_debater(settings)
+    agent = create_pro_debater(settings, topic=_TOPIC)
     assert isinstance(agent.model, AnthropicModel)
