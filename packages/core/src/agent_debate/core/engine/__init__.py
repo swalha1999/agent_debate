@@ -11,6 +11,8 @@ wrapper, closing discussion, event streaming and SDK entrypoint that follow
 
 from __future__ import annotations
 
+from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
+from agent_debate.core.engine.loop import run_debate_loop
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import (
     CostTotals,
@@ -26,7 +28,9 @@ __all__ = [
     "DebateMessage",
     "DebateResult",
     "DebateSetup",
+    "Gatekeeper",
     "SetupModels",
     "ToolCallRecord",
+    "run_debate_loop",
     "setup_debate",
 ]

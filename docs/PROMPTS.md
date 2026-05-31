@@ -1298,5 +1298,30 @@ outcome/decision it produced.
   stance. Re-exports added to `engine/__init__` + the `_engine_public.py` shim (split, not
   compress).
 
+## 6.3 — Main 10v10 debate loop
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.3-debate-loop.json`.
+- **Context:** The MAIN LOOP of the debate flow (orchestration §3.2) — for
+  `round = 1..config.rounds` alternate Pro turn → controller drift-check (+nudge) → Con turn
+  (must rebut Pro) → controller drift-check (+nudge). NOT the timeout/retry wrapper (6.4) or
+  verdict/closing discussion (6.5/6.8).
+- **Outcome / pattern set:** Split into four small files (each ≤ 150 code lines). `engine/loop.py`
+  — `run_debate_loop(setup, config, *, gatekeeper=None, run_id, runs_dir) -> DebateResult`
+  drives the rounds, tracking each side's last message so Con rebuts Pro's latest and Pro (from
+  round 2) rebuts Con's last. `engine/turn.py` — `run_debate_turn(...)`: inject side anchor (+
+  adversarial relay of the opponent) into the debater's OWN context, generate via the gatekeeper,
+  `enforce_word_limit` (trim + log), append + log a `message` event. `engine/drift.py` —
+  `run_drift_check(...)`: `assess_drift` → on capture `nudge` (NOT a debate turn) + log a `nudge`
+  event. `engine/gatekeeper_proto.py` — a `Gatekeeper` `Protocol` so the loop depends on the
+  `execute` *shape* and tests inject a spy. **Gatekeeper pattern:** every debater model call
+  routes through `gatekeeper.execute(agent.run_sync, message_history=ctx.message_history(),
+  service="anthropic")`; absent an injected gatekeeper the loop builds a default `ApiGatekeeper`
+  from `load_rate_limit_config()`. The 6.4 timeout/retry wraps exactly at that `execute` call
+  (clean seam, no behaviour change). pydantic-ai note: `run_sync` is called with only
+  `message_history` (its trailing `user` turn is the live prompt); `.usage` is now a property
+  (input/output tokens fold into `DebateMessage`/`CostTotals`). Verdict left `None` and
+  `closing_discussion` `[]` as 6.5/6.8 seams. Re-exports added to `engine/__init__` + the
+  `_engine_public.py` shim.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
