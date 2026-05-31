@@ -1414,5 +1414,35 @@ outcome/decision it produced.
   policy flow file stays small; when a re-export aggregator outgrows the line cap,
   collapse it onto the package's own `__all__` splat instead of raising the limit.*
 
+### 4.5 — Register skills as Pydantic AI tools (Epic 4, PRD §5.2/§5.3, issue #36)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/4.5-register-tools.json`.
+- **Context:** the six skills (4.1–4.4) already existed as functions + Pydantic
+  input models, and the agents (Epic 5) already carried system prompts *naming*
+  those skills — but did **not** attach them as tools. 4.5 closes that loop:
+  register each skill as a real `pydantic_ai.Tool` and group them per agent.
+- **Outcome / pattern set:** TDD red-first (`tests/test_skill_tools.py`, 17 tests,
+  watched fail on the missing `controller_tools` import). New `agents/tools.py`:
+  two grouping factories `debater_tools(settings=None, gatekeeper=None)` and
+  `controller_tools()` returning `list[Tool]`, wired into `create_debater` /
+  `create_controller` via `Agent(model, …, tools=[…])` (pydantic-ai v1.104.0).
+  Each skill is wrapped in a thin closure whose **single argument is a Pydantic
+  input model**, so pydantic-ai validates at the tool boundary — a malformed
+  payload raises `ValidationError` before the skill runs (introspect registered
+  tools via `agent._function_toolset.tools`; validate via
+  `tool.function_schema.validator.validate_python(payload)`). Tool **names** come
+  from `DEBATER_SKILLS` / `CONTROLLER_SKILLS` + `WEB_SEARCH_TOOL` (no literal
+  inlined) so they cannot drift from the names the prompt advertises. `web_search`
+  captures `settings`/`gatekeeper` in its closure and threads them through, keeping
+  the no-bypass property (external call still routes via the API gatekeeper, Epic
+  13). Added one input model (`NudgeRequest`) since `nudge` had no request model.
+  Sets are disjoint (debater has no controller tools and vice versa).
+  *Pattern: to make every skill a validated tool, wrap each function in a closure
+  taking ONE Pydantic input model and register it as `Tool(fn, name=<constant>)`
+  passed to the `Agent` at construction — name tools from the same skill-list
+  constants the system prompt uses so registration and prompt can never diverge;
+  return tool sets from small per-agent grouping factories so the cross-wiring is
+  impossible by construction and the gatekeeper is threaded only where needed.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
