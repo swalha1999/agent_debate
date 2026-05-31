@@ -148,6 +148,7 @@ env vars — they live in versioned `config/rate_limits.json` (PRD §5.6).
 | Document | What it covers |
 |---|---|
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirements — vision, goals, architecture, surfaces, acceptance criteria. |
+| [`docs/UI.md`](docs/UI.md) | The web UI — annotated layout diagrams + UX walkthrough (understand the interface without running it). |
 | [`docs/TASKS.md`](docs/TASKS.md) | The full task breakdown by epic, with status and dependencies. |
 | [`docs/prds/`](docs/prds/) | Dedicated sub-PRDs: [debate orchestration](docs/prds/debate-orchestration.md), [anti-sycophancy](docs/prds/anti-sycophancy.md), [API gatekeeper](docs/prds/api-gatekeeper.md), [search plug-in](docs/prds/search-plugin.md). |
 | [`docs/PROMPTS.md`](docs/PROMPTS.md) | The Prompt Book — significant prompts that shaped the project (guideline §8.3). |
