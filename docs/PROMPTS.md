@@ -1109,5 +1109,29 @@ outcome/decision it produced.
   rather than hand-threading fields in the test; assert the two security postures
   (sanitise-untrusted vs validate-trusted) in one place so the boundary is law.*
 
+### 5.1 — Pro debater agent (Epic 5, PRD §5.2, anti-sycophancy §2)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.1-agent-pro.json`.
+- **Context:** First agent of the system. PRD §5.2 requires each debater to be a
+  Pydantic AI `Agent` whose **system prompt** states its side, the rules (word
+  limit, must rebut), and an **explicit list of the skills it has + when to use
+  them**. `web_search` (skill task 4.1) and full tool registration (4.5) are still
+  blocked, so 5.1's deliverable is the AGENT carrying the correct system-prompt
+  text — `web_search` is named in the prompt only, not attached.
+- **Outcome / pattern set:** New `core/agents/` subpackage, **prompt text split
+  from the factory**: `prompts.py` = pure `build_debater_system_prompt(side, *,
+  max_words, skills=DEBATER_SKILLS) -> str` + named constants (no inlined values —
+  side labels FOR/AGAINST, rule templates, and the `DEBATER_SKILLS` tuple with a
+  one-line "when to use" each); `debater.py` = `create_pro_debater(...)` over a
+  **side-parameterizable `create_debater(side, ...)` seam** so task 5.2 (Con)
+  reuses it by flipping the `DebateSide`. `max_words` is read from `Settings`
+  (changing it changes the prompt) — never hard-coded. Anti-sycophancy §2 is baked
+  into the rules: MUST rebut + do-NOT-concede-merely-because-convincing.
+  *Pattern: agent factories accept an **injected `model`** so tests pass a
+  pydantic-ai `TestModel` — the eager Anthropic client (needs `ANTHROPIC_API_KEY`)
+  is never built, the static `agent._system_prompts` is inspected, and the whole
+  suite stays offline/key-free. Keep the prompt builder pure and side-parameterised
+  so the next agent is a 3-line wrapper, not a copy.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

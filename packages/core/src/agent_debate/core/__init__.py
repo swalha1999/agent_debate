@@ -11,6 +11,12 @@ importing across the edge, proving the dependency resolves at runtime.
 from __future__ import annotations
 
 from agent_debate.core._version import __version__
+from agent_debate.core.agents import (
+    DEBATER_SKILLS,
+    build_debater_system_prompt,
+    create_debater,
+    create_pro_debater,
+)
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
     ApiGatekeeper,
@@ -91,6 +97,7 @@ __all__ = [
     "ApiGatekeeper",
     "Argument",
     "ArgumentRequest",
+    "DEBATER_SKILLS",
     "DebateSide",
     "DriftAssessment",
     "DuckDuckGoSearchProvider",
@@ -122,7 +129,10 @@ __all__ = [
     "assess_drift",
     "available_search_backends",
     "build_argument",
+    "build_debater_system_prompt",
     "core_version",
+    "create_debater",
+    "create_pro_debater",
     "create_search_provider",
     "get_settings",
     "load_rate_limit_config",
