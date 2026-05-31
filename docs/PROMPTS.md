@@ -1916,5 +1916,23 @@ outcome/decision it produced.
   left/right. Honest scope: browser behaviour itself is the UI smoke test (11.8); dedicated
   nudge/system + verdict panels are 11.3/11.4.
 
+- **Task 11.3 — Separate panels (#75).** Prompt: *"Lay out three separate panels (don't
+  overload one view): debate transcript, controller actions/nudges, and system log."*
+  Building on 11.2's serving-level approach: the SSE `event` name **is** the
+  `LogEvent.event_type`, so `app.js` routes each event to its panel by type — `message` →
+  the Pro/Con **debate transcript**, `nudge` → the **controller actions/nudges** panel
+  (the moderator's private corrections, kept OUT of the transcript), and the technical
+  events (`system`/`tool_call`/`timeout`/`retry`, declared once as `SYSTEM_EVENT_TYPES`) →
+  the **system log** panel. `index.html` gains a `#panels` grid wrapping three distinct,
+  labelled `<section>`s (`#transcript`, `#controller-panel`, `#system-log`), each with its
+  own list (`#controller-actions`, `#system-log-list`); the transcript keeps its two
+  Pro/Con columns. `style.css` lays them out with a responsive `grid-template-areas`
+  (transcript wide on top, controller + system below) using **logical properties only**
+  (no left/right) for RTL-safety. `verdict` is intentionally left to 11.4. TDD red-first
+  via `TestClient`: the served HTML has three labelled panel containers + their lists; the
+  served `app.js` wires the per-type routing (`appendMessage`/`appendControllerAction`/
+  `appendSystemEvent`); the CSS styles each panel distinctly and uses no physical
+  left/right. Honest scope: browser behaviour itself is the UI smoke test (11.8).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

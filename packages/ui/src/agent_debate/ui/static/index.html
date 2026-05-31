@@ -30,25 +30,55 @@
 
       <output id="result" class="result" aria-live="polite"></output>
 
-      <!-- Live transcript (task 11.2): the JS opens an EventSource to the API's
-           GET /debates/{id}/stream and appends each Pro/Con message here as it
-           streams. The two side columns make Pro vs Con read distinctly. -->
-      <section
-        id="transcript"
-        class="transcript"
-        aria-live="polite"
-        aria-label="Live debate transcript"
-        hidden
-      >
-        <div class="transcript__col transcript__col--pro">
-          <h2 class="transcript__heading">Pro</h2>
-          <ol id="transcript-pro" class="transcript__turns"></ol>
-        </div>
-        <div class="transcript__col transcript__col--con">
-          <h2 class="transcript__heading">Con</h2>
-          <ol id="transcript-con" class="transcript__turns"></ol>
-        </div>
-      </section>
+      <!-- Three SEPARATE panels (task 11.3, PRD §6: "separate panels for
+           transcript / controller actions / system log — don't overload one
+           view"). The JS routes each streamed SSE event to its panel by
+           event_type: message → transcript, nudge → controller, and the
+           technical events (system/tool_call/timeout/retry) → system log. -->
+      <div id="panels" class="panels" hidden>
+        <!-- PANEL 1 — Debate transcript: Pro vs Con "message" events. -->
+        <section
+          id="transcript"
+          class="panel transcript"
+          aria-live="polite"
+          aria-label="Debate transcript"
+        >
+          <h2 class="panel__heading">Debate transcript</h2>
+          <div class="transcript__cols">
+            <div class="transcript__col transcript__col--pro">
+              <h3 class="transcript__heading">Pro</h3>
+              <ol id="transcript-pro" class="transcript__turns"></ol>
+            </div>
+            <div class="transcript__col transcript__col--con">
+              <h3 class="transcript__heading">Con</h3>
+              <ol id="transcript-con" class="transcript__turns"></ol>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL 2 — Controller actions / nudges: the moderator's private
+             corrections, kept OUT of the transcript. -->
+        <section
+          id="controller-panel"
+          class="panel controller-panel"
+          aria-live="polite"
+          aria-label="Controller actions and nudges"
+        >
+          <h2 class="panel__heading">Controller actions / nudges</h2>
+          <ol id="controller-actions" class="event-list"></ol>
+        </section>
+
+        <!-- PANEL 3 — System log: system / tool_call / timeout / retry. -->
+        <section
+          id="system-log"
+          class="panel system-log"
+          aria-live="polite"
+          aria-label="System log"
+        >
+          <h2 class="panel__heading">System log</h2>
+          <ol id="system-log-list" class="event-list"></ol>
+        </section>
+      </div>
     </main>
 
     <script src="/static/app.js"></script>

@@ -107,19 +107,115 @@ button:disabled {
   color: #fca5a5;
 }
 
-/* Live transcript (task 11.2). Two side-by-side columns make Pro vs Con read
-   distinctly; RTL-safe — logical properties only (margin/padding-inline,
-   text-align: start, border-inline-start), never left/right, so it mirrors
-   under dir="rtl" (task 11.5). */
-.transcript {
+/* Three SEPARATE panels (task 11.3, PRD §6: "separate panels for transcript /
+   controller actions / system log — don't overload one view"). A responsive
+   grid lays the transcript out wide with the controller-actions + system-log
+   panels alongside/below. RTL-safe — logical properties only (no left/right),
+   so it mirrors under dir="rtl" (task 11.5). */
+.panels {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 1rem;
   margin-block-start: 1.5rem;
 }
 
-.transcript[hidden] {
+.panels[hidden] {
   display: none;
+}
+
+@media (max-width: 48rem) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  min-inline-size: 0;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+  text-align: start;
+}
+
+.panel__heading {
+  margin-block: 0 0.75rem;
+  font-size: 1.05rem;
+  text-align: start;
+}
+
+/* The transcript panel spans both grid columns; the side panels stack beside
+   each other below it on wide screens. */
+.transcript {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .panels {
+    grid-template-areas:
+      "transcript transcript"
+      "controller system";
+  }
+  .transcript {
+    grid-area: transcript;
+  }
+  .controller-panel {
+    grid-area: controller;
+  }
+  .system-log {
+    grid-area: system;
+  }
+}
+
+/* Controller actions + system log lists share a compact event-row style. */
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.event {
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  background: var(--panel);
+  border-radius: var(--radius);
+  border-inline-start: 4px solid var(--muted);
+  text-align: start;
+}
+
+.event--controller {
+  border-inline-start-color: var(--accent);
+}
+
+.event__meta {
+  margin-block: 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.event--controller .event__meta {
+  color: var(--accent);
+}
+
+.event__body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Live transcript (task 11.2). Two side-by-side columns make Pro vs Con read
+   distinctly; RTL-safe — logical properties only (margin/padding-inline,
+   text-align: start, border-inline-start), never left/right, so it mirrors
+   under dir="rtl" (task 11.5). */
+.transcript__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .transcript__col {
