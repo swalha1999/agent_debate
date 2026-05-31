@@ -1237,5 +1237,26 @@ outcome/decision it produced.
   policy is both stated in the prompt and enforced deterministically after generation; the
   enforcement helper is a clean reusable seam the Epic-6 engine calls per turn.*
 
+### 5.8 — Agent/prompt acceptance tests (Epic-5 consolidation, PRD §5.2/§5.3, anti-sycophancy)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.8-agent-tests.json`.
+- **Context:** The Epic-5 acceptance/consolidation pass (mirrors 1.5/2.5/3.6/7.5/13.7). The
+  per-task suites (5.1–5.7) already cover each unit (~100% agents coverage); the value here
+  is asserting the four headline anti-sycophancy guarantees together, **through the public
+  `agent_debate.core` API**, as one integrated story.
+- **Outcome / pattern set:** New `tests/test_agents_acceptance.py` (5 tests): both debater
+  prompts list their named skills; the controller prompt mirrors "never reveal" and leaks no
+  pre-held stance; the relay framing is the adversarial «»/rebut frame, sanitised, landing as
+  a USER turn in the agent's OWN context (5.4 isolation); over-`MAX_WORDS` output is trimmed
+  to the config limit and logs a `system` violation. *Genuine gap fixed (TDD red-first): the
+  relay + word-limit symbols (`relay_opponent_turn`, `build_adversarial_relay`,
+  `enforce_word_limit`, `count_words`, `WordLimitResult`, `anchor_turn`, `build_side_anchor`,
+  `ADVERSARIAL_RELAY_TEMPLATE`, `ANTI_CONCESSION_RULE`) were only on the `…agents` subpackage,
+  not the top-level hub — so the four behaviours couldn't be asserted via `agent_debate.core`.
+  Added the 9 re-exports.* Pattern (split, not compress): the hub `__init__` already sat at
+  the 150-line limit, so the agents re-export group was factored into a `_agents_public.py`
+  shim (explicit imports + an explicit, mypy-checked `__all__`), pulled in via a single `*`
+  import, with a scoped `per-file-ignores = [F403, F405]` for that one re-export `__init__`.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
