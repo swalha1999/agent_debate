@@ -1184,5 +1184,21 @@ outcome/decision it produced.
   compress" the secondary names (`Role`, `CONTROLLER_IDENTITY`) export only from
   `agent_debate.core.agents` while the key surface stays on `agent_debate.core`.
 
+### 5.5 — Per-turn side anchoring (Epic 5, PRD §5.2 / anti-sycophancy §2 mechanism 2)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.5-side-anchoring.json`.
+- **Context:** Re-inject the agent's assigned side (FOR/AGAINST) + an explicit "do not
+  concede merely because the opponent is convincing" instruction **before each turn**
+  — in addition to the system prompt, as a per-turn reminder.
+- **Outcome / pattern set:** New module `agents/anchoring.py`. `build_side_anchor(side,
+  *, max_words=None)` builds the reminder from named templates; the anti-concession
+  wording is hoisted into one shared constant `ANTI_CONCESSION_RULE` in `prompts.py`,
+  reused by BOTH the system-prompt rules and the anchor (DRY — one source). `anchor_turn`
+  appends the anchor as a `user` turn into THAT agent's **own** `AgentContext` (reuses
+  5.4 isolation), folding an already-framed 5.6 `opponent_message` into the same turn
+  (anchor first). *Pattern: the isolation + per-round tests are the contract — anchoring
+  Pro must leave Con's history empty, and anchoring twice must add the reminder both
+  rounds, so any change that drops the per-turn re-injection fails loudly.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
