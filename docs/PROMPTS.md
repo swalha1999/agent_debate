@@ -1732,5 +1732,30 @@ outcome/decision it produced.
   sequence (Pro msg, Con msg, nudge, verdict, result) so **no network/key** — asserting
   Pro/Con distinguished, the nudge inline (ordered after the turns), the verdict last.
 
+### `--json` machine output + non-zero exit on failure (task 9.3, issue #66)
+- **Prompt (verbatim):** "Add --json to print the DebateResult as JSON; exit
+  non-zero on failure."
+- **Context:** Epic 9 finishes the CLI surface (PRD §6). 9.2 made the default human
+  view a Rich LIVE transcript; 9.3 adds a `--json` flag that emits the final
+  `DebateResult` as a single machine-readable JSON blob for piping/parsing, and makes
+  the command exit non-zero on any debate failure.
+- **Outcome / pattern set:** New `cli/_json.py` (split out of `app.py` to stay <150
+  lines): `emit_json(result)` writes `DebateResult.model_dump_json()` (the canonical
+  serialisation — transcript/nudges/closing/verdict/totals) as ONE line; a generic
+  `run_or_fail(produce, *, log)` wrapper that runs a callable and, on a known debate
+  failure (`MissingApiKeyError`/`InvalidInputError`/`TurnFailedError`) OR any other
+  engine error, logs `cli_run_failed` via the LOG package, prints `Error: …` to
+  **stderr**, and raises `typer.Exit(code=EXIT_FAILURE)` (a NAMED constant, no magic
+  number); and a `clean_stdout()` context manager that diverts `sys.stdout` → `sys.stderr`
+  for the duration of the `--json` engine run so the LOG package's console sink (which
+  prints to stdout, PRD §5.8) never pollutes the JSON — stdout carries ONLY the blob.
+  `run` gained `--json` and is split into `_run_json` (blocking `engine.run` under
+  `clean_stdout`, then `emit_json`) / `_run_human` (LIVE `render_stream`); BOTH paths go
+  through `run_or_fail` so failure semantics are identical. Tests (`test_cli_json.py`)
+  use `CliRunner` + stub engines (blocking/failing/crashing) so **no network/key** —
+  asserting `--json` stdout parses to the DebateResult shape (topic/transcript/verdict),
+  a failing or crashing engine exits non-zero with the error on stderr, and the human
+  path also exits non-zero on failure.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
