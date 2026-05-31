@@ -17,11 +17,23 @@ Task 5.2 (issue #39) adds :func:`~agent_debate.core.agents.debater.create_con_de
 the **Con** (AGAINST) debater, a thin mirror of the Pro wrapper over the same
 :func:`create_debater` seam (same rules and skill list, only the side flips).
 
+Task 5.3 (issue #40) adds the **Controller** (moderator/judge):
+:func:`~agent_debate.core.agents.controller_prompts.build_controller_system_prompt` (it
+knows both sides, NEVER reveals its own stance, detects drift + nudges privately, renders
+a verdict, and lists :data:`CONTROLLER_SKILLS`) and the
+:func:`~agent_debate.core.agents.controller.create_controller` factory over the resolved
+``CONTROLLER_MODEL``.
+
 The re-exports below are the subpackage's public surface.
 """
 
 from __future__ import annotations
 
+from agent_debate.core.agents.controller import create_controller
+from agent_debate.core.agents.controller_prompts import (
+    CONTROLLER_SKILLS,
+    build_controller_system_prompt,
+)
 from agent_debate.core.agents.debater import (
     create_con_debater,
     create_debater,
@@ -30,9 +42,12 @@ from agent_debate.core.agents.debater import (
 from agent_debate.core.agents.prompts import DEBATER_SKILLS, build_debater_system_prompt
 
 __all__ = [
+    "CONTROLLER_SKILLS",
     "DEBATER_SKILLS",
+    "build_controller_system_prompt",
     "build_debater_system_prompt",
     "create_con_debater",
+    "create_controller",
     "create_debater",
     "create_pro_debater",
 ]

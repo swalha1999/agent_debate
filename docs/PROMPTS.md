@@ -1148,5 +1148,22 @@ outcome/decision it produced.
   the builder and the constructed-agent level, so any future drift between the two
   debaters' rules/skills fails loudly rather than silently diverging.*
 
+### 5.3 — Controller agent (Epic 5, PRD §5.3)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.3-agent-controller.json`.
+- **Context:** Third and last agent — the moderator/judge. Unlike the debaters, the
+  Controller **knows both sides** (Pro = FOR, Con = AGAINST) but its defining
+  constraint is anti-sycophancy §4: it must **NEVER reveal its own stance/opinion**
+  or hint which side it leans. It detects drift, nudges privately (a correction that
+  does **not** count as a debate turn), and renders a structured verdict.
+- **Outcome / pattern set:** Because `prompts.py` was already near the 150-line cap,
+  the controller prompt got its **own module** `agents/controller_prompts.py` rather
+  than compressing the debater builder — split, don't compress. `create_controller`
+  reuses the debater factory pattern (resolve `CONTROLLER_MODEL` or inject a
+  `TestModel`, log via LOG). *Pattern: the negative test is the contract — assert the
+  prompt **does not** leak a pre-held stance (no "I think Pro/Con is right", "I lean",
+  "in my opinion the…") AND **does** carry the explicit "never reveal" instruction, so
+  any future edit that makes the judge opinionated fails loudly.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

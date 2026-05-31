@@ -12,9 +12,12 @@ from __future__ import annotations
 
 from agent_debate.core._version import __version__
 from agent_debate.core.agents import (
+    CONTROLLER_SKILLS,
     DEBATER_SKILLS,
+    build_controller_system_prompt,
     build_debater_system_prompt,
     create_con_debater,
+    create_controller,
     create_debater,
     create_pro_debater,
 )
@@ -98,6 +101,7 @@ __all__ = [
     "ApiGatekeeper",
     "Argument",
     "ArgumentRequest",
+    "CONTROLLER_SKILLS",
     "DEBATER_SKILLS",
     "DebateSide",
     "DriftAssessment",
@@ -130,8 +134,10 @@ __all__ = [
     "assess_drift",
     "available_search_backends",
     "build_argument",
+    "build_controller_system_prompt",
     "build_debater_system_prompt",
     "create_con_debater",
+    "create_controller",
     "core_version",
     "create_debater",
     "create_pro_debater",
