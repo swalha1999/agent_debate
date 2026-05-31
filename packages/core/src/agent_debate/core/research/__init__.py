@@ -28,6 +28,13 @@ from agent_debate.core.research.analysis import (
     tokens_latency_per_topic,
     who_wins,
 )
+from agent_debate.core.research.viz import (
+    save_agree_disagree_chart,
+    save_all_figures,
+    save_nudges_chart,
+    save_round_tokens_chart,
+    save_who_wins_chart,
+)
 
 __all__ = [
     "DATASET_COLUMNS",
@@ -42,6 +49,11 @@ __all__ = [
     "nudges_per_side",
     "parse_run",
     "round_metrics",
+    "save_agree_disagree_chart",
+    "save_all_figures",
+    "save_nudges_chart",
+    "save_round_tokens_chart",
+    "save_who_wins_chart",
     "summary_to_row",
     "tokens_latency_per_topic",
     "who_wins",

@@ -47,8 +47,17 @@ def test_notebook_has_four_analysis_sections() -> None:
         assert section in markdown
 
 
-def test_notebook_outputs_are_cleared() -> None:
-    """No code cell ships embedded outputs (keeps secrets out of the repo)."""
+def test_notebook_carries_no_text_outputs() -> None:
+    """Only rendered chart images may be embedded — never text/stream output.
+
+    Task 14.3 embeds the §9 charts (``image/png``) so the notebook *shows* them,
+    which is fine. Text/stream outputs are still forbidden: they could carry a
+    stray printed value or secret, so any committed output must be an image only.
+    """
     for cell in _cells():
-        if cell["cell_type"] == "code":
-            assert cell.get("outputs") == []
+        if cell["cell_type"] != "code":
+            continue
+        for output in cell.get("outputs", []):
+            data = output.get("data", {})
+            assert output.get("output_type") == "display_data"
+            assert set(data) == {"image/png"}
