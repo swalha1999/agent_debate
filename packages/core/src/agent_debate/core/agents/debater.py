@@ -84,4 +84,20 @@ def create_pro_debater(
     return create_debater(DebateSide.PRO, settings, model=model)
 
 
-__all__ = ["create_debater", "create_pro_debater"]
+def create_con_debater(
+    settings: Settings | None = None,
+    *,
+    model: Model | None = None,
+) -> Agent[None, str]:
+    """Build the **Con** debater (side=AGAINST) — the task-5.2 entry point (issue #39).
+
+    Mirror of :func:`create_pro_debater`: a thin wrapper over :func:`create_debater`
+    with ``side=CON`` so the Con agent reuses the exact same rules and skill list as
+    Pro (DRY), only the assigned side flips. Its model resolves from ``CON_MODEL``
+    (falling back to ``DEBATER_MODEL``); see :func:`create_debater` for argument
+    semantics.
+    """
+    return create_debater(DebateSide.CON, settings, model=model)
+
+
+__all__ = ["create_con_debater", "create_debater", "create_pro_debater"]

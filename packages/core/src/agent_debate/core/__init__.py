@@ -14,6 +14,7 @@ from agent_debate.core._version import __version__
 from agent_debate.core.agents import (
     DEBATER_SKILLS,
     build_debater_system_prompt,
+    create_con_debater,
     create_debater,
     create_pro_debater,
 )
@@ -130,6 +131,7 @@ __all__ = [
     "available_search_backends",
     "build_argument",
     "build_debater_system_prompt",
+    "create_con_debater",
     "core_version",
     "create_debater",
     "create_pro_debater",

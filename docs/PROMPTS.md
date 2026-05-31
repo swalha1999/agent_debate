@@ -1133,5 +1133,20 @@ outcome/decision it produced.
   suite stays offline/key-free. Keep the prompt builder pure and side-parameterised
   so the next agent is a 3-line wrapper, not a copy.*
 
+### 5.2 — Con debater agent (Epic 5, PRD §5.2)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/5.2-agent-con.json`.
+- **Context:** Second agent. The Con debater **mirrors** Pro (5.1) with
+  `side=AGAINST` and the **same** rules and skill list — only the side flips.
+- **Outcome / pattern set:** Because 5.1 built the side-parameterizable
+  `create_debater(side, ...)` seam and the shared `build_debater_system_prompt`
+  builder, 5.2 is a **3-line wrapper**: `create_con_debater(...)` returns
+  `create_debater(DebateSide.CON, ...)`, exactly as `create_pro_debater` does for
+  `PRO`. **Zero prompt logic duplicated** — DRY pays off. Re-exported from
+  `agent_debate.core.agents` / `agent_debate.core`. *Pattern: the mirror test is
+  the contract — assert `con_prompt.replace("AGAINST", "FOR") == pro_prompt` at both
+  the builder and the constructed-agent level, so any future drift between the two
+  debaters' rules/skills fails loudly rather than silently diverging.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
