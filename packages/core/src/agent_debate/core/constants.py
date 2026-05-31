@@ -99,6 +99,17 @@ VERDICT_TIE = "tie"
 #: is the derived outcome and ``{pro}``/``{con}`` the per-side totals.
 VERDICT_RATIONALE_TEMPLATE = "Verdict {winner}: tallied from the transcript (pro={pro}, con={con})."
 
+#: ``event_type`` used when a generated message exceeds the word limit and is
+#: trimmed (TASKS.md 5.7). The LOG schema has no ``"violation"`` type, so a policy
+#: violation is recorded as a ``system`` event (its payload names the violation).
+WORD_LIMIT_LOG_EVENT_TYPE = "system"
+
+#: ``agent`` label recorded on the word-limit violation event (a name, not a value).
+WORD_LIMIT_LOG_AGENT = "word_limit"
+
+#: Stable ``payload["violation"]`` tag identifying a word-limit breach in the log.
+WORD_LIMIT_VIOLATION_TAG = "word_limit"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -132,4 +143,7 @@ __all__ = [
     "REBUTTAL_LEAD_OUT",
     "VERDICT_RATIONALE_TEMPLATE",
     "VERDICT_TIE",
+    "WORD_LIMIT_LOG_AGENT",
+    "WORD_LIMIT_LOG_EVENT_TYPE",
+    "WORD_LIMIT_VIOLATION_TAG",
 ]
