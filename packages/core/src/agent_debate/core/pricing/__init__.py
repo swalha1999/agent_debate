@@ -14,6 +14,7 @@ divisor. The re-exports below are this package's public surface.
 
 from __future__ import annotations
 
+from agent_debate.core.pricing._alert import alert_over_budget
 from agent_debate.core.pricing._cost import TOKENS_PER_PRICE_UNIT, compute_cost
 from agent_debate.core.pricing._format import format_cost_table
 from agent_debate.core.pricing.breakdown import (
@@ -22,6 +23,7 @@ from agent_debate.core.pricing.breakdown import (
     aggregate_costs,
     cost_breakdown_from_result,
 )
+from agent_debate.core.pricing.budget import BudgetStatus, check_budget
 from agent_debate.core.pricing.config import (
     DEFAULT_MODEL,
     MODEL_PRICES_FILENAME,
@@ -35,11 +37,14 @@ __all__ = [
     "DEFAULT_MODEL",
     "MODEL_PRICES_FILENAME",
     "TOKENS_PER_PRICE_UNIT",
+    "BudgetStatus",
     "CostBreakdown",
     "ModelCostRow",
     "ModelPrice",
     "PriceTable",
     "aggregate_costs",
+    "alert_over_budget",
+    "check_budget",
     "compute_cost",
     "cost_breakdown_from_result",
     "format_cost_table",

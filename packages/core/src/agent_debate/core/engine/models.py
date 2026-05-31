@@ -40,6 +40,7 @@ class DebateConfig(BaseModel):
         controller_model: ``provider:model`` string for the controller/judge.
         pro_model: Resolved PRO-side model (override or ``debater_model``).
         con_model: Resolved CON-side model (override or ``debater_model``).
+        budget_usd: Configurable USD budget cap per run; ``0.0`` = unlimited (15.3).
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -52,6 +53,7 @@ class DebateConfig(BaseModel):
     controller_model: str = Field(min_length=1)
     pro_model: str = Field(min_length=1)
     con_model: str = Field(min_length=1)
+    budget_usd: float = Field(ge=0.0, default=0.0)
 
     @classmethod
     def from_settings(cls, settings: Settings) -> DebateConfig:
@@ -70,6 +72,7 @@ class DebateConfig(BaseModel):
             controller_model=settings.controller_model,
             pro_model=settings.pro_model,
             con_model=settings.con_model,
+            budget_usd=settings.budget_usd,
         )
 
 
