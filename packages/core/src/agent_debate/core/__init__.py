@@ -14,6 +14,7 @@ from agent_debate.core import _engine_public, pricing, skills
 from agent_debate.core._agents_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._engine_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._version import __version__
+from agent_debate.core.export import render_run_markdown, write_run_markdown
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
     ApiGatekeeper,
@@ -128,6 +129,8 @@ __all__ = [
     "sanitize_search_result",
     "sanitize_untrusted_text",
     "register_search_provider",
+    "render_run_markdown",
+    "write_run_markdown",
     "log_version",
     "resolve_model",
     "resolve_models",
