@@ -1,0 +1,18 @@
+{
+  "task_id": "4.6",
+  "title": "Skill tests (Epic-4 acceptance consolidation)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write tests for each skill: callable, input validation rejects bad payloads, web_search output passes through sanitisation (mock provider + gatekeepers).\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": null
+  },
+  "usage": {
+    "tool_uses": null,
+    "duration_ms": null,
+    "summary": "usage to be filled by main loop from harness report"
+  },
+  "note": "Epic-4 acceptance/consolidation pass (mirrors 1.5/2.5/3.6/5.8/7.5/13.7). Added packages/core/tests/test_skills_acceptance.py asserting the headline behaviours END-TO-END through the public agent_debate.core API: (1) each skill is callable as a REGISTERED tool and returns its structured output; (2) input validation rejects malformed payloads for each registered tool (parametrised); (3) web_search tool output passes through sanitisation (injection in a mocked DDG hit neutralised in what the TOOL returns) AND routes through the API gatekeeper (spy gatekeeper, no network); (4) PRD §5.2 Epic-4 acceptance — debaters expose >=2 skills + web_search, controller exposes its moderation skills only (disjoint). Offline helpers split into _skills_acceptance_helpers.py to stay under the 150-line limit. TDD red-first demonstrated on a NET-NEW assertion: temporarily made the registered web_search tool wrapper bypass the gatekeeper (gatekeeper=None) -> test_web_search_tool_callable_returns_results failed (assert [] == ['search']) -> restored source -> green. NET-NEW vs already-covered: the per-task suites (test_web_search/test_build_argument/test_analyze_opponent/test_controller_skills/test_skill_tools) cover the skill units and VALIDATE each tool's payload but never INVOKE the registered tool wrapper bodies — agents/tools.py was at 79% (lines 67/74/79/84/89/94, the six wrapper bodies, uncovered). The invoke() helper exercises validation + the wrapper body end-to-end, taking agents/tools.py to 100%. No source bug found; source change was test-only (the gatekeeper-bypass probe was reverted). Gates green: uv sync clean; ruff check . All checks passed; ruff format --check . 142 files formatted; mypy no issues (142 files); pytest --cov 554 passed, 100% total coverage (>=85); check_line_limit.py passed; secret_scan.py passed. No network, no committed secrets."
+}
