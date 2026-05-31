@@ -28,6 +28,7 @@ from agent_debate.core.models import ResolvedModels, resolve_model, resolve_mode
 from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
     DuckDuckGoSearchProvider,
+    GatekeptSearchProvider,
     ResilientSearchProvider,
     SearchProvider,
     SearchResult,
@@ -104,6 +105,7 @@ __all__ = [
     "DebateSide",
     "DriftAssessment",
     "DuckDuckGoSearchProvider",
+    "GatekeptSearchProvider",
     "InvalidInputError",
     "MissingApiKeyError",
     "NudgeMessage",
