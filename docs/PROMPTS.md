@@ -1082,5 +1082,32 @@ outcome/decision it produced.
   it by design, not coincidence; build the fake secret from parts so the
   coordination test never trips the very gate it exercises.*
 
+### 7.5 — Security tests (Epic-7 acceptance consolidation, PRD §5.7)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/7.5-security-tests.json`.
+- **Context:** 7.1 (sanitiser) and 7.2 (validators) already had per-task unit
+  tests at 100%. 7.5 is the Epic-7 acceptance/consolidation pass (mirroring
+  1.5 / 2.5 / 3.6 / 13.7): prove the §5.7 behaviours END-TO-END through the
+  public API — a prompt-injection payload *embedded in a (mocked) web-search
+  result* is neutralised, and oversized/abusive *direct input* is rejected.
+- **Outcome / pattern set:** TDD red-first on a genuine gap — the acceptance test
+  needed to sanitise a whole `SearchResult` (injection can hide in `title` *or*
+  `snippet`), but only a per-string `sanitize_untrusted_text` existed. Added
+  `security/result.py::sanitize_search_result(result)` (net-new source): copies
+  the frozen result with `title`/`snippet` run through the sanitiser, `url` left
+  as structural provenance. Then `tests/test_security_acceptance.py` (11 tests):
+  injection in a snippet/title from a *mocked* DuckDuckGo provider is neutralised
+  while benign text survives; over-length topic/query and empty/control-char
+  input raise the typed `InvalidInputError`; and the trust-boundary posture is
+  asserted side by side — untrusted text is *sanitised* (never raises), direct
+  input is *validated* (rejected loudly). No network (DDGS monkeypatched), no
+  committed secrets. Gates: ruff/format clean, mypy clean (99 files), 383 passed,
+  100% coverage, line-limit + secret-scan exit 0.
+  *Pattern: the acceptance pass is allowed to surface a real composition gap —
+  when the end-to-end story needs an object-level seam the units never built,
+  add the minimal typed helper (sanitise both prose fields, keep structural ones)
+  rather than hand-threading fields in the test; assert the two security postures
+  (sanitise-untrusted vs validate-trusted) in one place so the boundary is law.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
