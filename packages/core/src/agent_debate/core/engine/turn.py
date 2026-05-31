@@ -26,11 +26,13 @@ the :class:`DebateConfig`. The function returns the typed :class:`DebateMessage`
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from agent_debate.core import constants
 from agent_debate.core.agents import anchor_turn, enforce_word_limit, relay_opponent_turn
 from agent_debate.core.agents.context import AgentContext
+from agent_debate.core.engine._call import TimeoutRunner, TurnFailedError, generate_turn_output
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import DebateMessage
@@ -50,6 +52,8 @@ def run_debate_turn(
     run_id: str,
     runs_dir: Path | str,
     opponent_message: str | None,
+    sleep_fn: Callable[[float], None] = time.sleep,
+    timeout_runner: TimeoutRunner | None = None,
 ) -> DebateMessage:
     """Run one debater turn for ``side`` and return its :class:`DebateMessage` (§3.2).
 
@@ -77,13 +81,25 @@ def run_debate_turn(
     start = time.monotonic()
     # The anchor/relay was just appended as the trailing ``user`` turn, so the
     # whole context history is the run input (its last turn is the live prompt).
-    # The model call routes through the gatekeeper — the 6.4 timeout/retry wraps
-    # exactly here (no behavioural change yet, a clean seam).
-    output = gatekeeper.execute(
-        agent.run_sync,
-        message_history=context.message_history(),
-        service=constants.LOOP_MODEL_SERVICE,
-    )
+    # The model call routes through the gatekeeper under the 6.4 timeout + retry
+    # wrapper; on an exhausted budget the turn is marked FAILED (not a crash).
+    runner_kw = {} if timeout_runner is None else {"timeout_runner": timeout_runner}
+    try:
+        output = generate_turn_output(
+            gatekeeper,
+            agent.run_sync,
+            message_history=context.message_history(),
+            service=constants.LOOP_MODEL_SERVICE,
+            config=config,
+            run_id=run_id,
+            round_=round_,
+            agent=side.value,
+            runs_dir=runs_dir,
+            sleep_fn=sleep_fn,
+            **runner_kw,
+        )
+    except TurnFailedError:
+        return _failed_turn(side, round_, run_id, runs_dir)
     latency_ms = (time.monotonic() - start) * 1000.0
     if output is None:  # pragma: no cover — synchronous loop never queues a call.
         msg = "gatekeeper returned no result (call was queued); the loop runs calls inline"
@@ -98,6 +114,20 @@ def run_debate_turn(
     )
     context.append_assistant(enforced.text)
     return _record(side, round_, enforced.text, output, latency_ms, run_id, runs_dir)
+
+
+def _failed_turn(side: DebateSide, round_: int, run_id: str, runs_dir: Path | str) -> DebateMessage:
+    """Build the FAILED-turn marker after the model call exhausted its budget (§4).
+
+    The controller was already informed via a ``system`` event inside the wrapper
+    (:func:`~agent_debate.core.engine._call.generate_turn_output`); here we return
+    a ``failed`` :class:`DebateMessage` marker so the loop records the turn and
+    continues without crashing. The marker is *not* appended to the opponent's
+    context — a failed turn produces no argument to rebut.
+    """
+    return DebateMessage(
+        round=round_, side=side, content=constants.TURN_FAILED_CONTENT, failed=True
+    )
 
 
 def _inject_prompt(

@@ -1323,5 +1323,35 @@ outcome/decision it produced.
   `closing_discussion` `[]` as 6.5/6.8 seams. Re-exports added to `engine/__init__` + the
   `_engine_public.py` shim.
 
+## 6.4 — Timeout + retry wrapper for per-turn model calls
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.4-timeout-retry.json`.
+- **Context:** Wrap the per-turn MODEL CALL (the `gatekeeper.execute(agent.run_sync, ...)` seam in
+  `engine/turn.py`) to enforce `config.turn_timeout_s` (cancel on timeout), retry up to
+  `config.max_retries` with backoff, and after exhaustion mark the turn FAILED + inform the
+  controller — logging `timeout`/`retry` events. Orchestration §4. NOT verdict/closing (6.5/6.8).
+- **Outcome / pattern set:** New `engine/_call.py` — `generate_turn_output(gatekeeper, api_call,
+  *, message_history, service, config, run_id, round_, agent, runs_dir, sleep_fn, timeout_runner)`
+  routes the call THROUGH `gatekeeper.execute` (every external call still does), **reusing** the
+  search layer's thread-based `run_with_timeout` (daemon worker joined for `timeout_s`; on timeout
+  `TimeoutError` raised + the hung worker abandoned — the documented cancel semantics for the
+  synchronous `run_sync` path) and the gatekeeper's `run_with_retry`/`backoff_delay`/`is_transient`
+  retry policy (no duplication). **Compose-not-double-count:** the gatekeeper retries the
+  rate/throughput concern INSIDE `execute`; this wrapper composes AROUND `execute` to add the
+  `turn_timeout_s` + turn-failure semantics; backoff base = the service's `retry_after_seconds`
+  (single source of truth). A non-transient error (e.g. `ValueError`) is NOT retried — it
+  propagates raw; only an exhausted transient/timeout budget raises `TurnFailedError`. New
+  `engine/_call_log.py` — `_CallLog` emits `timeout`/`retry`/`system` events (split to keep
+  `_call.py` ≤ 150 code lines). **Turn-failed policy:** `turn.py` catches `TurnFailedError` and
+  returns a `failed=True` `DebateMessage` marker (new field on `DebateMessage`); the wrapper has
+  already logged a `system` event (`payload.turn_failed`) informing the controller; `loop.py`
+  records the marker and returns `None` as the next `opponent_message` so the opponent gets a fresh
+  anchor (never rebuts a failure). The debate runs all rounds and never crashes. **Test seams:**
+  `sleep_fn` + `timeout_runner` injected so tests are deterministic and fast (no real
+  threads/sleeping); backoff delays asserted via a recording `sleep_fn`. New constants
+  `TURN_{TIMEOUT,RETRY,FAILED}_EVENT_TYPE` + `TURN_FAILED_TAG`/`TURN_FAILED_CONTENT` (no hard-coded
+  values; caps from `DebateConfig`). `run_debate_turn` gained `sleep_fn`/`timeout_runner` defaults
+  (backward-compatible — existing `test_debate_loop.py` stayed green).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

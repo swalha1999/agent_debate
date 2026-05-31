@@ -97,8 +97,14 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
     round_: int,
     opponent_message: str | None,
     transcript: list[DebateMessage],
-) -> str:
-    """Run one debater turn, append it to ``transcript`` and return its content."""
+) -> str | None:
+    """Run one debater turn, append it to ``transcript`` and return its content.
+
+    A FAILED turn (its model call exhausted the timeout + retry budget) is still
+    recorded in the transcript (marked ``failed``) so the run does not crash, but
+    returns ``None`` — the opponent gets a fresh anchor rather than being asked to
+    rebut a failure marker (the §4 graceful-degradation policy).
+    """
     agent = setup.pro_agent if side is DebateSide.PRO else setup.con_agent
     message = run_debate_turn(
         agent=agent,
@@ -112,7 +118,7 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
         opponent_message=opponent_message,
     )
     transcript.append(message)
-    return message.content
+    return None if message.failed else message.content
 
 
 def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared mutable state).
