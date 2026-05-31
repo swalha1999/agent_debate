@@ -5,7 +5,10 @@ The guideline mandates **no secrets in the repo** and an automated CI gate that
 fails on a committed credential. This self-contained regex scanner walks the
 tree, flags key-like secrets — ``sk-...``/``sk-ant-...`` tokens, AWS ``AKIA...``
 access-key ids, PEM private-key headers, and generic high-entropy API tokens —
-and exits non-zero listing every hit, or 0 on a clean tree.
+and exits non-zero listing every hit, or 0 on a clean tree. Coverage spans
+both source and log artifacts: ``.jsonl`` run files are scanned too, so a stray
+committed ``runs/*.jsonl`` can never hide a secret (the runtime
+``agent_debate.log`` redactor is the complementary defence — PRD §7.4).
 
 Obvious placeholders (``your-...-here``, ``xxxxx`` runs, empty ``.env.example``
 values) are ignored so the template file does not trip the gate. The detection
@@ -56,6 +59,10 @@ EXCLUDED_DIRS: frozenset[str] = frozenset(
 )
 
 #: Only text-like files are scanned; binary/lock noise is skipped by suffix.
+#: ``.jsonl`` is included so committed log artifacts (a stray ``runs/*.jsonl``)
+#: are covered too — secrets must not hide in logs (PRD §7.4; the runtime LOG
+#: redactor is the complementary defence). ``runs/*.jsonl`` is normally
+#: gitignored, but the scan must not silently miss one if it lands in the tree.
 SCANNED_SUFFIXES: frozenset[str] = frozenset(
     {
         ".py",
@@ -65,6 +72,7 @@ SCANNED_SUFFIXES: frozenset[str] = frozenset(
         ".cfg",
         ".ini",
         ".json",
+        ".jsonl",
         ".yaml",
         ".yml",
         ".md",
