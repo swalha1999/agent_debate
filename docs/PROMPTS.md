@@ -1665,5 +1665,30 @@ outcome/decision it produced.
   deterministic, testable, and PRD-§3 compliant; deepen the output model additively
   so the baseline contract stays green.*
 
+## 8.4 — Staged-drift test fixture (`tests/test_staged_drift.py`, anti-sycophancy §4, issue #63)
+
+- **Prompt (verbatim):** "Add a test fixture that forces a debater to parrot/concede
+  to the opponent and assert assess_drift flags it and nudge corrects it at least once."
+- **Context:** §4 acceptance requires a STAGED drift fixture — force an agent to
+  parrot/concede, then prove it is DETECTED and NUDGED back ≥1. The drift pipeline
+  (assess_drift 8.1, nudge 8.2, engine `run_drift_check`/loop wiring) already existed,
+  so this is a test-only task: a meaningful, non-trivial fixture that drives a REAL
+  conceding message through the real engine/SDK drift path.
+- **Outcome / pattern set:** No source change needed — staging drift surfaced no gap.
+  New reusable `tests/_staged_drift_helpers.py`: `drifting_model(side, concede_round)`
+  builds a `FunctionModel` whose `concede_round`-th turn deterministically emits a
+  clearly-conceding line (sourced from `DRIFT_CONCEDE_PHRASES`, no literal dup) and is
+  otherwise on-side; `staged_run()` drives a full debate through the public
+  `DebateEngine` SDK with an injected `ApiGatekeeper` (Epic 13) + per-run JSONL sink.
+  5 tests assert: `assess_drift` flags the concession (captured); the engine records
+  ≥1 nudge in `DebateResult.nudges` AND logs a `nudge` event; the nudge is PRIVATE
+  (10-vs-10 invariant holds, `is_debate_turn=False`, never leaks into the opponent's
+  transcript); a NON-drifting control yields ZERO nudges (the red→green guard proving
+  nudges come from the STAGED concession, not noise); the correction reaches the
+  captured agent's OWN later prompt. *Pattern: stage drift deterministically via an
+  injectable FunctionModel + a reusable helper, then assert detection/nudge end-to-end
+  through the SDK; pair the staged assertion with an on-side control so the fixture's
+  trigger is proven, not assumed.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
