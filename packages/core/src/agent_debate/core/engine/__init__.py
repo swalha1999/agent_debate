@@ -18,11 +18,15 @@ from agent_debate.core.engine.result import (
     DebateResult,
     ToolCallRecord,
 )
+from agent_debate.core.engine.setup import DebateSetup, SetupModels, setup_debate
 
 __all__ = [
     "CostTotals",
     "DebateConfig",
     "DebateMessage",
     "DebateResult",
+    "DebateSetup",
+    "SetupModels",
     "ToolCallRecord",
+    "setup_debate",
 ]

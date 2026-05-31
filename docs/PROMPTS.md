@@ -1278,5 +1278,25 @@ outcome/decision it produced.
   a `_engine_public.py` shim (mirroring `_agents_public.py`); the hub splices the shim's
   `__all__` via `*_engine_public.__all__` (no new literal entries) to stay under the cap.
 
+## 6.2 — Topic setup & private side assignment
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.2-topic-setup.json`.
+- **Context:** The SETUP step of the debate flow (orchestration §3.1) — the controller
+  receives/sets the topic, privately assigns Pro = FOR and Con = AGAINST, and keeps its own
+  stance hidden. NOT the loop (that is 6.3).
+- **Outcome / pattern set:** New `engine/setup.py` — `setup_debate(topic, config, *, settings,
+  models, run_id, runs_dir) -> DebateSetup`. (1) VALIDATES the untrusted topic via the 7.2
+  `validate_topic` (rejects empty/control-char/oversized with the typed `InvalidInputError`).
+  (2) Privately ASSIGNS Pro = FOR / Con = AGAINST as a fixed STRUCTURED mapping keyed by the
+  `DebateSide` constants, labelled via the existing `SIDE_LABEL` (no hard-coded side strings).
+  (3) Builds the three agents (Pro/Con/Controller) on injected per-agent `TestModel`s (offline,
+  no network/key) + three ISOLATED contexts (`create_debate_contexts`). **No model call is made**
+  — setup only prepares state; the loop's calls route through the API gatekeeper (Epic 13) in
+  6.3. *Controller neutrality pattern:* `DebateSetup` is a frozen dataclass with deliberately
+  NO stance/opinion field — a test asserts no `stance`/`opinion`/`winner`/`lean`/`bias` field
+  exists, and the single `system` setup log event (topic + assignment, `round=0`) carries no
+  stance. Re-exports added to `engine/__init__` + the `_engine_public.py` shim (split, not
+  compress).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
