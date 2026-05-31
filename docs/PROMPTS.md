@@ -1934,5 +1934,23 @@ outcome/decision it produced.
   `appendSystemEvent`); the CSS styles each panel distinctly and uses no physical
   left/right. Honest scope: browser behaviour itself is the UI smoke test (11.8).
 
+- **Task 11.4 — Verdict view (#76).** Prompt: *"Add a verdict view showing the summary,
+  whether agents agreed, who won, and token/cost totals."* Continuing the serving-level
+  approach: the SSE stream ends with a `verdict` event then a `done` sentinel. Rather than
+  accumulate streamed token deltas, the cleanest source is the **final `DebateResult`**
+  (`verdict` + `totals` together), so on `done` `app.js` GETs `/debates/{id}` (the result
+  endpoint, no `/stream` suffix, via a new `resultUrl()` built from the same config-driven
+  `apiBaseUrl()`) and `renderVerdict()` fills a **distinct** `#verdict` `<section>`: who won
+  (`verdict.winner` mapped to **Pro / Con / Tie** via `WINNER_LABELS`), whether the agents
+  **converged/agreed** (`verdict.converged`), the **summary** (`verdict.summary`, falling
+  back to `rationale`), and **token totals** (`totals.total_tokens`/`input_tokens`/
+  `output_tokens` — cost is Epic 15, so tokens are surfaced now). The view starts `hidden`,
+  is re-hidden when a new debate starts, and stays hidden on fetch/parse failure. `style.css`
+  styles `.verdict` with **logical properties only** (no left/right) for RTL-safety. TDD
+  red-first via `TestClient`: the served HTML exposes the `#verdict` region + outcome
+  containers (`#verdict-winner/summary/converged/tokens`); `app.js` fetches the result on
+  `done` and references the winner/summary/converged/`total_tokens` fields; the CSS is
+  RTL-safe. Browser behaviour itself is the UI smoke test (11.8).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
