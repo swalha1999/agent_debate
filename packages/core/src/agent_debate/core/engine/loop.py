@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from agent_debate.core.engine._budget import check_run_budget
 from agent_debate.core.engine._cost import price_result
 from agent_debate.core.engine._verdict import render_loop_verdict
 from agent_debate.core.engine.closing import run_closing_discussion
@@ -127,7 +128,9 @@ def run_debate_loop(
         verdict=render_loop_verdict(transcript + closing, run_id, runs_dir, sink),
         totals=CostTotals.from_messages(transcript + closing),
     )
-    return price_result(result, config, price_table)
+    priced = price_result(result, config, price_table)
+    check_run_budget(priced, config, run_id=run_id, runs_dir=runs_dir)
+    return priced
 
 
 def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutable state).

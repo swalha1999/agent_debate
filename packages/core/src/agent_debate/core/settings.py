@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     #: Key for search backends that need one (ignored by DuckDuckGo).
     search_api_key: str | None = Field(default=None)
 
+    #: Configurable USD budget cap per run; ``0.0`` (default) = unlimited (15.3).
+    budget_usd: float = Field(default=constants.DEFAULT_BUDGET_USD, ge=0.0)
+
     @property
     def pro_model(self) -> str:
         """Resolved PRO-side model — ``PRO_MODEL`` or ``DEBATER_MODEL``."""

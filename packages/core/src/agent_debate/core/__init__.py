@@ -10,7 +10,7 @@ importing across the edge, proving the dependency resolves at runtime.
 
 from __future__ import annotations
 
-from agent_debate.core import _engine_public, skills
+from agent_debate.core import _engine_public, pricing, skills
 from agent_debate.core._agents_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._engine_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._version import __version__
@@ -25,20 +25,7 @@ from agent_debate.core.gatekeeper import (
     load_rate_limit_config,
 )
 from agent_debate.core.models import ResolvedModels, resolve_model, resolve_models
-from agent_debate.core.pricing import (
-    DEFAULT_MODEL,
-    MODEL_PRICES_FILENAME,
-    CostBreakdown,
-    ModelCostRow,
-    ModelPrice,
-    PriceTable,
-    aggregate_costs,
-    compute_cost,
-    cost_breakdown_from_result,
-    format_cost_table,
-    get_model_price,
-    load_price_table,
-)
+from agent_debate.core.pricing import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core.search import (
     DEFAULT_MAX_RESULTS,
     DuckDuckGoSearchProvider,
@@ -86,24 +73,12 @@ __all__ = [
     "ANTI_CONCESSION_RULE",
     "DEFAULT_MAX_RESULTS",
     "DEFAULT_MAX_UNTRUSTED_LEN",
-    "DEFAULT_MODEL",
     "DEFAULT_SERVICE",
     "INJECTION_PATTERNS",
     "LIBRARY_VERSION",
     "MAX_QUERY_LEN",
     "MAX_TOPIC_LEN",
-    "MODEL_PRICES_FILENAME",
-    "CostBreakdown",
-    "ModelCostRow",
-    "ModelPrice",
-    "PriceTable",
     "NEUTRALISED_MARKER",
-    "aggregate_costs",
-    "compute_cost",
-    "cost_breakdown_from_result",
-    "format_cost_table",
-    "get_model_price",
-    "load_price_table",
     "WordLimitResult",
     "AgentContext",
     "ApiGatekeeper",
@@ -159,6 +134,7 @@ __all__ = [
     "validate_required_keys",
     "validate_search_query",
     "validate_topic",
+    *pricing.__all__,  # Epic-15 pricing surface (CostBreakdown, BudgetStatus, …)
     *skills.__all__,  # Epic-4 skills surface (build_argument, web_search, …)
     *_engine_public.__all__,  # Epic-6 engine surface (CostTotals, DebateConfig, …)
 ]

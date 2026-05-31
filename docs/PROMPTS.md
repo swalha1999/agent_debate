@@ -2038,5 +2038,25 @@ fails → restore → green.
   prices — and that the loop is split (`_cost.py`, `_verdict.py`) to hold the 150-line
   cap.
 
+### Budget cap + over-budget alert (task 15.3, 2026-05-31)
+- **Prompt:** "Add a configurable budget cap and an over-budget alert (during/after
+  a run). Document how cost scales with rounds × word-limit."
+- **Context:** 15.1 shipped the config-driven per-model price table; 15.2 priced a
+  completed run into `DebateResult.cost_breakdown` + `totals.cost_usd`. This task
+  made that cost *actionable* — a cap + an alert when a run blows it.
+- **Outcome/pattern:** Added a `BUDGET_USD` config knob (PRD §7 → `Settings` →
+  `DebateConfig.budget_usd`, default `0` = **unlimited** so existing runs are
+  unchanged). Split the logic the same way as 15.2's cost code: a *pure* decision
+  surface — `BudgetStatus` + `check_budget(spent_usd, budget_usd)` in
+  `pricing/budget.py` — and an I/O side next door, `alert_over_budget(...)` in
+  `pricing/_alert.py`, which logs ONE structured `system` event (`payload.budget_alert`
+  + spent/cap/remaining) via the LOG package only on a genuine overrun. The engine
+  wiring (`engine/_budget.py`) runs right after `price_result` in the loop. Documented
+  cost-vs-scale in PRD §10: output ≈ linear in `ROUNDS × MAX_WORDS`, input faster
+  (replayed context grows with `ROUNDS`). Also set the convention that a long
+  re-export `__init__.py` collapses to the existing `*pkg.__all__` star-import shim
+  (matching `skills`/`_engine_public`) to hold the 150-line cap rather than trimming
+  the public surface.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

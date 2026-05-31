@@ -259,7 +259,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 
 - [ ] **15.1** Price table per model (input/output $ per 1M tokens) in config. · P1 · Owner: __ · dep: 6.7
 - [ ] **15.2** **Cost-breakdown table** per run + aggregate (tokens × price → total, per model + overall). · P1 · dep: 15.1
-- [ ] **15.3** Budget cap (config) + over-budget **alert**; document cost vs. scale (rounds × word-limit). · P1 · dep: 15.1
+- [x] **15.3** Budget cap (config) + over-budget **alert**; document cost vs. scale (rounds × word-limit). · P1 · dep: 15.1
 
 **Epic 15 acceptance:** every debate reports a cost breakdown; a budget cap triggers an alert; cost scaling is documented.
 

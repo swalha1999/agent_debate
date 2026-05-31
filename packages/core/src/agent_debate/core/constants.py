@@ -29,6 +29,12 @@ DEFAULT_MAX_RETRIES = 2
 #: Selects the ``SearchProvider`` plug-in; DuckDuckGo needs no key (PRD §7).
 DEFAULT_SEARCH_BACKEND = "duckduckgo"
 
+#: Configurable USD budget cap per run (PRD §7/§10, task 15.3). ``0.0`` (the
+#: default) means *unlimited* — no cap, never over budget — so adding the feature
+#: changes no existing behaviour until a positive cap is configured. A documented
+#: default, not a magic number inlined at a call site (guideline §7.2).
+DEFAULT_BUDGET_USD = 0.0
+
 #: Connective phrase the ``build_argument`` skill uses to introduce its rebuttal
 #: when an opponent point is supplied (anti-sycophancy: the debater must rebut,
 #: not concede — ``docs/prds/anti-sycophancy.md`` §2). Kept here, not inlined.
@@ -194,6 +200,24 @@ TURN_FAILED_TAG = "model_call"
 #: timeout/retry budget was exhausted (a marker, not a debater message).
 TURN_FAILED_CONTENT = "[turn failed: model call exhausted timeout + retries]"
 
+#: ``event_type`` recorded when a run exceeds its configured budget cap (task
+#: 15.3). The LOG schema has no dedicated "alert" kind, so the over-budget alert
+#: is a ``system`` event whose payload carries the ``budget_alert`` flag.
+BUDGET_ALERT_EVENT_TYPE = "system"
+
+#: ``agent`` label recorded on the over-budget alert event — a name (the budget
+#: monitor), not a debate stance, so the alert is attributable in the run log.
+BUDGET_ALERT_LOG_AGENT = "budget"
+
+#: ``round`` marker stamped on the over-budget alert event. The check runs AFTER
+#: the numbered rounds (at finalisation), so ``0`` (the same marker setup/closing
+#: use) cleanly distinguishes it from a debate round.
+BUDGET_ALERT_ROUND = 0
+
+#: Stable ``payload["budget_alert"]`` flag marking an over-budget alert record so
+#: it is greppable/queryable in the run log (the single source for the literal).
+BUDGET_ALERT_TAG = "budget_alert"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -205,6 +229,10 @@ PROVIDER_KEY_ENV_VARS: dict[str, str] = {
 }
 
 __all__ = [
+    "BUDGET_ALERT_EVENT_TYPE",
+    "BUDGET_ALERT_LOG_AGENT",
+    "BUDGET_ALERT_ROUND",
+    "BUDGET_ALERT_TAG",
     "CLAIM_SPLIT_DELIMITERS",
     "CLOSING_EXCHANGES",
     "CLOSING_MESSAGE_TAG",
@@ -212,6 +240,7 @@ __all__ = [
     "CLOSING_ROUND",
     "CLOSING_WORD_LIMIT_LINE",
     "CONCLUSION_TEMPLATE",
+    "DEFAULT_BUDGET_USD",
     "DEFAULT_CONTROLLER_MODEL",
     "DEFAULT_DEBATER_MODEL",
     "DEFAULT_MAX_RETRIES",

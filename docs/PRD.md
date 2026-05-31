@@ -296,6 +296,7 @@ class ApiGatekeeper:
 | `MAX_RETRIES` | Retries on timeout/error | `2` |
 | `SEARCH_BACKEND` | Selects the `SearchProvider` plug-in (`duckduckgo`/`tavily`/…) — swap with one value | `duckduckgo` |
 | `SEARCH_API_KEY` | Key for backends that need one (ignored by DuckDuckGo) | — |
+| `BUDGET_USD` | Per-run USD budget cap; over-budget triggers an alert. `0` = unlimited (§10, 15.3) | `0` |
 
 Rate limits are **not** env vars — they live in `config/rate_limits.json` (guideline §5.2).
 
@@ -351,9 +352,33 @@ visualizations (in `notebooks/` and `runs/`) covering:
   | --- | --- | --- | --- | --- | --- |
   | anthropic:claude-opus-4-8 | 1000000 | 200000 | $15.000000 | $15.000000 | $30.000000 |
   | Overall | 1000000 | 200000 | $15.000000 | $15.000000 | $30.000000 |
-- **Budget management**: real-time token accounting in the LOG package, a configurable
-  budget cap, and an over-budget alert. Cost behaviour vs. scale (rounds × word limit)
-  documented.
+- **Budget management** (task 15.3): a **configurable budget cap** — `BUDGET_USD`
+  (PRD §7, default `0` = unlimited) → `DebateConfig.budget_usd`. After a run is priced
+  (15.2) the engine compares the cost-breakdown total against the cap via the pure
+  `check_budget(spent_usd, budget_usd) -> BudgetStatus` (in
+  `packages/core/.../pricing/budget.py`); on an overrun `alert_over_budget(status, …)`
+  emits a structured **over-budget alert** — a `system` event carrying
+  `payload.budget_alert = true` plus `spent_usd`/`budget_usd`/`remaining_usd` — into the
+  per-run `runs/<run_id>.jsonl` log via the LOG package (no alert when under the cap or
+  unlimited, so existing behaviour is unchanged). The alert is greppable/queryable for
+  monitoring and surfaced to the UI/CLI alongside the cost table.
+
+- **Cost vs. scale (rounds × word limit).** Cost is driven by tokens, and tokens scale
+  with both knobs. Each round adds **one Pro + one Con message**, so output tokens grow
+  **linearly in `ROUNDS`**. The per-message `MAX_WORDS` cap bounds each message's output
+  tokens (≈ `1.3 × words` for English), so output also grows **linearly in `MAX_WORDS`**.
+  Input tokens grow **faster than linearly**: every turn re-sends the side anchor + the
+  adversarial relay of the opponent's last message, and the running transcript/context
+  lengthens as the debate proceeds — so doubling `ROUNDS` more than doubles total input
+  tokens (roughly quadratic in the worst case where full history is replayed). Net rule
+  of thumb: **total cost ≈ `k₁ · ROUNDS · MAX_WORDS` (output) + `k₂ · ROUNDS² · MAX_WORDS`
+  (input context)**, priced per model from `config/model_prices.json`. Practical levers,
+  cheapest first: lower `MAX_WORDS`, lower `ROUNDS`, route debaters to a cheaper model
+  (e.g. Haiku via `DEBATER_MODEL`), and set a `BUDGET_USD` cap so a runaway run is flagged
+  early rather than discovered on the bill. Example: at the Opus example price ($15/1M in,
+  $75/1M out) a 10-round, 150-word debate lands in the low-single-dollar range; halving
+  both `ROUNDS` and `MAX_WORDS` cuts that by roughly 4× (output halves twice; input drops
+  more).
 
 ## 11. Acceptance criteria
 

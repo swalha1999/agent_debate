@@ -1,0 +1,15 @@
+{
+  "task_id": "15.3",
+  "title": "Budget cap + alert",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a configurable budget cap and an over-budget alert (during/after a run). Document how cost scales with rounds × word-limit.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 96000
+  },
+  "usage": {
+    "summary": "Budget cap (BUDGET_USD) + over-budget alert via LOG; cost-vs-scale documented in PRD §10."
+  }
+}
