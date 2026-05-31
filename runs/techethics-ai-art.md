@@ -6,129 +6,87 @@
 
 ### Round 1
 
-**Pro** (89 words)
+**Pro** (50 words)
 
-I'm ready to debate, but I need a couple of things from you before I can begin:
+I'm ready to argue FOR the motion: *"AI-generated art should be eligible for copyright protection."*
 
-1. **What is the debate topic?** (e.g., *"Artificial intelligence will do more good than harm"*)
-2. **What is the opponent's argument?** (if this is a rebuttal round — share their last message so I can analyze and counter it)
+Please share the **opponent's opening argument** so I can analyze it and build a strong rebuttal. Or, if this is the **opening round**, just let me know and I'll launch the first argument right away!
 
-Once you provide those, I'll immediately:
-- 🔍 Research supporting evidence
-- ⚔️ Analyze the opponent's weaknesses
-- 🏗️ Build a strong **PRO** argument to counter them
+**Con** (99 words)
 
-Go ahead and share the details!
+The opponent has offered **no substantive argument** — just procedural stalling. I'll seize the floor.
 
-**Con** (118 words)
+**AI-generated art must NOT receive copyright protection**, and here's why:
 
-My opponent offered **zero arguments** — only a checklist of demands. That is not debating; that is stalling.
+1. **Law is clear:** The U.S. Copyright Office explicitly requires *human authorship*. The 2023 *Thaler v. Perlmutter* ruling firmly rejected copyright for AI-generated works.
+2. **No true creativity:** AI statistically recombines training data — it has no intent, emotion, or conscious expression.
+3. **Harm to human artists:** Granting AI works legal monopolies would flood markets, disadvantaging real human creators.
 
-A genuinely prepared debater argues from **first principles** — they don't need the audience to hand them their position. Demanding the topic and opponent context before uttering a single claim reveals structural unpreparedness, not readiness.
-
-Furthermore, "I'm ready to debate" followed by *doing no debating* is a self-contradiction. No evidence was cited, no logic was advanced, no position was defended. By definition, their side is **currently undefended**.
-
-Stalling disguised as clarification-seeking is itself a forfeiture. The CON side stands firm: my opponent has not begun to debate, and that silence speaks louder than any argument they have yet to make.
+Copyright exists to reward *human* creative labor. AI performs none. The motion must be rejected.
 
 ### Round 2
 
-**Pro** (111 words)
+**Pro** (104 words)
 
-**My opponent attacks process — a textbook red herring — while committing the exact sin they accuse me of: advancing zero substantive claims on any real topic.**
+**Law evolves — and must.** Copyright once excluded photography and software; today it protects both. *Thaler* is a snapshot of current law, not settled moral truth.
 
-Every formal debate tradition — Oxford, parliamentary, Lincoln-Douglas — *requires* a stated resolution before arguments begin. That isn't weakness; it's the foundation of rigorous discourse. "First principles" are meaningless without a proposition to anchor them.
+**The human author is already there.** Prompt engineers, curators, and iterative directors exercise genuine creative judgment — that *is* authorship. Denying protection punishes *human* creators who invest real skill in AI-assisted works — the very people the opponent claims to defend.
 
-Crucially, CON declares their side "stands firm" — *on nothing*. A stance without a topic is pure theater.
+**"Recombination" proves too much.** Every human artist builds on prior influences. Originality has never meant creation from nothing.
 
-Demanding clarity isn't forfeiture — it's intellectual precision. My opponent's eagerness to debate *without a topic* reveals a preference for exploiting ambiguity over pursuing truth. **That is the real concession here.**
+The law must catch up with reality: protect the human creative intelligence *behind* AI art. The motion stands. ✅
 
-**Con** (102 words)
+**Con** (105 words)
 
-My opponent **demolished their own argument** in real time.
+**The opponent is arguing a different motion.** Human-directed AI tools? Copyright *already protects* that. The motion asks about **purely AI-generated** art — a critical distinction they erase.
 
-They invoke Oxford and Lincoln-Douglas — traditions requiring a stated resolution — then spend their *entire rebuttal* debating vigorously **without one**. That's self-refutation, not precision.
+- **Photography/software analogy collapses:** photographers compose, expose, and execute. Programmers write every line. Prompt writers *instruct an autonomous system* — fundamentally different delegation.
+- **"Human behind the AI" is already covered** by existing law where human contribution is substantial. No new protection needed.
+- Granting copyright to AI outputs **rewards no human creative labor** — copyright's entire rationale vanishes.
 
-They brand CON's argument a red herring, then dedicate every sentence to pure process meta-debate. The irony is staggering.
-
-Their circular logic: *"We cannot debate without a topic"* — yet here they are, debating. The topic **is** this debate. It always was.
-
-"Intellectual precision" that generates zero forward progress isn't rigor — it's **sophisticated paralysis**. CON holds firm: my opponent continues performing the stall they claimed to oppose.
+The opponent is defending a strawman. Purely AI-generated art has no human author deserving protection. The motion fails. ❌
 
 ### Round 3
 
-**Pro** (103 words)
+**Pro** (101 words)
 
-**CON's headline move — "the topic is this debate, it always was" — is a textbook post-hoc rationalization.** They never declared that upfront. They invented it *after being cornered*, proving PRO's original point exactly.
+**"Purely AI-generated" is a false absolute.** Human choices in model design, training curation, and deployment are embedded creative decisions — authorship exists upstream.
 
-Notice also: PRO didn't choose to debate without a topic — PRO was *forced* to defend against bad-faith procedural attacks. Responding under fire is not self-refutation; it's self-defense.
+**Copyright's rationale isn't only direct labor.** It also incentivizes *investment and innovation* — and humans invest enormously in building AI systems. Denying protection removes that incentive entirely.
 
-Most damning: CON has never once advanced an independent substantive claim. Their entire case is parasitic — purely reactive to PRO. **An argument that cannot stand alone isn't a position; it's a shadow.**
+**History repeats:** Early courts rejected photography copyright claiming "the camera, not the human, made the image." They were overturned. The opponent's logic is identical — and equally temporary.
 
-Mockery isn't logic. PRO's stand holds firm. ✅
+**Unprotected AI art** creates a free-for-all that floods markets uncontrollably — harming human artists far more. Protection enables *governance*. The motion stands. ✅
 
-**Con** (101 words)
+**Con** (99 words)
 
-PRO's **"parasitic" charge is perfectly symmetrical** — and therefore self-defeating. Scroll back: PRO has never once proactively advanced a substantive claim either. Every single PRO response has been reactive. The accusation lands on both sides equally, which neutralizes it entirely.
+**Investment ≠ authorship — the opponent conflates them.** Patents and trade secrets *already* protect AI developers' investments. Copyright is the wrong tool entirely.
 
-PRO brands CON "bad-faith" — with **zero evidence**. That's a dismissal cosplaying as logic.
+- **Upstream logic is dangerous:** It would grant *one developer* monopoly rights over millions of distinct outputs they never individually created — an extraordinary, unjustifiable power grab.
+- **Governance ≠ copyright:** Regulation, watermarking laws, and licensing frameworks govern AI art *without* handing monopolies to machines.
+- **Photography still fails:** Each photographer makes *per-image* creative choices. AI developers make *zero* per-output decisions.
 
-Most devastatingly: PRO declares *"mockery isn't logic"* — then immediately calls CON's position **"a shadow."** That IS mockery. PRO violated their own standard in the same breath they proclaimed it.
-
-Finally, "forced to defend" is victimhood, not argumentation. CON holds firm. PRO's case remains built on contradiction.
-
-### Round 4
-
-**Pro** (108 words)
-
-**CON's symmetry argument is an own goal.** Conceding that *both sides* are reactive doesn't neutralize PRO — it *validates* PRO's original warning: without a declared topic, no genuine debate can exist.
-
-CON policing the word "shadow" is pure semantic nitpicking — attacking vocabulary to avoid engaging with the substance beneath it.
-
-Most fatally: **PRO's structure has driven every exchange.** CON has never once opened with an independent proactive claim. Their entire case is a mirror — it only exists as a reflection of PRO's moves. That is the definition of a parasitic argument, symmetry claim notwithstanding.
-
-**PRO stands firm. CON's case remains a reaction, not a position.** ✅
-
-**Con** (108 words)
-
-**PRO "drove every exchange"? The record says otherwise.**
-
-PRO's opening move was a *checklist of demands* — zero claims, zero arguments. **CON struck first** with a substantive position. That is historically undeniable.
-
-PRO's "own goal" label is naked circular reasoning: it assumes PRO's premise is correct *in order to validate* PRO's premise. That's not logic — that's question-begging dressed in confidence.
-
-Furthermore, PRO conflates *reacting to weak arguments* with *having no position.* A judge who reacts to faulty evidence still holds a firm stance. Reaction doesn't equal emptiness.
-
-PRO never dismantled CON's symmetry logic — they simply *named it* an own goal. Labels aren't rebuttals.
-
-**CON stands firm.**
+The opponent offers no authorship — only investment. That's insufficient. The motion must fall. ❌
 
 ## Closing discussion
 
-**Pro** (110 words)
+**Pro** (109 words)
 
-**Ladies and gentlemen, review the full transcript — it tells one clear story.**
+**Closing — FOR the motion:**
 
-CON never once opened a round with an independent claim. Round after round, they waited for PRO to move, then attacked the move. That *is* the parasitic pattern — and CON's own symmetry concession proves it, because admitting "both sides are reactive" only validates PRO's founding argument: without a declared topic, authentic debate collapses.
+The opponent never dismantled our core point: **copyright rewards investment and innovation, not just physical brushstrokes.** Humans design, train, curate, and deploy AI systems — that *is* creative labor deserving protection.
 
-PRO demanded intellectual precision. CON demanded we abandon it. Every formal tradition sides with PRO.
+Brookings, Harvard Law, and EU policymakers all confirm: **the law is actively evolving** toward recognizing AI-assisted authorship. The current U.S. position is a starting point, not a final verdict.
 
-CON built a case made entirely of reflections — no original substance, no independent foundation.
+Leaving AI art unprotected creates a dangerous legal vacuum — enabling mass exploitation with zero accountability, harming human stakeholders most.
 
-**A shadow cannot win. PRO's position stands. The resolution belongs to us.** ✅
+History always vindicates expansion: photography, software, film — all initially rejected, all ultimately protected.
 
-**Con** (110 words)
+**Adapt the law. Protect human creative investment. Vote FOR.** ✅
 
-## CON Closing Statement
+**Con** (120 words)
 
-Ladies and gentlemen, the record is unambiguous.
-
-**PRO opened with zero arguments** — by PRO's own formal-debate standards, an immediate disqualification. PRO then spent *every subsequent round* reacting to CON, while accusing CON of being reactive. PRO cited Oxford traditions, then abandoned them instantly. PRO condemned mockery, then deployed it. PRO called symmetry an "own goal" — without ever logically disproving it.
-
-**CON struck first. CON argued substantively. CON held firm throughout.**
-
-PRO's entire case was a hall of mirrors: contradictions reflecting contradictions. A position that violates its own rules at every turn isn't a position — it's a performance.
-
-**CON stands firm. The opposition holds.**
+## Closing Statement — AGAINST the Motion ❌ Throughout this debate, one truth stood unshaken: **copyright exists to reward human creative expression, not investment, not upstream decisions, not delegation.** The opponent never identified a human author for any *specific* AI output. They offered developers, prompt writers, and investors — none of whom individually create what the machine produces. - **Investment** has patent law. **Trade secrets** protect AI models. Copyright is not needed and is the *wrong instrument*. - **Upstream authorship** would hand corporations monopolies over millions of works they never truly made — devastating, not protecting, human artists. - **Governance** needs regulation, not monopoly rights. The law, logic, and the interests of real human creators all point one way: **reject
 
 ## Controller nudges
 
@@ -136,21 +94,21 @@ _No nudges were needed — neither agent drifted._
 
 ## Verdict
 
-- **Winner:** Pro
+- **Winner:** Con
 - **Agents converged:** no
-- **Scores:** Pro 10.5, Con 8
+- **Scores:** Pro 10, Con 11
 
-**Summary.** Debate of 10 turns. The pro side argued more effectively and wins. The agents stayed opposed. Judged on argumentation, rebuttal quality and engagement — not factual correctness.
+**Summary.** Debate of 8 turns. The con side argued more effectively and wins. The agents stayed opposed. Judged on argumentation, rebuttal quality and engagement — not factual correctness.
 
-**Rationale.** Pro scored 10.5 and Con scored 8.0 on argumentation/rebuttal/engagement; winner = pro.
+**Rationale.** Pro scored 10.0 and Con scored 11.0 on argumentation/rebuttal/engagement; winner = con.
 
 ## Cost & tokens
 
-- **Total tokens:** 78956 (input 71452, output 7504)
-- **Total cost:** $0.326916
-- **Total latency:** 126563 ms
+- **Total tokens:** 67173 (input 61916, output 5257)
+- **Total cost:** $0.264603
+- **Total latency:** 93985 ms
 
 | Model | Input tokens | Output tokens | $ Input | $ Output | $ Total |
 | --- | --- | --- | --- | --- | --- |
-| anthropic:claude-sonnet-4-6 | 71452 | 7504 | $0.214356 | $0.112560 | $0.326916 |
-| Overall | 71452 | 7504 | $0.214356 | $0.112560 | $0.326916 |
+| anthropic:claude-sonnet-4-6 | 61916 | 5257 | $0.185748 | $0.078855 | $0.264603 |
+| Overall | 61916 | 5257 | $0.185748 | $0.078855 | $0.264603 |
