@@ -1614,5 +1614,28 @@ outcome/decision it produced.
   determinism seam, exercise the edge at the seam's own level and compose the happy
   path through the public API — don't widen the public API just to test it.*
 
+## 8.2 — Nudge logic: private correction injected into the captured agent (`tests/test_nudge_logic.py`)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/8.2-nudge-logic.json`.
+- **Context:** 8.1 deepened drift *detection* and `drift.py` already recorded +
+  logged a nudge on capture, but the private correction was never actually
+  **delivered** to the offending agent. 8.2 closes that loop: "private" must mean
+  the correction lands in the captured agent's OWN context only.
+- **Outcome / pattern set:** TDD red-first (5 tests, watched `ImportError:
+  inject_nudge` fail, then green). New `engine/drift.py` helper
+  `inject_nudge(context, correction)` appends the correction as a `user` turn into
+  the captured agent's isolated `AgentContext`; `run_drift_check` gained an opt-in
+  `context` param (default `None` = log-only, back-compat) that injects on capture
+  before emitting the `nudge` event, and `loop.py` `_drift` passes
+  `setup.contexts.for_side(side)` so the live loop injects into the right agent —
+  never the opponent's context, never the public transcript. The correction text
+  is a single deepened named constant (`NUDGE_CORRECTION_TEMPLATE`) naming the
+  reason + assigned side. The nudge stays logged + streamed (6.6) and **not** a
+  debate turn (`is_debate_turn=False`), so the 10-vs-10 invariant holds (existing
+  loop/acceptance/controller tests stay green). *Pattern: deliver a side-channel
+  correction through the recipient's isolated context, not the shared transcript —
+  "private" is enforced by where it is injected, asserted by its absence from the
+  opponent's history and the transcript.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

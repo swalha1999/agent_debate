@@ -91,7 +91,7 @@ def run_debate_loop(
             transcript,
             sink,
         )
-        _drift(transcript[-1], DebateSide.PRO, round_, run_id, runs_dir, nudges, sink)
+        _drift(setup, transcript[-1], DebateSide.PRO, round_, run_id, runs_dir, nudges, sink)
         last_con = _turn(
             setup,
             config,
@@ -104,7 +104,7 @@ def run_debate_loop(
             transcript,
             sink,
         )
-        _drift(transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges, sink)
+        _drift(setup, transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges, sink)
     closing = run_closing_discussion(
         setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir, sink=sink
     )
@@ -154,6 +154,7 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
 
 
 def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared mutable state).
+    setup: DebateSetup,
     message: DebateMessage,
     side: DebateSide,
     round_: int,
@@ -162,13 +163,20 @@ def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared muta
     nudges: list[NudgeMessage],
     sink: EventSink | None,
 ) -> None:
-    """Drift-check ``message`` and record a nudge when the agent was captured."""
+    """Drift-check ``message``; on capture inject the private nudge + record it.
+
+    The correction is injected into the captured agent's OWN context (anti-sycophancy
+    §4) — never the opponent's, never the public transcript — so it reads the moderator
+    note before its next turn. The nudge is logged + streamed but is **not** a debate
+    turn (the 10-vs-10 message invariant is unaffected).
+    """
     correction = run_drift_check(
         message=message.content,
         side=side,
         round_=round_,
         run_id=run_id,
         runs_dir=runs_dir,
+        context=setup.contexts.for_side(side),
         sink=sink,
     )
     if correction is not None:
