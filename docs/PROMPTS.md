@@ -1379,5 +1379,40 @@ outcome/decision it produced.
   `_ALLOWLISTED_FILES` constant; a NEW direct call elsewhere fails CI, catching a future bypass. A
   guard test asserts the scan globbed real files (no vacuous pass).
 
+### 4.1 — web_search skill (Epic 4, PRD §5.2 / search-plugin §5, issue #32)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/4.1-web-search-skill.json`.
+- **Context:** all building blocks already existed — `create_search_provider(...,
+  gatekeeper=)` (wraps the active backend in `GatekeptSearchProvider`, routing
+  through `ApiGatekeeper.execute(service="search")`), `ResilientSearchProvider`
+  (timeout/retry → `[]`), `validate_search_query` (7.2), and
+  `sanitize_search_result` (7.5). 4.1 is the skill that *composes* them into the
+  flow the debater calls. Full Pydantic AI tool registration is 4.5; here it is
+  the tool-ready function + validated input model.
+- **Outcome / pattern set:** TDD red-first (`tests/test_web_search.py`, 9 tests,
+  watched fail on the missing import). New `skills/web_search.py::web_search(query,
+  *, settings=None, gatekeeper=None, max_results=None, run_id=None, runs_dir=…)`:
+  **validate** (`validate_search_query`, rejects oversized/blank/control-char)
+  → **gatekeeper-routed provider** (built in a split `skills/_web_search_build.py`
+  so the skill file stays a thin policy flow under 150 lines: `create_search_provider`
+  for the API-gatekeeper hop, wrapped in `ResilientSearchProvider` whose retry knobs
+  come from the `search` `ServiceLimits` and timeout from `Settings.turn_timeout_s`
+  — 0 hard-coded) → **sanitise** each result through `sanitize_search_result`
+  *before* returning → **log** one `tool_call` event (query + result count) via the
+  LOG package. `WebSearchInput` (in `skills/models.py`) reuses the 7.2 validator so
+  it is tool-ready. New named constants `WEB_SEARCH_EVENT_TYPE/_TOOL/_DEFAULT_RUN_ID`;
+  `max_results` defaults to `DEFAULT_MAX_RESULTS`. Provider-agnostic: a test proves
+  it works with the tavily stub too. While wiring re-exports, `core/__init__.py`
+  crossed the 150-code-line limit — fixed structurally by switching the skills
+  re-export to the existing `import *` + `*skills.__all__` splat pattern (same shim
+  `_engine_public`/`_agents_public` already use), which *reduced* the file to 121
+  lines rather than hacking the cap. Gates: ruff/format clean, mypy clean (138
+  files), 522 passed, 100% coverage (new files 100%), line-limit + secret-scan exit 0.
+  *Pattern: a skill that touches the network threads BOTH gatekeepers — API
+  (rate-limit, via the provider factory) on the way out and security (sanitise) on
+  the way back — and splits provider assembly into a private `_build` helper so the
+  policy flow file stays small; when a re-export aggregator outgrows the line cap,
+  collapse it onto the package's own `__all__` splat instead of raising the limit.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

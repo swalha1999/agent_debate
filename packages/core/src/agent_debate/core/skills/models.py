@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from agent_debate.core.security import validate_search_query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -287,6 +288,29 @@ class Verdict(BaseModel):
     scores: dict[DebateSide, float]
 
 
+class WebSearchInput(BaseModel):
+    """Validated input for the :func:`web_search` skill (task 4.1, issue #32).
+
+    Makes the skill tool-ready (PRD §5.2): a Pydantic model whose ``query`` field
+    reuses the 7.2 trusted-boundary validator (:func:`validate_search_query`), so a
+    blank / oversized / control-char query is rejected with a clear
+    :class:`~agent_debate.core.security.InvalidInputError` before any provider call.
+
+    Attributes:
+        query: The web-search query; trimmed and length-capped per
+            :data:`~agent_debate.core.security.MAX_QUERY_LEN`.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    query: str
+
+    @field_validator("query")
+    @classmethod
+    def _check_query(cls, value: str) -> str:
+        return validate_search_query(value)
+
+
 __all__ = [
     "Argument",
     "ArgumentRequest",
@@ -299,4 +323,5 @@ __all__ = [
     "TranscriptTurn",
     "Verdict",
     "VerdictRequest",
+    "WebSearchInput",
 ]

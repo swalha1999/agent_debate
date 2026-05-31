@@ -10,7 +10,7 @@ importing across the edge, proving the dependency resolves at runtime.
 
 from __future__ import annotations
 
-from agent_debate.core import _engine_public
+from agent_debate.core import _engine_public, skills
 from agent_debate.core._agents_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._engine_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._version import __version__
@@ -55,23 +55,7 @@ from agent_debate.core.security import (
     validate_topic,
 )
 from agent_debate.core.settings import Settings, get_settings
-from agent_debate.core.skills import (
-    Argument,
-    ArgumentRequest,
-    DebateSide,
-    DriftAssessment,
-    NudgeMessage,
-    OpponentAnalysis,
-    OpponentAnalysisRequest,
-    TranscriptTurn,
-    Verdict,
-    VerdictRequest,
-    analyze_opponent_argument,
-    assess_drift,
-    build_argument,
-    nudge,
-    render_verdict,
-)
+from agent_debate.core.skills import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core.validation import MissingApiKeyError, validate_required_keys
 from agent_debate.log import log_version
 
@@ -97,20 +81,13 @@ __all__ = [
     "WordLimitResult",
     "AgentContext",
     "ApiGatekeeper",
-    "Argument",
-    "ArgumentRequest",
     "CONTROLLER_SKILLS",
     "DebateContexts",
     "DEBATER_SKILLS",
-    "DebateSide",
-    "DriftAssessment",
     "DuckDuckGoSearchProvider",
     "GatekeptSearchProvider",
     "InvalidInputError",
     "MissingApiKeyError",
-    "NudgeMessage",
-    "OpponentAnalysis",
-    "OpponentAnalysisRequest",
     "QueueFullError",
     "QueueStatus",
     "RateLimitConfig",
@@ -125,18 +102,12 @@ __all__ = [
     "Settings",
     "TavilySearchProvider",
     "TopicInput",
-    "TranscriptTurn",
     "Turn",
     "UnknownSearchBackendError",
-    "Verdict",
-    "VerdictRequest",
     "__version__",
-    "analyze_opponent_argument",
     "anchor_turn",
-    "assess_drift",
     "available_search_backends",
     "build_adversarial_relay",
-    "build_argument",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
     "build_side_anchor",
@@ -153,16 +124,15 @@ __all__ = [
     "get_settings",
     "load_rate_limit_config",
     "normalise_text",
-    "nudge",
     "sanitize_search_result",
     "sanitize_untrusted_text",
     "register_search_provider",
     "log_version",
-    "render_verdict",
     "resolve_model",
     "resolve_models",
     "validate_required_keys",
     "validate_search_query",
     "validate_topic",
+    *skills.__all__,  # Epic-4 skills surface (build_argument, web_search, …)
     *_engine_public.__all__,  # Epic-6 engine surface (CostTotals, DebateConfig, …)
 ]

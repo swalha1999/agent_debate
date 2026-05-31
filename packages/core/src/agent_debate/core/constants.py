@@ -140,6 +140,20 @@ LOOP_MODEL_SERVICE = "anthropic"
 #: ``default`` when unconfigured. A name selecting rate limits, not a limit value.
 SEARCH_SERVICE = "search"
 
+#: ``event_type`` recorded when the ``web_search`` skill runs a search (task 4.1).
+#: The LOG schema's ``tool_call`` kind is the canonical "an agent invoked a tool"
+#: signal. A name, not a value.
+WEB_SEARCH_EVENT_TYPE = "tool_call"
+
+#: ``agent`` label + ``payload["tool"]`` tag stamped on the ``web_search`` skill's
+#: ``tool_call`` event so the invocation is attributable in the run log. The single
+#: source for the literal "web_search" used by the skill (kept here, not inlined).
+WEB_SEARCH_TOOL = "web_search"
+
+#: ``run_id`` the ``web_search`` skill logs under when the caller supplies none — a
+#: real debate binds its own run; a standalone call logs under this module label.
+WEB_SEARCH_DEFAULT_RUN_ID = "skills.web_search"
+
 #: ``event_type`` for each per-turn model call that exceeds ``turn_timeout_s`` and
 #: is cancelled before a retry (orchestration §4, the LOG schema's ``timeout`` kind).
 TURN_TIMEOUT_EVENT_TYPE = "timeout"
@@ -205,6 +219,9 @@ __all__ = [
     "TURN_TIMEOUT_EVENT_TYPE",
     "VERDICT_RATIONALE_TEMPLATE",
     "VERDICT_TIE",
+    "WEB_SEARCH_DEFAULT_RUN_ID",
+    "WEB_SEARCH_EVENT_TYPE",
+    "WEB_SEARCH_TOOL",
     "WORD_LIMIT_LOG_AGENT",
     "WORD_LIMIT_LOG_EVENT_TYPE",
     "WORD_LIMIT_VIOLATION_TAG",
