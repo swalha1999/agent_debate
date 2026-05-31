@@ -122,6 +122,19 @@ SETUP_LOG_AGENT = "controller"
 #: ``payload["event"]`` tag identifying the debate-setup record in the run log.
 SETUP_EVENT_TAG = "debate_setup"
 
+#: ``event_type`` recorded for each debate turn the loop emits (orchestration §3.2).
+LOOP_MESSAGE_EVENT_TYPE = "message"
+
+#: ``event_type`` recorded when the controller nudges a captured agent (§3.2 / §4).
+LOOP_NUDGE_EVENT_TYPE = "nudge"
+
+#: ``agent`` label recorded on a controller nudge event (the controller issues it).
+LOOP_NUDGE_LOG_AGENT = "controller"
+
+#: ``service`` key the loop selects for the API gatekeeper when routing a debater's
+#: model call — the gatekeeper falls back to ``default`` when unconfigured (§13).
+LOOP_MODEL_SERVICE = "anthropic"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -149,6 +162,10 @@ __all__ = [
     "DRIFT_REASON_PHRASE",
     "DRIFT_REASON_SIGNALS",
     "DRIFT_SIGNAL_CONFIDENCE",
+    "LOOP_MESSAGE_EVENT_TYPE",
+    "LOOP_MODEL_SERVICE",
+    "LOOP_NUDGE_EVENT_TYPE",
+    "LOOP_NUDGE_LOG_AGENT",
     "NUDGE_CORRECTION_TEMPLATE",
     "PROVIDER_KEY_ENV_VARS",
     "REBUTTAL_LEAD_IN",
