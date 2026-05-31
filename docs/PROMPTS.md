@@ -1971,5 +1971,30 @@ outcome/decision it produced.
   `margin-left`/`text-align: right` made the enforcement test fail as designed. The test now
   fails the build for any future CSS that reintroduces physical direction.
 
+### 11.6 — Nielsen heuristics (issue #78)
+
+Prompt: *"Apply Nielsen's heuristics: visible system status (round/streaming
+indicator), error prevention/recovery, consistency, minimalist design,
+recognition over recall."* A usability hardening pass over the UI built in
+11.1–11.5, turning Nielsen's 10 heuristics into concrete, serving-level testable
+affordances. Implemented: (#1 visibility of system status) an honest status line
+— `Connecting… / Debating — round N / Complete / Error` — driven by a single
+`setStatus(state, round)` source of truth, with a pulsing "live" dot
+(`prefers-reduced-motion` aware) toggled while connecting/debating; round is
+tracked from `message` events. (#5 error prevention) Start stays disabled until
+the topic is non-empty (`input` listener + initial sync) and the empty-topic
+guard returns before the POST. (#9 error recovery) network/non-2xx/SSE-drop
+failures show a friendly `"Something went wrong. Please try again."` message and
+an error status — never a raw stack; the SSE `error` handler distinguishes a
+clean `done` from a real drop. (#3 user control & freedom) a `New debate`
+secondary button (`resetDebate()`) clears panels/verdict/status so the user is
+never trapped. (#10 help) a minimalist help/about line above the form. (#2/#4/#6
+consistency & recognition) consistent Pro/Con/**Moderator**/Verdict terminology
+(controller panel renamed to "Moderator actions / nudges"). All new CSS is
+RTL-safe logical-properties-only, keeping `test_ui_rtl.py` green. Durable
+deliverable: `test_ui_usability.py` asserts each affordance at the serving level.
+TDD red→green: 9 of 11 tests failed first, then the HTML/JS/CSS changes made
+them pass.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

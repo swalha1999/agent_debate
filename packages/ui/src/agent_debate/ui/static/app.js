@@ -49,6 +49,40 @@ function setResult(el, message, isError) {
   el.classList.toggle("error", Boolean(isError));
 }
 
+// --- Visibility of system status (Nielsen #1, task 11.6) -----------------
+
+// Status states drive the status line + the streaming "live" dot. Single
+// source of truth — no inline status strings scattered through the code.
+const STATUS_LABELS = {
+  connecting: "Connecting…",
+  debating: "Debating",
+  complete: "Complete",
+  error: "Error",
+  idle: "",
+};
+
+// A friendly, human recovery message for any failure — never a raw stack.
+const ERROR_RECOVERY = "Something went wrong. Please try again.";
+
+// Update the always-visible status line + the "live" streaming indicator.
+// `state` is a STATUS_LABELS key; `round` (optional) is shown while debating.
+function setStatus(state, round) {
+  const box = document.getElementById("status");
+  const text = document.getElementById("status-text");
+  if (!box || !text) {
+    return;
+  }
+  let label = STATUS_LABELS[state] || "";
+  if (state === "debating" && round) {
+    label = `${label} — round ${round}`;
+  }
+  text.textContent = label;
+  box.hidden = state === "idle";
+  box.dataset.state = state;
+  // The "live" dot pulses only while connecting or actively debating.
+  box.classList.toggle("status--live", state === "connecting" || state === "debating");
+}
+
 async function startDebate(topic) {
   const response = await fetch(`${apiBaseUrl()}/debates`, {
     method: "POST",
@@ -230,14 +264,24 @@ function streamTranscript(runId) {
   }
   clearPanels();
 
+  setStatus("connecting");
+  let currentRound = 0;
+  let finished = false;
+
   const source = new EventSource(streamUrl(runId));
 
-  // PANEL 1 — debate transcript: Pro/Con message events.
+  // PANEL 1 — debate transcript: Pro/Con message events. Surfacing the current
+  // round keeps the system status honest + visible (Nielsen #1).
   source.addEventListener("message", (sseEvent) => {
-    appendMessage(JSON.parse(sseEvent.data));
+    const event = JSON.parse(sseEvent.data);
+    if (event.round) {
+      currentRound = event.round;
+    }
+    setStatus("debating", currentRound);
+    appendMessage(event);
   });
 
-  // PANEL 2 — controller actions / nudges.
+  // PANEL 2 — moderator actions / nudges.
   source.addEventListener("nudge", (sseEvent) => {
     appendControllerAction(JSON.parse(sseEvent.data));
   });
@@ -252,22 +296,75 @@ function streamTranscript(runId) {
   // On the `done` sentinel, close the stream then fetch the final result and
   // render the verdict view (verdict + token totals — task 11.4).
   source.addEventListener("done", () => {
+    finished = true;
+    setStatus("complete");
     source.close();
     showVerdict(runId);
   });
 
+  // Help users recover from errors (Nielsen #9): an SSE drop before `done`
+  // shows a friendly retry message + an error status, not a silent close.
   source.addEventListener("error", () => {
     source.close();
+    if (!finished) {
+      setStatus("error");
+      const result = document.getElementById("result");
+      if (result) {
+        setResult(result, `Lost the live connection. ${ERROR_RECOVERY}`, true);
+      }
+    }
   });
 
   return source;
+}
+
+// User control & freedom (Nielsen #3, task 11.6): clear the panels, verdict and
+// status so the user can start a fresh debate without reloading — never trapped.
+function resetDebate() {
+  clearPanels();
+  setStatus("idle");
+  const panels = document.getElementById("panels");
+  if (panels) {
+    panels.hidden = true;
+  }
+  const verdict = document.getElementById("verdict");
+  if (verdict) {
+    verdict.hidden = true;
+  }
+  const reset = document.getElementById("new-debate");
+  if (reset) {
+    reset.hidden = true;
+  }
+  const result = document.getElementById("result");
+  if (result) {
+    setResult(result, "", false);
+  }
+  const input = document.getElementById("topic");
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
 }
 
 function init() {
   const form = document.getElementById("debate-form");
   const input = document.getElementById("topic");
   const button = document.getElementById("start");
+  const reset = document.getElementById("new-debate");
   const result = document.getElementById("result");
+
+  // User control & freedom: the reset control starts a fresh debate.
+  if (reset) {
+    reset.addEventListener("click", resetDebate);
+  }
+
+  // Error prevention (Nielsen #5): keep Start disabled until the topic is
+  // non-empty, so the user can't submit an empty debate by mistake.
+  function syncStartEnabled() {
+    button.disabled = !input.value.trim();
+  }
+  input.addEventListener("input", syncStartEnabled);
+  syncStartEnabled();
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -277,15 +374,22 @@ function init() {
       return;
     }
     button.disabled = true;
+    setStatus("connecting");
     setResult(result, "Starting debate…", false);
+    if (reset) {
+      reset.hidden = false;
+    }
     try {
       const data = await startDebate(topic);
       setResult(result, `Debate started — run id: ${data.run_id}`, false);
       streamTranscript(data.run_id);
     } catch (err) {
-      setResult(result, `Could not start debate: ${err.message}`, true);
+      // Help users recover from errors (Nielsen #9): a friendly retry message,
+      // never the raw error/stack.
+      setStatus("error");
+      setResult(result, `Could not start the debate. ${ERROR_RECOVERY}`, true);
     } finally {
-      button.disabled = false;
+      syncStartEnabled();
     }
   });
 }
