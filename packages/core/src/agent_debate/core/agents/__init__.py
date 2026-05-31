@@ -36,6 +36,11 @@ The re-exports below are the subpackage's public surface.
 
 from __future__ import annotations
 
+from agent_debate.core.agents.anchoring import (
+    ANTI_CONCESSION_RULE,
+    anchor_turn,
+    build_side_anchor,
+)
 from agent_debate.core.agents.context import (
     CONTROLLER_IDENTITY,
     AgentContext,
@@ -57,6 +62,7 @@ from agent_debate.core.agents.debater import (
 from agent_debate.core.agents.prompts import DEBATER_SKILLS, build_debater_system_prompt
 
 __all__ = [
+    "ANTI_CONCESSION_RULE",
     "CONTROLLER_IDENTITY",
     "CONTROLLER_SKILLS",
     "DEBATER_SKILLS",
@@ -64,8 +70,10 @@ __all__ = [
     "DebateContexts",
     "Role",
     "Turn",
+    "anchor_turn",
     "build_controller_system_prompt",
     "build_debater_system_prompt",
+    "build_side_anchor",
     "create_con_debater",
     "create_controller",
     "create_debate_contexts",

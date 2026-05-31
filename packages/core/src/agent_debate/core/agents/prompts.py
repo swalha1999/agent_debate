@@ -52,13 +52,21 @@ SIDE_LABEL: dict[DebateSide, str] = {
 #: Opening line — states the assigned side. ``{label}`` is FOR/AGAINST.
 SIDE_LINE = "You are a debate agent arguing the {label} side of the topic."
 
-#: The rules block (anti-sycophancy §2). ``{max_words}`` is injected from config.
+#: The single source of truth for the anti-concession wording (anti-sycophancy
+#: §2 mechanism 2). Shared by the system-prompt rules AND the per-turn side anchor
+#: (:mod:`~agent_debate.core.agents.anchoring`) so the instruction is written once.
+ANTI_CONCESSION_RULE = (
+    "Do NOT concede merely because the opponent sounds convincing — "
+    "hold your assigned side and keep arguing it."
+)
+
+#: The rules block (anti-sycophancy §2). ``{max_words}`` is injected from config;
+#: the anti-concession line reuses :data:`ANTI_CONCESSION_RULE` (DRY).
 RULES_TEMPLATE = (
     "Rules:\n"
     "- Answer in at most {max_words} words.\n"
     "- You MUST rebut the opponent's argument directly; never ignore it.\n"
-    "- Do NOT concede merely because the opponent sounds convincing — "
-    "hold your assigned side and keep arguing it."
+    "- " + ANTI_CONCESSION_RULE
 )
 
 #: Heading introducing the explicit skill list.
@@ -99,4 +107,9 @@ def build_debater_system_prompt(
     return "\n\n".join([side_line, rules, skills_block])
 
 
-__all__ = ["DEBATER_SKILLS", "build_debater_system_prompt"]
+__all__ = [
+    "ANTI_CONCESSION_RULE",
+    "DEBATER_SKILLS",
+    "SIDE_LABEL",
+    "build_debater_system_prompt",
+]
