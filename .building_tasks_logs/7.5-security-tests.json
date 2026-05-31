@@ -7,11 +7,11 @@
   "tokens": {
     "input": null,
     "output": null,
-    "total": null
+    "total": 63432
   },
   "usage": {
-    "tool_uses": null,
-    "duration_ms": null,
-    "summary": "usage to be filled by main loop from harness report"
+    "tool_uses": 44,
+    "duration_ms": 285805,
+    "summary": "44 tool uses · 63.4k tokens · 4m 46s"
   }
 }
