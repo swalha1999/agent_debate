@@ -2308,5 +2308,30 @@ fails → restore → green.
   signature. Kept honest about the small **n = 4** sample. *Pattern: a chart is
   only useful once it is read back against the design hypothesis it tests.*
 
+### Parameter exploration (task 14.4, issue #100, 2026-05-31)
+
+- **Prompt intent:** run a small sweep over `MAX_WORDS`/`ROUNDS`/model and report
+  the effect on debate quality and cost.
+- **Cost-free, data + model-driven approach:** the user is cost-sensitive, so we
+  ran **no new paid debates**. Instead the exploration is grounded in three
+  transparent sources: (1) the **4 existing runs** (already span `ROUNDS` ∈
+  {3, 4, 10}, `MAX_WORDS` ∈ {120, 150}) via the 14.1 aggregation; (2) the
+  **validated PRD §10 cost model** — output ~linear in `ROUNDS × MAX_WORDS`,
+  input ~quadratic in `ROUNDS` (context replay) — scaled from the richest run;
+  (3) the **config price table** (`config/model_prices.json`) for the model lever.
+- **Reuse-not-reimplement:** new `agent_debate.core.research.params` builds on the
+  14.1 `RunSummary` rows and the Epic-15 `compute_cost`/`PriceTable` — it adds no
+  pricing logic of its own. Pure functions only: `empirical_points`,
+  `fit_token_model`, `project_grid` (rounds × max_words grid), `model_choice_table`
+  (same usage priced per model). No hard-coded prices/paths.
+- **Honesty about the method:** the empirical points are real but **n = 4 is
+  small**; the grid is an analytical *projection*, not a fresh paid sweep — a real
+  paid parameter sweep is a documented future extension. Concrete sanity check
+  (Sonnet debater): 10r/150w ≈ \$1.86, halving both knobs to 5r/120w ≈ \$0.58
+  (~the 4× saving §10 predicts); same usage costs ≈ \$0.62 on Haiku, ≈ \$9.3 on
+  Opus. *Pattern: when a paid sweep is too costly, a validated cost model + the
+  config price table can project the parameter surface from the runs you already
+  have — as long as you label the projection as such.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
