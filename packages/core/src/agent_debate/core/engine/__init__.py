@@ -16,6 +16,7 @@ from agent_debate.core.engine._call import (
     TurnFailedError,
     generate_turn_output,
 )
+from agent_debate.core.engine._usage import UsageBreakdown
 from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.loop import run_debate_loop
@@ -47,6 +48,7 @@ __all__ = [
     "TimeoutRunner",
     "ToolCallRecord",
     "TurnFailedError",
+    "UsageBreakdown",
     "emit_event",
     "generate_turn_output",
     "run_closing_discussion",

@@ -1501,5 +1501,30 @@ outcome/decision it produced.
   call tree so it stays backward compatible, and put the generator/thread wrapper
   on top of the sink rather than re-plumbing the engine.*
 
+## 6.7 — Token/cost accounting (`engine/_usage.py` + `result.py`)
+
+- **Prompt:** "Capture token usage per model call and aggregate into DebateResult
+  (per agent, per round, totals). Feed the LOG package. This supports Epic 15 cost
+  reporting."
+- **Outcome / pattern set:** TDD red-first (`tests/test_token_accounting.py`,
+  watched fail on the missing `UsageBreakdown` export). Confirmed the installed
+  pydantic-ai API: `result.usage` is now a **property** (not a method) returning a
+  `RunUsage` with `input_tokens`/`output_tokens`/`total_tokens`; `TestModel`
+  reports deterministic, **non-zero** usage (≈51 in / 4 out per call), so tests
+  assert real captured numbers — no `FunctionModel` stub needed. Per-call capture
+  already existed in `turn._record`; this task (a) factored the defensive
+  `getattr(output, "usage", …)` read into one `call_tokens(output)` helper reused
+  by `turn` AND `closing` (closing previously dropped usage), and (b) added a small
+  `UsageBreakdown` value + `usage_by_agent`/`usage_by_round` folds in a new
+  `engine/_usage.py` (split, not compress — `result.py` was already near the
+  150-line cap). `CostTotals.from_messages` now also fills `by_agent` /
+  `by_round`; grand totals + both breakdowns re-sum to the same total. **Prices are
+  deliberately left out** (`cost_usd` stays `0.0`): Epic 15's per-model price table
+  (task 15.1) consumes this typed, JSON-serialisable shape. *Pattern: when the SDK
+  result already exposes usage, capture it through ONE defensive reader at every
+  call site, store raw tokens on the message + the LOG event's `tokens` field, and
+  aggregate into typed per-slice breakdowns — leave pricing to the downstream epic
+  so token capture has no hard-coded values.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
