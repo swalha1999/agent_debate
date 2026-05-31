@@ -1,0 +1,17 @@
+{
+  "task_id": "6.9",
+  "title": "Engine tests (mocked LLM)",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write tests with a mocked LLM: a full debate yields 10+10 messages; a simulated timeout triggers cancel+retry; an exhausted-retry turn is handled; streamed events are ordered. No network.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 117816
+  },
+  "usage": {
+    "tool_uses": 78,
+    "duration_ms": 582662,
+    "summary": "78 tool uses · 117.8k tokens · 9m 43s"
+  }
+}
