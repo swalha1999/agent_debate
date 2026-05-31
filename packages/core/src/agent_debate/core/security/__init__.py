@@ -27,6 +27,10 @@ from agent_debate.core.security.constants import (
     NEUTRALISED_MARKER,
 )
 from agent_debate.core.security.normalise import normalise_text
+from agent_debate.core.security.result import (
+    SEARCH_SOURCE,
+    sanitize_search_result,
+)
 from agent_debate.core.security.sanitiser import (
     SecurityGatekeeper,
     sanitize_untrusted_text,
@@ -45,11 +49,13 @@ __all__ = [
     "MAX_QUERY_LEN",
     "MAX_TOPIC_LEN",
     "NEUTRALISED_MARKER",
+    "SEARCH_SOURCE",
     "InvalidInputError",
     "SearchQueryInput",
     "SecurityGatekeeper",
     "TopicInput",
     "normalise_text",
+    "sanitize_search_result",
     "sanitize_untrusted_text",
     "validate_search_query",
     "validate_topic",
