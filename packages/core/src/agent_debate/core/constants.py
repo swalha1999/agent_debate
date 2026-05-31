@@ -135,6 +135,35 @@ LOOP_NUDGE_LOG_AGENT = "controller"
 #: model call — the gatekeeper falls back to ``default`` when unconfigured (§13).
 LOOP_MODEL_SERVICE = "anthropic"
 
+#: Number of closing EXCHANGES in the closing-discussion phase (orchestration §3.3):
+#: each exchange is one closing statement per side (Pro then Con), so the phase
+#: produces ``CLOSING_EXCHANGES * 2`` turns. A single named constant — never an
+#: inline magic ``2`` at the call site (§7.2). One exchange = a closing statement
+#: from each debater, which is the §3.3 "freer exchange before judgement".
+CLOSING_EXCHANGES = 1
+
+#: ``round`` marker stamped on every closing-discussion turn/event. The closing
+#: phase runs AFTER the numbered rounds (1..rounds), so its turns are not tied to a
+#: debate round; ``0`` (the same marker setup uses) cleanly distinguishes them.
+CLOSING_ROUND = 0
+
+#: ``payload`` flag tagging a ``message`` event as a closing-discussion turn, so the
+#: freer closing exchange is distinguishable from the main loop in the run log (§3.3).
+CLOSING_MESSAGE_TAG = "closing"
+
+#: Lead line of the freer per-turn closing prompt (orchestration §3.3). Unlike the
+#: main loop's adversarial "Rebut it" relay, the closing framing invites a final
+#: statement — still on the debater's side, still word-limited, just less
+#: constrained. ``{label}`` is the FOR/AGAINST side label.
+CLOSING_PROMPT_LINE = (
+    "Closing statement: you have argued {label} the topic. Respond freely to the "
+    "other side and make your strongest final case — stay on your side."
+)
+
+#: Optional word-limit reminder appended to the closing prompt; ``{max_words}`` is
+#: supplied from config (Settings), never inlined.
+CLOSING_WORD_LIMIT_LINE = "Keep your closing within {max_words} words."
+
 #: ``service`` key the search layer selects for the API gatekeeper when routing a
 #: provider's live external request (task 13.6) — the gatekeeper falls back to
 #: ``default`` when unconfigured. A name selecting rate limits, not a limit value.
@@ -185,6 +214,11 @@ PROVIDER_KEY_ENV_VARS: dict[str, str] = {
 
 __all__ = [
     "CLAIM_SPLIT_DELIMITERS",
+    "CLOSING_EXCHANGES",
+    "CLOSING_MESSAGE_TAG",
+    "CLOSING_PROMPT_LINE",
+    "CLOSING_ROUND",
+    "CLOSING_WORD_LIMIT_LINE",
     "CONCLUSION_TEMPLATE",
     "DEFAULT_CONTROLLER_MODEL",
     "DEFAULT_DEBATER_MODEL",

@@ -1444,5 +1444,35 @@ outcome/decision it produced.
   return tool sets from small per-agent grouping factories so the cross-wiring is
   impossible by construction and the gatekeeper is threaded only where needed.*
 
+## 6.5 — Closing discussion phase (`engine/closing.py`)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/6.5-closing-discussion.json`.
+- **Context:** the 6.3 loop produced exactly `rounds*2` Pro/Con turns and left
+  `DebateResult.closing_discussion=[]` as a seam. Orchestration §3.3 calls for "a
+  freer exchange before judgement" after the main rounds and before the 6.8 verdict.
+- **Outcome / pattern set:** TDD red-first (`tests/test_closing_discussion.py`, 5
+  tests, watched fail on the missing `CLOSING_EXCHANGES` import). New
+  `engine/closing.py`: `run_closing_discussion(setup, config, *, gatekeeper,
+  run_id, runs_dir) -> list[DebateMessage]` runs `CLOSING_EXCHANGES` (a single
+  named constant = 1) exchanges, each one closing statement per side (Pro then
+  Con). The "freer" framing is a NON-adversarial per-turn prompt
+  (`CLOSING_PROMPT_LINE`: "respond freely … strongest final case — stay on your
+  side") injected as a plain `user` turn — instead of the main loop's strict
+  `relay_opponent_turn` ("…«…». Rebut it."). It REUSES the existing turn pieces:
+  `generate_turn_output` (so the model call still routes through the gatekeeper
+  under the 6.4 timeout+retry wrapper — no bypass) → `enforce_word_limit` (config
+  `max_words`) → `context.append_assistant`. Each closing turn logs a `message`
+  event tagged `payload["closing"]=True` with the `CLOSING_ROUND` (0) marker
+  (event_type stays within the LogEvent literal). Wired into `run_debate_loop`
+  after the rounds; closing turns land in `closing_discussion` (kept separate from
+  `transcript`) and feed `CostTotals.from_messages(transcript + closing)`. Updated
+  two existing loop tests honestly to scope to non-closing messages / account for
+  closing gatekeeper calls.
+  *Pattern: to add a phase that "reuses a turn but with different framing", keep
+  the gatekeeper-routed `generate_turn_output` + `enforce_word_limit` core and vary
+  only the injected `user` prompt; tag the new phase in the log payload + reuse a
+  documented round marker (0) rather than inventing a new `event_type`, and drive
+  the count from one named constant — never an inline `2`.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
