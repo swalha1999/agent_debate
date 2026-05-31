@@ -10,7 +10,9 @@ importing across the edge, proving the dependency resolves at runtime.
 
 from __future__ import annotations
 
+from agent_debate.core import _engine_public
 from agent_debate.core._agents_public import *  # noqa: F403 — re-export shim (PRD §3.2)
+from agent_debate.core._engine_public import *  # noqa: F403 — re-export shim (PRD §3.2)
 from agent_debate.core._version import __version__
 from agent_debate.core.gatekeeper import (
     DEFAULT_SERVICE,
@@ -160,4 +162,5 @@ __all__ = [
     "validate_required_keys",
     "validate_search_query",
     "validate_topic",
+    *_engine_public.__all__,  # Epic-6 engine surface (CostTotals, DebateConfig, …)
 ]
