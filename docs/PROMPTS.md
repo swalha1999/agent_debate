@@ -1757,5 +1757,25 @@ outcome/decision it produced.
   a failing or crashing engine exits non-zero with the error on stderr, and the human
   path also exits non-zero on failure.
 
+### CLI acceptance/consolidation tests (task 9.4, issue #67)
+- **Prompt:** "Write tests running the CLI against a mocked engine, asserting transcript
+  + verdict are printed and exit codes are correct."
+- **Context:** Epic-9 acceptance pass (mirrors prior epics' `*_acceptance` modules). The
+  per-task suites (9.1 `test_cli_run.py` / 9.2 `test_cli_live.py` / 9.3 `test_cli_json.py`)
+  already cover each behaviour and the CLI is ~99% covered; the value here is the
+  integrated acceptance composition, not net-new coverage.
+- **Outcome / pattern set:** New `packages/cli/tests/test_cli_acceptance.py` driving the
+  Typer app via `CliRunner` against MOCKED engines (stubs in a split
+  `_acceptance_helpers.py` to stay <150 code lines), NO network/key. It asserts the
+  headline Epic-9 story END-TO-END: `run "<topic>"` prints the full transcript (Pro **and**
+  Con messages) **and** the verdict in render order (the human/live path); `--json` prints
+  a parseable `DebateResult` blob; exit codes are correct (0 on success, non-zero on
+  failure for **both** the human and `--json` paths, with `--json` keeping stdout clean of
+  partial JSON); the `--rounds`/`--max-words`/`--model`/`--search-backend` flags reach the
+  engine config (read from a frozen `Settings`, no hard-coded numbers); and `--help` lists
+  the `run` command + every option. TDD red-first demonstrated on the net-new integrated
+  transcript assertion (dropping the streamed Con message turns it red, then restored).
+  Test-only change — no source fix needed; the CLI was already a thin, correct driver.
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
