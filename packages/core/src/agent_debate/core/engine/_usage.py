@@ -14,15 +14,12 @@ pricing is task 15.1's per-model price table (Epic 15), which consumes this shap
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:  # pragma: no cover — typing-only, avoids an import cycle.
     from agent_debate.core.engine.result import DebateMessage
-
-#: The hashable key a breakdown is grouped by (a side label or a round number).
-_K = TypeVar("_K", str, int)
 
 
 class UsageBreakdown(BaseModel):
@@ -76,11 +73,11 @@ def usage_by_round(messages: list[DebateMessage]) -> dict[int, UsageBreakdown]:
     return _group(messages, key=lambda m: m.round)
 
 
-def _group(
-    messages: list[DebateMessage], *, key: Callable[[DebateMessage], _K]
-) -> dict[_K, UsageBreakdown]:
+def _group[K: (str, int)](
+    messages: list[DebateMessage], *, key: Callable[[DebateMessage], K]
+) -> dict[K, UsageBreakdown]:
     """Bucket ``messages`` by ``key`` (preserving first-seen order) → breakdowns."""
-    buckets: dict[_K, list[DebateMessage]] = {}
+    buckets: dict[K, list[DebateMessage]] = {}
     for message in messages:
         buckets.setdefault(key(message), []).append(message)
     return {k: UsageBreakdown.from_messages(group) for k, group in buckets.items()}
