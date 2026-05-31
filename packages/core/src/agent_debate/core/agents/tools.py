@@ -81,7 +81,7 @@ def _analyze_opponent_tool(request: OpponentAnalysisRequest) -> OpponentAnalysis
 
 def _assess_drift_tool(request: DriftRequest) -> DriftAssessment:
     """Classify whether the ``request`` message shows the side's agent being captured."""
-    return assess_drift(request.message, request.side, request.signals)
+    return assess_drift(request.message, request.side, request.signals, request.opponent_message)
 
 
 def _nudge_tool(request: NudgeRequest) -> NudgeMessage:

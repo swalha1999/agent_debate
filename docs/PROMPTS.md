@@ -1444,6 +1444,37 @@ outcome/decision it produced.
   return tool sets from small per-agent grouping factories so the cross-wiring is
   impossible by construction and the gatekeeper is threaded only where needed.*
 
+### 8.1 — Deepen assess_drift logic (Epic 8, anti-sycophancy §3, issue #60)
+
+- **Prompt (verbatim):** see `.building_tasks_logs/8.1-assess-drift.json`.
+- **Context:** 4.4 shipped a light baseline `assess_drift` (caller signals force
+  capture, else a flat concession-phrase scan at fixed 0.6 confidence). 8.1 deepens
+  the LOGIC to robustly classify the four §3 drift signals while keeping the public
+  `assess_drift` / `DriftAssessment` contract STABLE so 4.4's callers + the engine
+  drift tests stay green.
+- **Outcome / pattern set:** TDD red-first (`tests/test_assess_drift.py`, 13 tests,
+  watched fail on the missing `DRIFT_CAPTURE_THRESHOLD`). New deterministic detector
+  `skills/_drift_logic.py` (`detect_drift(message, opponent_message=None) ->
+  (confidence, labels)`) fires four named §3 signals — **concession**, **agreement
+  / framing-adoption**, **hedging**, and **restating-without-rebuttal** (token
+  overlap ≥ `DRIFT_OVERLAP_THRESHOLD` with the opponent AND no rebuttal marker). A
+  transparent **additive weighted** confidence (named per-signal weights, clamped to
+  `[0,1]`); `captured = confidence >= DRIFT_CAPTURE_THRESHOLD`; reason names the
+  fired signal(s). All phrase sets / weights / threshold / labels are named
+  constants in a dedicated `skills/_drift_constants.py` (split out of
+  `constants.py`, which would otherwise exceed the 150-line cap; the lexicon now
+  sits next to its logic). `DriftRequest` gained an optional `opponent_message`
+  (back-compat default `None`) and `assess_drift` a 4th optional `opponent_message`
+  param — the first three positional params (`message, side, signals`) are unchanged
+  so `tools.py`'s positional call still works (now forwards opponent context).
+  PURE/no-network heuristic, so the API gatekeeper (Epic 13) is N/A. Gates green:
+  ruff/format/mypy clean, 602 passed, 100% coverage, line-limit + secret-scan clean.
+  *Pattern: deepen a heuristic behind a stable public contract by extracting the
+  scoring into its own module with a `(confidence, labels)` return and ALL tuning as
+  named constants in a sibling `_constants` module — extend the input model with a
+  back-compat-default optional field rather than reordering params, so existing
+  positional callers and tests keep passing.*
+
 ## 6.5 — Closing discussion phase (`engine/closing.py`)
 
 - **Prompt (verbatim):** see `.building_tasks_logs/6.5-closing-discussion.json`.

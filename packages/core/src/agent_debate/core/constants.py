@@ -48,39 +48,20 @@ CONCLUSION_TEMPLATE = "Therefore, the {side} side maintains that {claim}"
 #: so the parsing rule lives in one place (guideline §7.2).
 CLAIM_SPLIT_DELIMITERS = ".!?"
 
-#: Concession/agreement phrases the deterministic baseline of ``assess_drift``
-#: scans the message text for (lower-cased substring match). Their presence is a
-#: drift signal: the agent is adopting the opponent's conclusion or conceding the
-#: core claim rather than rebutting (anti-sycophancy §3). Kept here, not inlined,
-#: so Epic 8 (8.1) can extend the detector from one source of truth.
-DRIFT_CONCESSION_PHRASES: tuple[str, ...] = (
-    "you're right",
-    "you are right",
-    "i agree",
-    "i concede",
-    "i was wrong",
-    "fair point",
-    "good point",
-    "i accept that",
-    "the opponent has the stronger",
-    "i can't argue with that",
-)
-
 #: Confidence assigned by ``assess_drift`` when the controller LLM supplies explicit
 #: drift ``signals`` (a strong, caller-asserted indication) — anti-sycophancy §3.
 DRIFT_SIGNAL_CONFIDENCE = 0.9
 
-#: Confidence assigned when the deterministic concession-phrase heuristic fires.
-DRIFT_PHRASE_CONFIDENCE = 0.6
-
-#: Confidence assigned when no drift signal fires (the agent looks on-side). Low,
-#: because the baseline is intentionally shallow until Epic 8 (8.1) deepens it.
+#: Confidence reported when no drift signal fires (the agent looks on-side). Low and
+#: well below :data:`DRIFT_CAPTURE_THRESHOLD`, so a clean message is never captured.
 DRIFT_CLEAR_CONFIDENCE = 0.1
 
-#: Reason text emitted by ``assess_drift`` for each outcome (single source of truth).
+#: Reason text emitted by ``assess_drift`` when the controller LLM supplied explicit
+#: ``signals`` (single source of truth for the literal). The deepened detector's
+#: phrase sets, weights, capture threshold and per-signal reason templates live in
+#: :mod:`agent_debate.core.skills._drift_constants` (next to the detector logic),
+#: split out to keep this module under the 150-line guideline (§3.2).
 DRIFT_REASON_SIGNALS = "Controller flagged drift signals: {signals}."
-DRIFT_REASON_PHRASE = "Message contains a concession/agreement phrase: {phrase!r}."
-DRIFT_REASON_CLEAR = "No concession or drift signal detected; agent appears on-side."
 
 #: Template for the private correction text a ``nudge`` carries (anti-sycophancy §4).
 #: ``{side}`` is the captured agent's side and ``{reason}`` the drift reason. The
@@ -228,10 +209,6 @@ __all__ = [
     "DEFAULT_SEARCH_BACKEND",
     "DEFAULT_TURN_TIMEOUT_S",
     "DRIFT_CLEAR_CONFIDENCE",
-    "DRIFT_CONCESSION_PHRASES",
-    "DRIFT_PHRASE_CONFIDENCE",
-    "DRIFT_REASON_CLEAR",
-    "DRIFT_REASON_PHRASE",
     "DRIFT_REASON_SIGNALS",
     "DRIFT_SIGNAL_CONFIDENCE",
     "LOOP_MESSAGE_EVENT_TYPE",
