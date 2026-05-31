@@ -10,6 +10,9 @@
   --accent: #38bdf8;
   --accent-text: #06283d;
   --radius: 0.625rem;
+  /* Distinct Pro vs Con palettes for the live transcript (task 11.2). */
+  --pro: #34d399;
+  --con: #f87171;
 }
 
 * {
@@ -28,7 +31,7 @@ body {
 }
 
 .page {
-  inline-size: min(32rem, 92vw);
+  inline-size: min(56rem, 92vw);
   padding: 2rem;
   background: var(--panel);
   border-radius: var(--radius);
@@ -102,4 +105,86 @@ button:disabled {
 
 .result.error {
   color: #fca5a5;
+}
+
+/* Live transcript (task 11.2). Two side-by-side columns make Pro vs Con read
+   distinctly; RTL-safe — logical properties only (margin/padding-inline,
+   text-align: start, border-inline-start), never left/right, so it mirrors
+   under dir="rtl" (task 11.5). */
+.transcript {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-block-start: 1.5rem;
+}
+
+.transcript[hidden] {
+  display: none;
+}
+
+.transcript__col {
+  min-inline-size: 0;
+}
+
+.transcript__heading {
+  margin-block: 0 0.5rem;
+  font-size: 1.1rem;
+  text-align: start;
+}
+
+.transcript__col--pro .transcript__heading {
+  color: var(--pro);
+}
+
+.transcript__col--con .transcript__heading {
+  color: var(--con);
+}
+
+.transcript__turns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.turn {
+  padding-block: 0.6rem;
+  padding-inline: 0.85rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border-inline-start: 4px solid var(--muted);
+  text-align: start;
+}
+
+.turn--pro {
+  border-inline-start-color: var(--pro);
+}
+
+.turn--con {
+  border-inline-start-color: var(--con);
+}
+
+.turn__meta {
+  margin-block: 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.turn--pro .turn__meta {
+  color: var(--pro);
+}
+
+.turn--con .turn__meta {
+  color: var(--con);
+}
+
+.turn__body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
