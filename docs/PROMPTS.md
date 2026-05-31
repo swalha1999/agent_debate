@@ -1353,5 +1353,31 @@ outcome/decision it produced.
   values; caps from `DebateConfig`). `run_debate_turn` gained `sleep_fn`/`timeout_runner` defaults
   (backward-compatible — existing `test_debate_loop.py` stayed green).
 
+### 13.6 — Route ALL calls through the gatekeeper + no-bypass test (Epic 13, api-gatekeeper §2/§6, issue #95)
+
+- **Prompt (verbatim):** "Route every external call (Pydantic AI model calls and SearchProvider
+  calls) through ApiGatekeeper. Add a test asserting there is no bypass path."
+- **Context:** MODEL calls already routed via `gatekeeper.execute(service="anthropic")` (engine
+  `turn.py`/`_call.py`, tasks 6.3/6.4); SEARCH calls (`duckduckgo.py`'s `DDGS().text()` in the
+  `_fetch` seam) were not yet gatekeeper-routed. The sub-PRD §6 acceptance is "no bypass exists
+  (test-enforced)".
+- **Outcome / pattern set:** New `search/gatekept.py` — `GatekeptSearchProvider`, a transparent
+  decorator over any `SearchProvider` (analogous to `ResilientSearchProvider`) that routes the
+  inner `search` through `gatekeeper.execute(self._inner.search, query, max_results=...,
+  service=SEARCH_SERVICE)` instead of calling it directly. The factory
+  `create_search_provider(settings, *, gatekeeper=None)` wraps the active provider in it when a
+  gatekeeper is supplied (backward-compatible default keeps the bare provider, so existing
+  search/registry tests stay green). New `constants.SEARCH_SERVICE = "search"` (named, mirrors
+  `LOOP_MODEL_SERVICE`; limits read from `config/rate_limits.json`, 0 hard-coded). `name` is a
+  plain settable attribute (`self.name = inner.name`) so the structural `SearchProvider` protocol
+  is satisfied when returned typed. **No-bypass test (`test_no_bypass.py`) — two complementary
+  checks:** (a) *behavioral* — a spy gatekeeper asserts the gatekept provider invokes
+  `execute(service="search")` (model routing already proven in `test_turn_timeout.py`); (b)
+  *structural/static* — a maintainable source grep over `packages/*/src` (comments + string
+  literals stripped via `tokenize`, so docstring prose never false-positives) asserts the only
+  direct external-call constructs (`DDGS(`, `.run_sync(`, `.run_async(`) live inside a named
+  `_ALLOWLISTED_FILES` constant; a NEW direct call elsewhere fails CI, catching a future bypass. A
+  guard test asserts the scan globbed real files (no vacuous pass).
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

@@ -31,9 +31,11 @@ from typing import TYPE_CHECKING, TypeVar
 
 from agent_debate.core.search.base import SearchProvider
 from agent_debate.core.search.errors import UnknownSearchBackendError
+from agent_debate.core.search.gatekept import GatekeptSearchProvider
 from agent_debate.log import get_logger
 
 if TYPE_CHECKING:
+    from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
     from agent_debate.core.settings import Settings
 
 _LOG = get_logger("search.registry")
@@ -79,7 +81,9 @@ def available_search_backends() -> list[str]:
     return sorted(_REGISTRY)
 
 
-def create_search_provider(settings: Settings) -> SearchProvider:
+def create_search_provider(
+    settings: Settings, *, gatekeeper: Gatekeeper | None = None
+) -> SearchProvider:
     """Construct the active :class:`SearchProvider` from ``settings``.
 
     The active backend is ``settings.search_backend`` (config, never hard-coded);
@@ -87,12 +91,20 @@ def create_search_provider(settings: Settings) -> SearchProvider:
     accepts an ``api_key`` parameter receive ``settings.search_api_key``; keyless
     providers are constructed with no arguments. No network call is made here.
 
+    When a ``gatekeeper`` is supplied the active provider is wrapped in a
+    :class:`~agent_debate.core.search.gatekept.GatekeptSearchProvider` so its live
+    external call routes through :meth:`ApiGatekeeper.execute` (task 13.6 — no
+    bypass). Omitting it returns the bare provider (backward-compatible default).
+
     Args:
         settings: The runtime :class:`Settings` carrying ``SEARCH_BACKEND`` and
             the optional ``SEARCH_API_KEY``.
+        gatekeeper: The API gatekeeper to route the provider's external call
+            through; when ``None`` the bare provider is returned unchanged.
 
     Returns:
-        A freshly constructed provider instance for the active backend.
+        A freshly constructed provider instance for the active backend, wrapped in
+        the gatekeeper router when one is supplied.
 
     Raises:
         UnknownSearchBackendError: If ``search_backend`` is not registered; the
@@ -106,7 +118,9 @@ def create_search_provider(settings: Settings) -> SearchProvider:
 
     provider = _construct(provider_cls, settings.search_api_key)
     _LOG.debug("search_provider_created", backend=backend, provider=provider_cls.__name__)
-    return provider
+    if gatekeeper is None:
+        return provider
+    return GatekeptSearchProvider(provider, gatekeeper=gatekeeper)
 
 
 def _construct(provider_cls: type[SearchProvider], api_key: str | None) -> SearchProvider:
