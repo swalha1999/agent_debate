@@ -16,11 +16,12 @@ The project ships five surfaces — **SDK** (the `core` engine), **CLI**, **API*
 namespace packages under `packages/`. For the full product vision, goals, and
 architecture, see [`docs/PRD.md`](docs/PRD.md).
 
-> **Project status:** scaffolding (Epic 0). The repository tooling — workspace,
-> CI quality gates, config, and logging skeleton — is in place. The debate
-> engine and the CLI/API/UI/SDK *runtime* surfaces are built in later
-> milestones (see [`docs/TASKS.md`](docs/TASKS.md)). Commands marked
-> **(planned)** below are not available yet.
+> **Project status:** all five surfaces are built and runnable. The debate
+> engine (SDK), CLI, API, UI, and LOG packages are implemented over the `uv`
+> workspace, with the API gatekeeper, search plug-ins, anti-sycophancy logic,
+> and cost accounting in place (see [`docs/TASKS.md`](docs/TASKS.md) for the
+> per-epic status). Each surface has its own README — linked from the
+> [Quickstart](#usage--quickstart) below.
 
 ## System requirements
 
@@ -65,9 +66,64 @@ uv run pytest        # the test suite should pass
 
 ## Usage / Quickstart
 
-### Available now (Epic 0 tooling)
+### Run a debate
 
-These commands work against the current scaffold:
+All five surfaces are runnable. A real run needs `ANTHROPIC_API_KEY` in your
+`.env` (see [Installation](#installation)); every external model/search call is
+routed through the API gatekeeper. Each surface has a dedicated README with its
+full reference — links below.
+
+**CLI** ([`packages/cli`](packages/cli/README.md)) — run a debate from the
+terminal and watch the transcript stream live:
+
+```bash
+uv run agent-debate run "Should cities ban cars downtown?" --rounds 10 --max-words 150
+uv run agent-debate run "Is nuclear power worth the risk?" --json   # machine-readable
+```
+
+**SDK** ([`packages/core`](packages/core/README.md)) — drive a debate
+programmatically (the canonical import is `agent_debate.core`):
+
+```python
+from agent_debate.core import DebateEngine
+
+engine = DebateEngine()                       # config comes from .env / Settings
+result = engine.run("Should cities ban cars downtown?")
+print(result.verdict)                         # winner + summary + agree/disagree
+for event in engine.stream("Should cities ban cars downtown?"):
+    print(event)                              # live events, then the final result
+```
+
+**API** ([`packages/api`](packages/api/README.md)) — FastAPI service; start it,
+then POST a topic and stream events:
+
+```bash
+uv run agent-debate-api                        # serves http://localhost:8000 (docs at /docs)
+# POST /debates {"topic": "..."} -> {run_id}; GET /debates/{id}; GET /debates/{id}/stream (SSE)
+```
+
+**UI** ([`packages/ui`](packages/ui/README.md)) — web frontend over the API;
+enter a topic and watch the Pro/Con transcript, moderator nudges, and verdict:
+
+```bash
+uv run agent-debate-ui                         # serves http://localhost:5173 (needs the API running)
+```
+
+**LOG** ([`packages/log`](packages/log/README.md)) — structured logs (JSON +
+pretty console) accompany every run, one JSONL file per `run_id`:
+
+```python
+from agent_debate.log import get_logger
+get_logger("my-run").info("debate_run_started", topic="...")
+```
+
+A typical workflow: pick a topic → the controller assigns sides → 10 Pro/Con
+rounds with web-search-grounded rebuttals → a closing discussion → the controller
+renders a summary, an agree/disagree result, and who won.
+
+### Repo quality gates
+
+These work without any API key — run them before opening a PR:
 
 ```bash
 uv run pytest --cov          # run the test suite with coverage (>= 85% gate)
@@ -79,38 +135,6 @@ uv run mypy                  # static type check
 uv run python scripts/check_line_limit.py   # no code file > 150 lines
 uv run python scripts/secret_scan.py        # fail if a secret is committed
 ```
-
-### Running a debate (planned)
-
-Once the engine lands (later milestones), the five surfaces are intended to work
-as follows. These are the *target* interfaces from [`docs/PRD.md`](docs/PRD.md)
-§6 and are **not runnable yet**:
-
-```bash
-# CLI (planned)
-uv run agent-debate run "Should cities ban cars downtown?" \
-    --rounds 10 --max-words 150
-```
-
-```python
-# SDK (planned) — the engine is importable and drives a debate programmatically
-from agent_debate import DebateEngine
-
-result = DebateEngine.from_env().run("Should cities ban cars downtown?")
-print(result.verdict)
-```
-
-- **API (planned):** `POST /debates` to start, `GET /debates/{id}` for the
-  result, `GET /debates/{id}/stream` (SSE) for live events — served by FastAPI.
-- **UI (planned):** a web page where you enter a topic and watch the Pro/Con
-  transcript stream round by round, with controller nudges inline and the final
-  verdict.
-- **LOG:** structured logs (JSON + pretty console) accompany every run, one
-  JSONL file per `run_id`.
-
-A typical workflow will be: pick a topic → the controller assigns sides → 10
-Pro/Con rounds with web-search-grounded rebuttals → a closing discussion → the
-controller renders a summary, an agree/disagree result, and who won.
 
 ## Configuration
 
@@ -147,6 +171,7 @@ env vars — they live in versioned `config/rate_limits.json` (PRD §5.6).
 
 | Document | What it covers |
 |---|---|
+| Per-package READMEs | One per surface: [`core` (SDK)](packages/core/README.md), [`cli`](packages/cli/README.md), [`api`](packages/api/README.md), [`ui`](packages/ui/README.md), [`log`](packages/log/README.md) — install/run/import, public API, config, and a minimal example for each. |
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirements — vision, goals, architecture, surfaces, acceptance criteria. |
 | [`docs/UI.md`](docs/UI.md) | The web UI — annotated layout diagrams + UX walkthrough (understand the interface without running it). |
 | [`docs/TASKS.md`](docs/TASKS.md) | The full task breakdown by epic, with status and dependencies. |

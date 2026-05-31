@@ -207,7 +207,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 > Goal: meet the lecturer guidelines + the Improvements checklist.
 
 - [x] **12.1** Tests for all PRD §11 acceptance criteria; coverage ≥85% on the engine + both gatekeepers. · P1 · Owner: __
-- [ ] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
+- [x] **12.2** Per-package READMEs + root README quickstart for all five surfaces. · P1 · dep: 9, 10, 11
 - [ ] **12.3** Cost report: see Epic 15 (cost-breakdown table + budget). · P1 · dep: 15.2
 - [ ] **12.4** Architecture/decisions doc (or expand PRD §5) for a new team member. · P1
 - [ ] **12.4a** Docstrings on all public modules/classes/functions; meaningful comments where logic is non-obvious (guideline §3.3). · P1

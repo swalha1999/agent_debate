@@ -1,0 +1,15 @@
+{
+  "task_id": "12.2",
+  "title": "Per-package + root READMEs",
+  "date": "2026-05-31",
+  "model": "claude-opus-4-8",
+  "prompt": "Write a README per package and ensure the root README quickstart covers SDK, CLI, API, UI, LOG.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 78000
+  },
+  "usage": {
+    "summary": "Added a README.md per package (core/cli/api/ui/log) documenting each surface for a new developer — what it is, install/run/import, public API/commands/endpoints, config it reads, and a minimal example tied to the ACTUAL interfaces (DebateEngine SDK facade, the agent-debate Typer command, the POST/GET /debates FastAPI routes, the agent-debate-ui app, the LOG get_logger/log_event helpers). Updated the root README: corrected the now-stale '(planned)' project-status note and Quickstart to reflect that all five surfaces are built and runnable, cross-linked the per-package READMEs, and kept the existing tests/test_readme.py contract green (System requirements / Install / Quickstart / Troubleshooting / docs links). Docs-only change, no Python added; all gates green and coverage held >=85%."
+  }
+}
