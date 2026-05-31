@@ -65,10 +65,13 @@ DRIFT_REASON_SIGNALS = "Controller flagged drift signals: {signals}."
 
 #: Template for the private correction text a ``nudge`` carries (anti-sycophancy §4).
 #: ``{side}`` is the captured agent's side and ``{reason}`` the drift reason. The
-#: nudge re-anchors the side and is logged + surfaced but never a debate turn.
+#: correction is a clear, actionable PRIVATE moderator instruction delivered into the
+#: captured agent's own context; it re-anchors the side and is logged + surfaced but
+#: never a debate turn. ``{side}``/``{reason}`` are named so the literal is defined once.
 NUDGE_CORRECTION_TEMPLATE = (
-    "Private correction for the {side} side: {reason} "
-    "Hold your assigned side and rebut the opponent — do not concede."
+    "Private note from the moderator: you appear to be drifting toward your "
+    "opponent's position ({reason}) Re-commit to your assigned {side} side and "
+    "rebut the opponent's argument — do not concede."
 )
 
 #: The outcome label ``render_verdict`` uses when neither side outscores the other
