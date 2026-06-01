@@ -21,14 +21,21 @@ two fixes in #202 — inject the debate topic into the debater context — and #
 actually deliver the agent system prompt to the model on the `message_history`
 path). The debaters now argue the stated motion and rebut each other's actual words.
 
-| Run id | Kind | Topic | Rounds | Winner |
-| --- | --- | --- | --- | --- |
-| `policy-congestion-pricing` | policy | Should governments impose congestion pricing to enter city centers? | 4 | Pro |
-| `techethics-ai-art` | tech-ethics | Should AI-generated art be eligible for copyright protection? | 3 | Con |
-| `lifestyle-morning-routine` | lifestyle | Is waking up at 5am the key to a productive life? | 3 | tie |
-| `capitalism` | economics | Capitalism is, on balance, a force for good in society. | 10 | Pro |
+| Topic | Kind | Rounds | Winner | Total tokens | Cost (USD) | Read it |
+| --- | --- | --- | --- | --- | --- | --- |
+| Should governments impose congestion pricing to enter city centers? | policy | 4 | Pro | 107,744 | $0.419 | [`policy-congestion-pricing.md`](policy-congestion-pricing.md) |
+| Should AI-generated art be eligible for copyright protection? | tech-ethics | 3 | Con | 67,173 | $0.265 | [`techethics-ai-art.md`](techethics-ai-art.md) |
+| Is waking up at 5am the key to a productive life? | lifestyle | 3 | tie | 76,344 | $0.296 | [`lifestyle-morning-routine.md`](lifestyle-morning-routine.md) |
+| Capitalism is, on balance, a force for good in society. | economics | 10 | Pro | 343,521 | $1.261 | [`capitalism.md`](capitalism.md) |
 
-(A fuller index with links is task 12.6.)
+Each **Read it** link opens the human-readable transcript + verdict + cost table; the
+matching machine-readable event log sits alongside it as `<run_id>.jsonl`. The
+**Total tokens** / **Cost** columns are the actual billed figures reported in each
+run's `## Cost & tokens` section. For a tidy one-row-per-run dataset across all four
+runs (drift/nudge counts, latency, est. cost) see
+[`dataset/runs_summary.csv`](dataset/runs_summary.csv) (documented in
+[`dataset/README.md`](dataset/README.md)); the PRD §9 analysis of these runs lives in
+[`../notebooks/analysis.ipynb`](../notebooks/analysis.ipynb).
 
 The `capitalism` run is a **full 10-round** debate at the **default 150-word** message
 limit — a complete exercise of the system's PRD default (PRD §2, §7). The original
