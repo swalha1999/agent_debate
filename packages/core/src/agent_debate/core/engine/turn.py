@@ -6,11 +6,12 @@ calls for both sides, kept here so the loop file stays small (split, not compres
 
 A turn:
 
-1. **Injects** the per-turn side anchor and — from the moment an opponent message
-   exists — the sanitised adversarial relay of the opponent's latest message into
-   the debater's OWN context (:func:`~agent_debate.core.agents.relay_opponent_turn`
-   / :func:`~agent_debate.core.agents.anchor_turn`); the opponent must be rebutted,
-   never echoed (anti-sycophancy §2).
+1. **Injects** the per-turn side anchor and — once the controller has forwarded the
+   opponent's latest message (§8.3.7 child → father → child, see
+   :func:`~agent_debate.core.engine.forward.forward_to_opponent`) — that already-framed,
+   sanitised adversarial relay into the debater's OWN context (folded into one user
+   turn via :func:`~agent_debate.core.agents.anchor_turn`); the opponent must be
+   rebutted, never echoed (anti-sycophancy §2).
 2. **Generates** the reply by routing ``agent.run_sync`` through the API gatekeeper
    (Epic 13) — EVERY model call passes through :meth:`Gatekeeper.execute`. The
    timeout + retry wrapping is task 6.4; this is the clean seam where it slots in.
@@ -30,7 +31,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from agent_debate.core import constants
-from agent_debate.core.agents import anchor_turn, enforce_word_limit, relay_opponent_turn
+from agent_debate.core.agents import anchor_turn, enforce_word_limit
 from agent_debate.core.agents.context import AgentContext
 from agent_debate.core.engine._call import TimeoutRunner, TurnFailedError, generate_turn_output
 from agent_debate.core.engine._usage import call_tokens
@@ -52,17 +53,19 @@ def run_debate_turn(
     gatekeeper: Gatekeeper,
     run_id: str,
     runs_dir: Path | str,
-    opponent_message: str | None,
+    framed_opponent_message: str | None,
     sleep_fn: Callable[[float], None] = time.sleep,
     timeout_runner: TimeoutRunner | None = None,
     sink: EventSink | None = None,
 ) -> DebateMessage:
     """Run one debater turn for ``side`` and return its :class:`DebateMessage` (§3.2).
 
-    Injects the side anchor (and, when ``opponent_message`` is given, the framed
-    adversarial relay of it so the debater rebuts rather than echoes), generates
-    the reply via the gatekeeper, enforces ``config.max_words`` (trim + log), then
-    appends the enforced text to ``context`` and logs one ``message`` event.
+    Injects the side anchor (and, when ``framed_opponent_message`` is given, the
+    already-framed adversarial relay the CONTROLLER forwarded — see
+    :func:`~agent_debate.core.engine.forward.forward_to_opponent` — so the debater
+    rebuts rather than echoes), generates the reply via the gatekeeper, enforces
+    ``config.max_words`` (trim + log), then appends the enforced text to ``context``
+    and logs one ``message`` event.
 
     Args:
         agent: The debater agent (built on an injected model in tests).
@@ -73,8 +76,10 @@ def run_debate_turn(
         gatekeeper: The API gatekeeper every model call routes through (Epic 13).
         run_id: The run id stamped on every emitted event.
         runs_dir: Directory holding the per-run JSONL sink.
-        opponent_message: The opponent's latest message to rebut, or ``None`` on
-            the very first turn (no opponent has spoken yet).
+        framed_opponent_message: The opponent's latest message ALREADY framed +
+            forwarded by the controller (§8.3.7), or ``None`` on the very first turn
+            (no opponent has spoken yet). The debater never sees the raw turn —
+            only this controller-forwarded frame.
         sleep_fn: Sleep primitive used between retries; injectable so tests can
             run without real delays (defaults to :func:`time.sleep`).
         timeout_runner: Optional injected timeout+retry runner (task 6.4);
@@ -84,7 +89,7 @@ def run_debate_turn(
     Returns:
         The enforced, word-limited :class:`DebateMessage` for the turn.
     """
-    _inject_prompt(context, side, config, run_id, opponent_message)
+    _inject_prompt(context, side, config, framed_opponent_message)
     start = time.monotonic()
     # The anchor/relay was just appended as the trailing ``user`` turn, so the
     # whole context history is the run input (its last turn is the live prompt).
@@ -143,16 +148,17 @@ def _inject_prompt(
     context: AgentContext,
     side: DebateSide,
     config: DebateConfig,
-    run_id: str,
-    opponent_message: str | None,
+    framed_opponent_message: str | None,
 ) -> None:
-    """Inject the side anchor (plus the framed opponent relay when one exists)."""
-    if opponent_message is None:
-        anchor_turn(context, side, max_words=config.max_words)
-    else:
-        relay_opponent_turn(
-            context, side, opponent_message, max_words=config.max_words, run_id=run_id
-        )
+    """Inject the side anchor, folding in the controller-forwarded frame when present.
+
+    ``framed_opponent_message`` is the already-sanitised, already-adversarially-framed
+    relay the controller forwarded (§8.3.7) — it is folded into the SAME ``user`` turn
+    as the side anchor (via :func:`~agent_debate.core.agents.anchor_turn`), never
+    re-framed here. Only ``context`` (the debater's OWN history) is mutated, so 5.4
+    isolation holds.
+    """
+    anchor_turn(context, side, max_words=config.max_words, opponent_message=framed_opponent_message)
 
 
 def _record(  # noqa: PLR0913 — explicit per-record deps (no shared mutable state).

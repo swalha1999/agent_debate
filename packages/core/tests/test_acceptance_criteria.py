@@ -161,7 +161,7 @@ def test_c5_timed_out_turn_is_killed_then_retried(tmp_path: Path) -> None:
         gatekeeper=gatekeeper("c5", tmp_path),
         run_id="c5",
         runs_dir=tmp_path,
-        opponent_message=None,
+        framed_opponent_message=None,
         sleep_fn=delays.append,
         timeout_runner=hang_n_times(1),
     )

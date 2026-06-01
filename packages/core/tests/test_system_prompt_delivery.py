@@ -60,7 +60,7 @@ def _run_pro_turn(rounds: int, runs_dir: Path, captured: list[list[ModelMessage]
             gatekeeper=keeper,
             run_id="sp-run",
             runs_dir=runs_dir,
-            opponent_message=opponent,
+            framed_opponent_message=opponent,
         )
         opponent = "Con says no."
 
@@ -104,7 +104,7 @@ def test_con_side_label_is_isolated_to_con(tmp_path: Path) -> None:
         gatekeeper=gatekeeper("sp-con", tmp_path),
         run_id="sp-con",
         runs_dir=tmp_path,
-        opponent_message="Pro says yes.",
+        framed_opponent_message="Pro says yes.",
     )
     (texts,) = [_system_texts(msgs) for msgs in captured]
     assert _AGAINST in texts[0]

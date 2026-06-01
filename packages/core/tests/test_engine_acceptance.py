@@ -124,7 +124,7 @@ def test_simulated_timeout_triggers_cancel_then_retry(tmp_path: Path) -> None:
         gatekeeper=gatekeeper("a3", runs_dir),
         run_id="a3",
         runs_dir=runs_dir,
-        opponent_message=None,
+        framed_opponent_message=None,
         sleep_fn=delays.append,  # injected: no real sleeping
         timeout_runner=hang_n_times(1),  # injected: no real threads/timeout
     )
@@ -153,7 +153,7 @@ def test_exhausted_retry_turn_is_handled_gracefully(tmp_path: Path) -> None:
         gatekeeper=gatekeeper("a4", runs_dir),
         run_id="a4",
         runs_dir=runs_dir,
-        opponent_message=None,
+        framed_opponent_message=None,
         sleep_fn=delays.append,
         timeout_runner=hang_n_times(99),  # always times out -> budget exhausted
     )
