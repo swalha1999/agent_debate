@@ -406,7 +406,7 @@ visualizations (in `notebooks/` and `runs/`) covering:
 - [x] Dedicated **sub-PRDs** exist for orchestration, anti-sycophancy, the gatekeeper, and the search plug-in.
 - [x] **Research notebook + visualizations** produced (who-wins, drift frequency, tokens/latency).
 - [x] **Cost-breakdown table** (tokens × price → total) reported; budget cap + alert work.
-- [x] **Sample debate runs are committed to the repo** (`runs/`) so the teacher can review real runs (transcript + verdict + token/cost). See TASKS.md §12.5.
+- [x] **A sample debate run is committed to the repo** (`runs/`) so the teacher can review a real run (transcript + verdict + token/cost). The repo keeps **one full 10-round `capitalism` run**; three earlier reduced-round sample runs were removed (see `runs/README.md`). See TASKS.md §12.5.
 
 ## 12. Open questions / future work
 
@@ -418,10 +418,10 @@ visualizations (in `notebooks/` and `runs/`) covering:
 ## 13. Milestones
 
 All five milestones are **realized** (built and merged — see `TASKS.md` for the
-per-epic `[x]` status and `runs/` for the committed sample debates).
+per-epic `[x]` status and `runs/` for the committed sample debate).
 
 1. **M1 — Scaffold ✅:** uv workspace, packages, config (+ `rate_limits.json`), version module `1.00`, LOG, CI (ruff/mypy/coverage-gate/150-line check).
 2. **M2 — SDK core ✅:** API gatekeeper, agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
 3. **M3 — Controller ✅:** drift detection, nudging, verdict.
 4. **M4 — Surfaces ✅:** CLI → API → UI.
-5. **M5 — Hardening & analysis ✅:** security gatekeeper, tests (≥85%, edge cases), research notebook + visualizations, cost-breakdown report, docs, sample runs committed.
+5. **M5 — Hardening & analysis ✅:** security gatekeeper, tests (≥85%, edge cases), research notebook + visualizations, cost-breakdown report, docs, sample run committed.

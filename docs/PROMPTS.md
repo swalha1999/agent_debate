@@ -2170,6 +2170,12 @@ fails → restore → green.
   module/test name confirmed against the tree, never an aspiration.*
 
 ### Sample debate runs committed for the teacher (task 12.5, 2026-05-31)
+> **Update (2026-06-01):** the three reduced-round sample debates described
+> below (`policy-congestion-pricing`, `techethics-ai-art`,
+> `lifestyle-morning-routine`) were later **removed** from the repo; only the
+> full 10-round `capitalism` run is now committed. The narrative below is kept
+> as the build-audit record of how the task was originally done. References to
+> "n = 4" / the three topics reflect that earlier state, not the current repo.
 - **Prompt:** "Run several debates on varied topics and commit each run under
   `runs/` as `<run_id>.jsonl` plus a readable `<run_id>.md` (transcript, verdict,
   token/cost). This is the evidence the teacher reviews."

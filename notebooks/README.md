@@ -15,7 +15,7 @@ logs (aggregated by task 14.1 into `runs/dataset/runs_summary.csv`):
 2. **Agree-vs-disagree rate** — how often the agents converged (`converged` flag).
 3. **Drift / nudge frequency per side** — how often the controller had to nudge a
    captured debater back to its assigned side. This is the direct evidence the
-   anti-sycophancy design works (the committed sample runs needed **0** nudges;
+   anti-sycophancy design works (the committed sample run needed **0** nudges;
    the staged-drift detection path itself is exercised by the engine tests, 8.4).
 4. **Tokens & latency** — per topic (run-level) and per round (parsed from the
    JSONL, since the run summary only carries run-level totals).
