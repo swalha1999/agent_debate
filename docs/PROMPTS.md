@@ -2527,6 +2527,19 @@ fails → restore → green.
   `execute()` call): the Watchdog guards a longer-running unit of work by liveness. TDD
   red-first (`tests/test_watchdog.py`).
 
+### FIFO-rotate the built-in JSONL logs within configured caps
+
+- **Prompt:** "Add config-driven FIFO log-file rotation (max files, max lines/file;
+  oldest dropped first). TDD; ≤150 lines/file; ruff/mypy/coverage ≥85%; no hard-coded
+  counts." (HW2 §8.6)
+- **Outcome:** New `agent_debate.log._rotation` (`RotationConfig`, `load_rotation_config`,
+  `RotatingJsonlSink`) wired into `_setup._open_sink`. `config/logging.json` (mirrors
+  `rate_limits.json`/`watchdog.json`) supplies `max_files` + `max_lines_per_file`;
+  defaults 20×500 follow the PDF example. The live file stays `runs/<run_id>.jsonl`
+  (backward compatible); at the line cap it rolls over logrotate-style (`<stem>.1.jsonl`
+  newest archive, higher index = older) and the oldest archive is deleted first so total
+  files never exceed `max_files`. TDD red-first (`packages/log/tests/test_log_rotation.py`).
+
 ---
 
 _(add entries here as code is built — significant prompts that set a pattern,

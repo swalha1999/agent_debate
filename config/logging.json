@@ -1,0 +1,7 @@
+{
+  "logging": {
+    "version": "1.00",
+    "max_files": 20,
+    "max_lines_per_file": 500
+  }
+}

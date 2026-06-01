@@ -19,13 +19,25 @@ schema, ``get_logger``/``log_event`` helpers and redaction land in later tasks
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, Protocol
 
 import structlog
+from agent_debate.log._rotation import RotatingJsonlSink, load_rotation_config
 from agent_debate.log.redaction import redact_event
 
 if TYPE_CHECKING:
     from structlog.typing import FilteringBoundLogger
+
+
+class _LineSink(Protocol):
+    """A minimal write-only line sink (satisfied by ``TextIO`` and the rotator)."""
+
+    def write(self, line: str, /) -> object:
+        """Write one already-newline-terminated line."""
+
+    def flush(self) -> object:
+        """Flush buffered output."""
+
 
 #: Default directory (relative to the process cwd) for per-run JSONL sinks.
 #: Single source of truth so the path is not hard-coded at call sites.
@@ -34,9 +46,9 @@ DEFAULT_RUNS_DIR = "runs"
 #: File extension for the per-run machine-readable sink.
 _JSONL_SUFFIX = ".jsonl"
 
-#: Cache of open run files keyed by their resolved path, so a repeated
-#: :func:`configure` for the same run reuses one handle (idempotency).
-_OPEN_SINKS: dict[Path, TextIO] = {}
+#: Cache of open run sinks keyed by their resolved path, so a repeated
+#: :func:`configure` for the same run reuses one rotating sink (idempotency).
+_OPEN_SINKS: dict[Path, RotatingJsonlSink] = {}
 
 
 def _resolve_jsonl_path(run_id: str, runs_dir: Path | str) -> Path:
@@ -46,14 +58,20 @@ def _resolve_jsonl_path(run_id: str, runs_dir: Path | str) -> Path:
     return (directory / run_id).with_suffix(_JSONL_SUFFIX)
 
 
-def _open_sink(path: Path) -> TextIO:
-    """Open (or reuse) the append-mode JSONL file handle for ``path``."""
+def _open_sink(path: Path) -> RotatingJsonlSink:
+    """Open (or reuse) the FIFO-rotating JSONL sink for ``path`` (issue #217).
+
+    The live file is always ``path`` itself (backward compatible); older
+    segments roll over to ``<stem>.N<suffix>`` and the oldest is dropped first
+    once the configured file/line caps are hit. Caps come from
+    ``config/logging.json`` via :func:`load_rotation_config`.
+    """
     cached = _OPEN_SINKS.get(path)
     if cached is not None and not cached.closed:
         return cached
-    handle = path.open("a", encoding="utf-8")
-    _OPEN_SINKS[path] = handle
-    return handle
+    sink = RotatingJsonlSink(path, load_rotation_config())
+    _OPEN_SINKS[path] = sink
+    return sink
 
 
 def configure(
@@ -86,7 +104,7 @@ def configure(
     return logger
 
 
-def _build_processors(sink: TextIO) -> list[structlog.typing.Processor]:
+def _build_processors(sink: _LineSink) -> list[structlog.typing.Processor]:
     """Build the chain: redact secrets/truncate, then the dual-sink renderer.
 
     :func:`~agent_debate.log.redaction.redact_event` runs immediately before the
@@ -115,7 +133,7 @@ class _DualSinkRenderer:
     extra.
     """
 
-    def __init__(self, sink: TextIO) -> None:
+    def __init__(self, sink: _LineSink) -> None:
         self._sink = sink
         self._json = structlog.processors.JSONRenderer()
         self._console = structlog.dev.ConsoleRenderer(colors=False)
