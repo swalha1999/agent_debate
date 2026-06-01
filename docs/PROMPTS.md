@@ -2510,5 +2510,24 @@ fails → restore → green.
 
 ---
 
+## HW2 §8.6 — Watchdog with keep-alive (2026-06-01, issue #216)
+
+### Detect a fallen worker and restart it
+- **Prompt:** "Add a Watchdog component (config-driven) that monitors agent/process
+  liveness via keep-alive and restarts on failure, distinct from the timeout/retry seam.
+  TDD; ≤150 lines/file; ruff/mypy/coverage ≥85%; log via the LOG package."
+- **Outcome:** New `agent_debate.core.watchdog` subpackage (`_config.py`, `_watchdog.py`).
+  `config/watchdog.json` (mirrors `rate_limits.json`) supplies `heartbeat_interval_s`,
+  `liveness_timeout_s`, `max_restarts` via a frozen `WatchdogConfig`. `Watchdog.run`
+  drives a worker through injected `start`/`kill`/`heartbeat` callables and injected
+  `monotonic`/`sleep` clock seams (deterministic, no real timing); a keep-alive stale
+  beyond `liveness_timeout_s` is treated as fallen → kill + restart up to `max_restarts`,
+  then give up. Each detect/kill/restart/give_up logs a `system` event tagged
+  `payload['watchdog']`. Distinct from per-turn timeout/retry (which bounds/retries one
+  `execute()` call): the Watchdog guards a longer-running unit of work by liveness. TDD
+  red-first (`tests/test_watchdog.py`).
+
+---
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

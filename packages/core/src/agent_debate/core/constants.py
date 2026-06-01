@@ -29,6 +29,15 @@ DEFAULT_MAX_RETRIES = 2
 #: Selects the ``SearchProvider`` plug-in; DuckDuckGo needs no key (PRD §7).
 DEFAULT_SEARCH_BACKEND = "duckduckgo"
 
+#: Default keep-alive Watchdog knobs (issue #216, HW2 §8.6) — the single source of
+#: truth for the env/Settings fallback. The authoritative *runtime* values live in
+#: ``config/watchdog.json`` (loaded by :func:`~agent_debate.core.watchdog.
+#: load_watchdog_config`); these mirror it so a key-free import/Settings instance
+#: still has sane, documented defaults rather than inlined magic numbers (§7.2).
+DEFAULT_WATCHDOG_HEARTBEAT_INTERVAL_S = 1.0
+DEFAULT_WATCHDOG_LIVENESS_TIMEOUT_S = 5.0
+DEFAULT_WATCHDOG_MAX_RESTARTS = 3
+
 #: Configurable USD budget cap per run (PRD §7/§10, task 15.3). ``0.0`` (the
 #: default) means *unlimited* — no cap, never over budget — so adding the feature
 #: changes no existing behaviour until a positive cap is configured. A documented
@@ -213,6 +222,32 @@ BUDGET_ALERT_ROUND = 0
 #: it is greppable/queryable in the run log (the single source for the literal).
 BUDGET_ALERT_TAG = "budget_alert"
 
+#: ``event_type`` recorded by the keep-alive Watchdog (issue #216, HW2 §8.6) when
+#: it detects a fallen worker, kills it, restarts it, or gives up. The LOG schema
+#: has no dedicated "watchdog" kind, so each is a ``system`` event whose payload
+#: carries the :data:`WATCHDOG_EVENT_TAG` action (``detect``/``kill``/``restart``/
+#: ``give_up``) — distinct from the per-turn ``timeout``/``retry`` events.
+WATCHDOG_EVENT_TYPE = "system"
+
+#: ``agent`` label recorded on every Watchdog event — a name (the liveness
+#: monitor), not a debate stance, so the action is attributable in the run log.
+WATCHDOG_LOG_AGENT = "watchdog"
+
+#: ``round`` marker stamped on Watchdog events. The Watchdog guards a long-running
+#: worker, not a numbered debate round, so ``0`` (the marker setup/closing use)
+#: cleanly distinguishes it from a debate round.
+WATCHDOG_ROUND = 0
+
+#: ``payload`` key under which a Watchdog event records its action — the single
+#: source for the literal so the four action tags below are never inlined.
+WATCHDOG_EVENT_TAG = "watchdog"
+
+#: Action tags carried in ``payload[WATCHDOG_EVENT_TAG]`` for each Watchdog event.
+WATCHDOG_ACTION_DETECT = "detect"
+WATCHDOG_ACTION_KILL = "kill"
+WATCHDOG_ACTION_RESTART = "restart"
+WATCHDOG_ACTION_GIVE_UP = "give_up"
+
 #: Maps a ``provider:model`` prefix (the part before ``:``) to the environment
 #: variable that must hold that provider's API key. The single source of truth
 #: for startup key validation (task 2.3) — extend this dict to cover a new
@@ -243,6 +278,9 @@ __all__ = [
     "DEFAULT_ROUNDS",
     "DEFAULT_SEARCH_BACKEND",
     "DEFAULT_TURN_TIMEOUT_S",
+    "DEFAULT_WATCHDOG_HEARTBEAT_INTERVAL_S",
+    "DEFAULT_WATCHDOG_LIVENESS_TIMEOUT_S",
+    "DEFAULT_WATCHDOG_MAX_RESTARTS",
     "DRIFT_CLEAR_CONFIDENCE",
     "DRIFT_REASON_SIGNALS",
     "DRIFT_SIGNAL_CONFIDENCE",
@@ -266,6 +304,14 @@ __all__ = [
     "TURN_RETRY_EVENT_TYPE",
     "TURN_TIMEOUT_EVENT_TYPE",
     "VERDICT_RATIONALE_TEMPLATE",
+    "WATCHDOG_ACTION_DETECT",
+    "WATCHDOG_ACTION_GIVE_UP",
+    "WATCHDOG_ACTION_KILL",
+    "WATCHDOG_ACTION_RESTART",
+    "WATCHDOG_EVENT_TAG",
+    "WATCHDOG_EVENT_TYPE",
+    "WATCHDOG_LOG_AGENT",
+    "WATCHDOG_ROUND",
     "WEB_SEARCH_DEFAULT_RUN_ID",
     "WEB_SEARCH_EVENT_TYPE",
     "WEB_SEARCH_TOOL",
