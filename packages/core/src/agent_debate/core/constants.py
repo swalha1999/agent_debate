@@ -80,11 +80,6 @@ NUDGE_CORRECTION_TEMPLATE = (
     "rebut the opponent's argument — do not concede."
 )
 
-#: The outcome label ``render_verdict`` uses when neither side outscores the other
-#: (anti-sycophancy §4: the controller declares a debate-derived outcome, never a
-#: pre-held stance). Kept here so the literal is defined once.
-VERDICT_TIE = "tie"
-
 #: Rationale template ``render_verdict`` uses for a score-tallied verdict; ``{winner}``
 #: is the derived outcome and ``{pro}``/``{con}`` the per-side totals.
 VERDICT_RATIONALE_TEMPLATE = "Verdict {winner}: tallied from the transcript (pro={pro}, con={con})."
@@ -271,7 +266,6 @@ __all__ = [
     "TURN_RETRY_EVENT_TYPE",
     "TURN_TIMEOUT_EVENT_TYPE",
     "VERDICT_RATIONALE_TEMPLATE",
-    "VERDICT_TIE",
     "WEB_SEARCH_DEFAULT_RUN_ID",
     "WEB_SEARCH_EVENT_TYPE",
     "WEB_SEARCH_TOOL",

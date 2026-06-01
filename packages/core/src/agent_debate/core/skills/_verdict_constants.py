@@ -66,16 +66,14 @@ VERDICT_AGREEMENT_MARKERS: tuple[str, ...] = (
     "that is true",
 )
 
-#: Per-criterion weights combined into a side's total score (transparent additive
-#: scheme — not magic numbers). Each present turn earns the argumentation base; each
-#: rebuttal / engagement marker hit adds its weight.
+#: Per-criterion DIFFERENTIAL weights combined into a side's total score (transparent
+#: additive scheme — not magic numbers). Deliberately distinct, non-integer values so
+#: an exact numeric tie between two non-identical transcripts is near-impossible (HW2
+#: §8.4: differential 80%/70%-style scoring is explicitly permitted). Each present turn
+#: earns the argumentation base; each rebuttal / engagement marker hit adds its weight.
 VERDICT_WEIGHT_ARGUMENTATION = 1.0
 VERDICT_WEIGHT_REBUTTAL = 1.5
-VERDICT_WEIGHT_ENGAGEMENT = 1.0
-
-#: Score difference at/below which the two sides are declared a TIE — a single named
-#: margin so "close enough" is tuned in one place (§7.2).
-VERDICT_TIE_MARGIN = 0.5
+VERDICT_WEIGHT_ENGAGEMENT = 0.75
 
 #: Minimum number of turns (per side) that must carry an agreement marker for the
 #: debate to be reported as converged — both sides must show it.
@@ -88,11 +86,18 @@ VERDICT_SUMMARY_TEMPLATE = (
     "rebuttal quality and engagement — not factual correctness."
 )
 
-#: Result clause for a decisive outcome; ``{winner}`` is the winning side label.
+#: Result clause for a decisive outcome; ``{winner}`` is the winning side label. A
+#: verdict is ALWAYS decisive — there is no tie clause (HW2 §8.4: ties are forbidden).
 VERDICT_RESULT_WIN = "The {winner} side argued more effectively and wins."
 
-#: Result clause for a tie (neither side cleared the margin).
-VERDICT_RESULT_TIE = "Neither side clearly out-argued the other; the result is a tie."
+#: Deterministic FINAL fallback side for the (now vanishingly rare) case where two
+#: transcripts are byte-for-byte symmetric and every tie-breaker is equal. Picking a
+#: fixed side keeps the verdict decisive and reproducible — never a tie, never random.
+VERDICT_DECISIVE_FALLBACK_SIDE = "pro"
+
+#: Clause appended to the rationale when the outcome was settled by the tie-breaker
+#: cascade rather than the raw weighted total; ``{criterion}`` names the deciding step.
+VERDICT_TIEBREAK_NOTE = " Scores were level on total; decided on {criterion}."
 
 #: Converged / not-converged notes appended to the summary.
 VERDICT_CONVERGED_NOTE = "The agents converged toward agreement."
@@ -110,14 +115,14 @@ __all__ = [
     "VERDICT_CRITERION_ARGUMENTATION",
     "VERDICT_CRITERION_ENGAGEMENT",
     "VERDICT_CRITERION_REBUTTAL",
+    "VERDICT_DECISIVE_FALLBACK_SIDE",
     "VERDICT_ENGAGEMENT_MARKERS",
     "VERDICT_NOT_CONVERGED_NOTE",
     "VERDICT_REASONING_TEMPLATE",
     "VERDICT_REBUTTAL_MARKERS",
-    "VERDICT_RESULT_TIE",
     "VERDICT_RESULT_WIN",
     "VERDICT_SUMMARY_TEMPLATE",
-    "VERDICT_TIE_MARGIN",
+    "VERDICT_TIEBREAK_NOTE",
     "VERDICT_WEIGHT_ARGUMENTATION",
     "VERDICT_WEIGHT_ENGAGEMENT",
     "VERDICT_WEIGHT_REBUTTAL",

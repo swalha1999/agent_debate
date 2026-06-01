@@ -143,8 +143,9 @@ def render_verdict(transcript: VerdictRequest | list[TranscriptTurn]) -> Verdict
     """Structure ``transcript`` into a debate-derived :class:`Verdict` (PRD §3.2, §5.3).
 
     Accepts a bare list of turns or a :class:`VerdictRequest`. The deepened verdict
-    (8.3) carries a SUMMARY, whether the agents CONVERGED/agreed, the RESULT (winning
-    side or ``tie``), and the REASONING — judged on ARGUMENTATION / REBUTTAL quality /
+    (8.3) carries a SUMMARY, whether the agents CONVERGED/agreed, the RESULT (the
+    winning side — always ``pro`` or ``con``; a tie is forbidden, HW2 §8.4 / issue
+    #215), and the REASONING — judged on ARGUMENTATION / REBUTTAL quality /
     ENGAGEMENT, explicitly **not** factual correctness (PRD §3: no fact-checking). The
     transparent deterministic scoring lives in :func:`build_verdict` /
     :mod:`agent_debate.core.skills._verdict_logic`; a controller-supplied

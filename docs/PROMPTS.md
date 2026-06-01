@@ -2492,5 +2492,23 @@ fails → restore → green.
 
 ---
 
+## HW2 §8.4 — Forbid tie verdicts (2026-06-01, issue #215)
+
+### Verdict must always decide a winner
+- **Prompt:** "Remove 'tie' as a permitted outcome (constrain `winner` to PRO|CON), use
+  weighted/differential scoring so exact ties are near-impossible, and add a deterministic
+  tie-breaker cascade (rebuttal quality → fewer drift captures → sourcing) for the
+  equal-score case. Update the controller's system prompt to forbid declaring a tie."
+- **Outcome:** `Verdict.winner` / `VerdictRequest.winner` constrained to `DebateSide`
+  (no more `str`/`"tie"`). Engagement weight made distinct/non-integer (0.75) so the
+  differential totals rarely collide. Added a deterministic `_break_tie` cascade
+  (rebuttal criterion → fewer agreement-drift signals → engagement → fixed PRO fallback)
+  that always yields PRO/CON. Controller system prompt gained a "tie is forbidden — you
+  MUST declare a decisive winner; differential scoring permitted" block. TDD: the old
+  balanced-debate-ties tests were rewritten to assert a decisive winner; acceptance
+  `winner ∈ {PRO,CON,"tie"}` assertions narrowed to `{PRO,CON}`.
+
+---
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

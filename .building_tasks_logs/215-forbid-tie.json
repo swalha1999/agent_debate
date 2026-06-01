@@ -1,0 +1,12 @@
+{
+  "task_id": "215",
+  "title": "[HW2] Verdict must always decide a winner — forbid tie results",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Remove \"tie\" as a permitted outcome (constrain winner to PRO|CON), use weighted/differential scoring so exact ties are near-impossible, and add a deterministic tie-breaker cascade (e.g. rebuttal quality → fewer drift captures → sourcing) for the equal-score case. Update the controller's system prompt to forbid declaring a tie. TDD; ruff/mypy/coverage ≥ 85%.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 145000
+  }
+}

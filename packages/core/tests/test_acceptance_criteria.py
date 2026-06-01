@@ -181,7 +181,7 @@ def test_c6_verdict_has_summary_result_winner_no_fact_check(tmp_path: Path) -> N
     assert result.verdict is not None
     assert result.verdict.summary  # written summary
     assert isinstance(result.verdict.converged, bool)  # agree/disagree result
-    assert result.verdict.winner in (DebateSide.PRO, DebateSide.CON, "tie")  # who won
+    assert result.verdict.winner in (DebateSide.PRO, DebateSide.CON)  # who won (HW2 §8.4: no tie)
     assert any(e["event_type"] == "verdict" for e in logged_events(tmp_path, "c6"))
 
 

@@ -86,6 +86,13 @@ def test_prompt_mentions_rendering_a_verdict() -> None:
     assert "verdict" in build_controller_system_prompt().lower()
 
 
+def test_prompt_forbids_declaring_a_tie() -> None:
+    """HW2 §8.3.6/§8.4/§9: the judge must decide — a tie is explicitly forbidden."""
+    lowered = build_controller_system_prompt().lower()
+    assert "tie is forbidden" in lowered or "never declare a tie" in lowered
+    assert "decisive winner" in lowered or "must declare" in lowered
+
+
 def test_prompt_lists_all_three_controller_skill_names() -> None:
     prompt = build_controller_system_prompt()
     for skill in ("assess_drift", "nudge", "render_verdict"):
