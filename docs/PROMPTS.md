@@ -2333,5 +2333,28 @@ fails → restore → green.
   config price table can project the parameter surface from the runs you already
   have — as long as you label the projection as such.*
 
+### runs/ index (task 12.6, issue #87, 2026-06-01)
+
+- **Prompt:** "Create `runs/README.md` indexing each saved debate (topic, who won,
+  link) and link it from the root README."
+- **Context:** `runs/README.md` already existed from 12.5 with a context table but
+  (a) no links to the per-run transcripts and (b) a `(A fuller index with links is
+  task 12.6.)` placeholder, and the root README's Documentation table did not point
+  to it at all. So 12.6 was a *finish-and-wire-up*, not a rewrite.
+- **Verify-from-source, not memory:** every winner/round/topic in the index was
+  re-read from the actual `runs/<run_id>.md` verdict + `## Cost & tokens` sections
+  (and cross-checked against `runs/dataset/runs_summary.csv`) rather than trusted
+  from prior notes — policy = Pro (4r), tech-ethics = Con (3r), lifestyle = tie (3r),
+  capitalism = Pro (10r). The token/cost columns are each run's actual billed totals.
+- **Index shape:** the issue's required columns are **topic → who won → link**; the
+  table leads with those and keeps the useful 12.5 context (kind, rounds, the
+  reduced-rounds-for-cost vs full-10-round capitalism note) plus cross-links to the
+  aggregated `dataset/runs_summary.csv` and the §9 `notebooks/analysis.ipynb`.
+- **Docs-only, no Python:** no exporter/code change was needed, so none was made; the
+  README contract test (`tests/test_readme.py`) stays green and the root README now
+  links the runs index from its Documentation table. *Pattern: when a prior task
+  leaves a labelled placeholder, the follow-up task's job is to make it true and
+  wire it into the entry-point doc — not to regenerate the underlying artifacts.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

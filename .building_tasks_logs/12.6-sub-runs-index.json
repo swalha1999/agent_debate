@@ -1,0 +1,15 @@
+{
+  "task_id": "12.6",
+  "title": "runs/ index — index each saved debate (topic, who won, link) and link it from the root README (Epic 12, issue #87)",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Create runs/README.md indexing each saved debate (topic, who won, link) and link it from the root README.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 42000
+  },
+  "usage": {
+    "summary": "Docs-only finish-and-wire-up. runs/README.md already existed from 12.5 with a context table but no per-run links and a '(fuller index with links is task 12.6)' placeholder; the root README did not link it. Re-read each runs/<run_id>.md verdict + cost section (cross-checked vs runs/dataset/runs_summary.csv) to confirm winners/rounds/tokens/cost: policy-congestion-pricing (4r, Pro, 107744 tok, $0.419), techethics-ai-art (3r, Con, 67173 tok, $0.265), lifestyle-morning-routine (3r, tie, 76344 tok, $0.296), capitalism (10r, Pro, 343521 tok, $1.261). Rewrote the runs/README.md table to lead with the issue's required columns (topic, winner, link) plus kept kind/rounds/tokens/cost context and the reduced-rounds-vs-full-10 note; each row links the readable <run_id>.md, and added cross-links to dataset/runs_summary.csv, dataset/README.md, and ../notebooks/analysis.ipynb. Added a runs/README.md row to the root README Documentation table. No Python added (no exporter change needed). Marked 12.6 [x] in docs/TASKS.md, added the 12.6 PROMPTS.md entry. Verified every link in runs/README.md and the new root link resolves to an existing file. Gates: ruff check/format clean, mypy clean, pytest --cov >=85% (README contract test tests/test_readme.py green), check_line_limit.py rc=0, secret_scan.py clean on tracked files. No new test failures vs the known pre-existing environmental set. Closes #87."
+  }
+}
