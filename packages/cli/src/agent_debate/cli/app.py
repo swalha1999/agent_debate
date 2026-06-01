@@ -24,7 +24,9 @@ from typing import NamedTuple
 import typer
 from agent_debate.cli._json import clean_stdout, emit_json, run_or_fail
 from agent_debate.cli._live import render_stream
+from agent_debate.cli._menu import DebateChoices, run_menu
 from agent_debate.core import DebateConfig, DebateEngine, Settings, get_settings
+from agent_debate.core.engine.result import DebateResult
 from agent_debate.log import get_logger
 
 app = typer.Typer(
@@ -151,4 +153,40 @@ def _run_human(topic: str, opts: _Options) -> None:
     run_or_fail(lambda: render_stream(topic, engine.stream(topic)), log=_LOG)
 
 
-__all__ = ["app", "run"]
+class _TyperIO:
+    """Real keyboard-driven I/O for the menu (Typer prompts + echo, no new dep)."""
+
+    def prompt(self, text: str) -> str:
+        """Read one line from the user via Typer's built-in prompt."""
+        return str(typer.prompt(text, default="", show_default=False))
+
+    def echo(self, text: str) -> None:
+        """Write one line to stdout via Typer's echo."""
+        typer.echo(text)
+
+
+def _menu_runner(choices: DebateChoices) -> DebateResult | None:
+    """Reuse the existing SDK path: stream the live transcript for ``choices``."""
+    assert choices.topic is not None  # menu refuses to start without a topic
+    opts = _Options(choices.rounds, choices.max_words, choices.model, choices.search_backend)
+    engine = _prepare(choices.topic, opts)
+    return run_or_fail(
+        lambda: render_stream(choices.topic or "", engine.stream(choices.topic or "")),
+        log=_LOG,
+    )
+
+
+@app.command()
+def menu() -> None:
+    """Drive a debate from an interactive, keyboard-driven terminal MENU (HW2 §8.6).
+
+    Launches a numbered menu where the user sets the topic / rounds / max-words /
+    model / search-backend (config defaults shown), then ``start`` runs the debate
+    through the SAME SDK + live renderer the ``run`` command uses, prints the live
+    transcript, and shows the verdict. ``quit`` exits. No debate logic is
+    duplicated; defaults come from :class:`Settings`.
+    """
+    run_menu(io=_TyperIO(), settings=get_settings(), runner=_menu_runner)
+
+
+__all__ = ["app", "menu", "run"]

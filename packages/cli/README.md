@@ -25,7 +25,8 @@ model call is routed through the Epic-13 [gatekeeper](../core/src/agent_debate/c
 The app is defined in [`app.py`](src/agent_debate/cli/app.py).
 
 ```text
-agent-debate run TOPIC [OPTIONS]
+agent-debate run TOPIC [OPTIONS]   # argument-based (scriptable / CI)
+agent-debate menu                  # interactive keyboard-driven menu (HW2 §8.6)
 ```
 
 | Option | Effect | Default |
@@ -40,6 +41,24 @@ agent-debate run TOPIC [OPTIONS]
 No hard-coded defaults: every option defaults to `None` and only the flags you
 actually pass override the process [`Settings`](../core/src/agent_debate/core/settings.py).
 Change config, not the CLI, to change the defaults.
+
+## Interactive menu (`menu`)
+
+For keyboard-driven operation (HW2 §8.6/§8.7), `menu` launches a numbered loop
+([`_menu.py`](src/agent_debate/cli/_menu.py)) instead of taking arguments:
+
+```bash
+uv run agent-debate menu
+```
+
+You pick/enter the **topic**, then optionally adjust **rounds**, **max words**,
+**model** and **search backend** (each shows its config default), choose
+**`s` — start debate** to stream the live transcript and see the verdict, or
+**`q` — quit**. Invalid numbers are re-prompted; starting without a topic is
+refused. The menu reuses the SAME SDK + live renderer as `run` (no duplicated
+debate logic); all defaults come from [`Settings`](../core/src/agent_debate/core/settings.py).
+Its terminal I/O and the debate runner are injectable, so the loop is unit-tested
+with scripted input and a fake runner — no real TTY, engine or API key.
 
 ## Examples
 
