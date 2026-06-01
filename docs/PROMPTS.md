@@ -2572,6 +2572,26 @@ fails → restore → green.
   JSON transport/log; render = the legible prompt injected into the opponent. TDD
   red-first (`packages/core/tests/test_agent_message.py`).
 
+### Architecture class diagram (class layout + relationships)
+
+- **Prompt:** "Add a class diagram (e.g. mermaid classDiagram) of the key classes
+  (agents, contexts, gatekeepers, engine, search providers, pricing, LOG) and their
+  relationships to docs/ARCHITECTURE.md; keep it truthful to the code. Docs-only."
+  (HW2 §8.6)
+- **Outcome:** New "Class diagram (class layout & relationships)" subsection in
+  `docs/ARCHITECTURE.md` §1 with a mermaid `classDiagram` covering the load-bearing
+  classes per area — engine/SDK (`DebateEngine`, `DebateConfig`, `DebateSetup`,
+  `DebateResult`, `AgentMessage`, `Gatekeeper`), agents/contexts (`AgentContext`,
+  `Turn`, `DebateContexts`), gatekeepers (`ApiGatekeeper`, `RateLimitConfig`,
+  `SecurityGatekeeper`), search (`SearchProvider` protocol + DuckDuckGo/Tavily/
+  Gatekept/Resilient providers, `SearchResult`), pricing (`PriceTable`,
+  `CostBreakdown`, `ModelCostRow`, `BudgetStatus`), watchdog/LOG (`Watchdog`,
+  `LogEvent`, `EventSink`, `RotatingJsonlSink`) and skills (`DebateSide`, `Verdict`,
+  `NudgeMessage`) — with composition / uses / protocol-implements edges plus a prose
+  walkthrough. Every class name verified against the source; placed as a `###`
+  subsection so no top-level heading was renumbered (the `#8` ISO 25010 anchor
+  referenced from PRD.md / SUBMISSION_CHECKLIST.md stays valid).
+
 ---
 
 _(add entries here as code is built — significant prompts that set a pattern,

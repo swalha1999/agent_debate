@@ -98,6 +98,195 @@ failed gracefully (`engine/turn.py`). The result is a structured
 `DebateResult` (transcript, tool calls, nudges, closing discussion, verdict,
 token totals, cost breakdown).
 
+### Class diagram (class layout & relationships)
+
+The diagram below shows the **key classes** grouped by area and how they relate
+(composition `*-->`, "uses/derives" `..>`, and structural protocol-implements
+`..|>`). It is deliberately the load-bearing classes, not every type. All names
+are verified against the code (paths in §3); the ISO/IEC 25010 mapping is §8.
+
+```mermaid
+classDiagram
+    %% ── Engine / SDK (core/engine) ──────────────────────────────
+    class DebateEngine {
+        +config: DebateConfig
+        +run(topic) DebateResult
+        +stream(topic) Iterator
+    }
+    class DebateConfig {
+        +rounds: int
+        +max_words: int
+        +pro_model: str
+        +con_model: str
+        +budget_usd: float
+        +from_settings(settings)$ DebateConfig
+    }
+    class DebateSetup {
+        +topic: str
+        +pro_agent / con_agent / controller_agent
+    }
+    class DebateResult {
+        +topic: str
+        +transcript: list~DebateMessage~
+        +nudges: list~NudgeMessage~
+        +verdict: Verdict
+        +totals: CostTotals
+        +cost_breakdown: CostBreakdown
+    }
+    class DebateMessage
+    class CostTotals
+    class AgentMessage {
+        +round / from_side / to_side / content
+        +render() str
+    }
+    class Gatekeeper {
+        <<protocol>>
+        +execute(api_call, *, service) result
+    }
+
+    %% ── Agents / contexts (core/agents) ─────────────────────────
+    class AgentContext {
+        +identity: str
+        +system_prompt: str
+        +append_user() / append_assistant()
+        +message_history() list
+    }
+    class Turn {
+        +role: str
+        +content: str
+    }
+    class DebateContexts {
+        +pro / con / controller: AgentContext
+    }
+
+    %% ── Gatekeepers (core/gatekeeper, core/security) ────────────
+    class ApiGatekeeper {
+        +execute(api_call, *, service)
+        +drain() int
+        +get_status() GatekeeperStatus
+    }
+    class RateLimitConfig {
+        +services: dict~str,ServiceLimits~
+    }
+    class ServiceLimits
+    class QueueFullError
+    class SecurityGatekeeper {
+        +sanitize(text) str
+    }
+
+    %% ── Search (core/search) ────────────────────────────────────
+    class SearchProvider {
+        <<protocol>>
+        +name: str
+        +search(query) list~SearchResult~
+    }
+    class SearchResult
+    class DuckDuckGoSearchProvider
+    class TavilySearchProvider
+    class GatekeptSearchProvider
+    class ResilientSearchProvider
+
+    %% ── Pricing / cost (core/pricing) ───────────────────────────
+    class PriceTable {
+        +get_model_price(model) ModelPrice
+    }
+    class CostBreakdown {
+        +rows: list~ModelCostRow~
+    }
+    class ModelCostRow
+    class BudgetStatus
+
+    %% ── Watchdog + LOG (core/watchdog, log) ─────────────────────
+    class Watchdog {
+        +run(max_ticks) WatchdogResult
+    }
+    class WatchdogConfig
+    class LogEvent {
+        +run_id / round / agent / event_type / payload
+    }
+    class EventSink {
+        <<protocol>>
+        +__call__(event)
+    }
+    class RotatingJsonlSink {
+        +write(line)
+    }
+    class RotationConfig
+
+    %% ── Skills (core/skills) ────────────────────────────────────
+    class DebateSide {
+        <<enum>>
+        PRO
+        CON
+    }
+    class Verdict
+    class NudgeMessage
+
+    %% relationships
+    DebateEngine *--> DebateConfig
+    DebateEngine ..> DebateSetup : builds via setup_debate
+    DebateEngine ..> DebateResult : returns
+    DebateEngine o--> Gatekeeper : routes calls
+    DebateSetup *--> DebateContexts
+    DebateContexts *--> AgentContext
+    AgentContext *--> Turn
+    DebateResult *--> DebateMessage
+    DebateResult *--> CostTotals
+    DebateResult *--> Verdict
+    DebateResult *--> NudgeMessage
+    DebateResult *--> CostBreakdown
+    AgentMessage ..> DebateSide
+    AgentMessage ..> SecurityGatekeeper : sanitises content
+
+    ApiGatekeeper ..|> Gatekeeper
+    ApiGatekeeper *--> RateLimitConfig
+    RateLimitConfig *--> ServiceLimits
+    ApiGatekeeper ..> QueueFullError : raises
+    ApiGatekeeper ..> LogEvent : logs
+
+    DuckDuckGoSearchProvider ..|> SearchProvider
+    TavilySearchProvider ..|> SearchProvider
+    GatekeptSearchProvider ..|> SearchProvider
+    ResilientSearchProvider ..|> SearchProvider
+    GatekeptSearchProvider o--> SearchProvider : wraps
+    ResilientSearchProvider o--> SearchProvider : wraps
+    GatekeptSearchProvider o--> Gatekeeper : routes search
+    SearchProvider ..> SearchResult : returns
+
+    CostBreakdown *--> ModelCostRow
+    CostBreakdown ..> PriceTable : priced from
+    BudgetStatus ..> CostBreakdown : checks total
+
+    Watchdog *--> WatchdogConfig
+    Watchdog ..> LogEvent : emits
+    RotatingJsonlSink *--> RotationConfig
+    EventSink ..> LogEvent : receives
+    Verdict *--> DebateSide
+    NudgeMessage *--> DebateSide
+```
+
+**Reading the diagram.** `DebateEngine` is the SDK facade: it *owns* a
+`DebateConfig`, builds a `DebateSetup` (which owns the three isolated
+`AgentContext`s via `DebateContexts`, each a list of `Turn`s — the
+anti-sycophancy "separate threads" property, §4.1), and returns a `DebateResult`
+that *composes* the transcript (`DebateMessage`), `nudges` (`NudgeMessage`),
+`verdict` (`Verdict`), `totals` (`CostTotals`) and `cost_breakdown`
+(`CostBreakdown`). Every external call routes through the `Gatekeeper` protocol;
+`ApiGatekeeper` is the concrete implementer (composing `RateLimitConfig` →
+`ServiceLimits`, raising `QueueFullError` on backpressure). Inter-agent hops are
+carried by `AgentMessage`, which sanitises its content through the
+`SecurityGatekeeper`. Search is a swappable plug-in: `SearchProvider` is a
+structural protocol implemented by `DuckDuckGoSearchProvider`,
+`TavilySearchProvider` and the two transparent decorators
+`GatekeptSearchProvider` (routes through the `Gatekeeper`) and
+`ResilientSearchProvider` (timeout/retry), all returning `SearchResult`s.
+Pricing turns tokens into a `CostBreakdown` (`ModelCostRow`s) using the
+`PriceTable`, checked against a `BudgetStatus`. `Watchdog` (driven by
+`WatchdogConfig`) and the LOG layer — `LogEvent`, the `EventSink` protocol and
+the FIFO-rotating `RotatingJsonlSink` (`RotationConfig`) — provide liveness and
+observability. `DebateSide` (the `pro`/`con` enum) is the shared key threaded
+through verdicts, nudges and per-side cost rows.
+
 ---
 
 ## 2. The five packages (uv workspace)

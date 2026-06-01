@@ -1,0 +1,12 @@
+{
+  "task_id": "221",
+  "title": "Add architecture class diagram (class layout + relationships)",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a class diagram (e.g. mermaid classDiagram) of the key classes (agents, contexts, gatekeepers, engine, search providers, pricing, LOG) and their relationships to docs/ARCHITECTURE.md; keep it truthful to the code. Docs-only.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 96000
+  }
+}
