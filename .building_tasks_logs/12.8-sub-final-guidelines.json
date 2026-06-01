@@ -1,0 +1,12 @@
+{
+  "task_id": "12.8",
+  "title": "Final pass vs lecturer guidelines",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Go through the lecturer's software_submission_guidelines-V3 and the §17 final checklist; verify each requirement is met and fix gaps.\n\nFollow repo standards: TDD (write the failing test first, then code); max 150 lines per code file (split, don't compress); ruff = 0 violations + mypy clean; no hard-coded values (read from config); every external API call goes through the API gatekeeper (Epic 13); log via the LOG package; keep coverage >= 85%. Read docs/PRD.md and the relevant docs/prds/*.md before starting.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 80000
+  }
+}

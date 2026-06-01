@@ -10,6 +10,7 @@
 Companion docs:
 - `Improvements_to_keep_in_mind.md` — standing quality/lessons checklist
 - `software_submission_guidelines-V3.en.md` / `.md` — lecturer's required guidelines (authoritative)
+- `SUBMISSION_CHECKLIST.md` — completed **§17 final checklist**, each item mapped to repo evidence (task 12.8)
 - `PROMPTS.md` — the **Prompt Book** (significant prompts that shaped the project; guideline §8.3)
 - `prds/` — **dedicated sub-PRDs** for each algorithm/mechanism (guideline §2.3):
   - `prds/debate-orchestration.md` — the 10-vs-10 loop, timeout/retry, phases
