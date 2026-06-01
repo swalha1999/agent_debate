@@ -7,19 +7,23 @@ the CONTROLLER ("father"), and :func:`forward_to_opponent` is the controller-own
 step that FORWARDS it (as the §5.6 adversarially-framed relay) into the opponent's
 context. The engine no longer relays directly between the two children.
 
-Isolation + framing are preserved exactly. The forward reuses
-:func:`~agent_debate.core.agents.build_adversarial_relay` (the single source of the
-"«…». Rebut it." framing — never duplicated) so the opponent receives a FRAMED,
-sanitised message as a ``user`` turn in its OWN
-:class:`~agent_debate.core.agents.context.AgentContext` (5.4 isolation); it never
-sees the opponent's raw turn and the two debaters never share a thread. Anti-sycophancy
-(side anchoring + the adversarial frame) is unchanged.
+Isolation + framing are preserved exactly. Each hop is wrapped in a structured JSON
+:class:`~agent_debate.core.engine.message.AgentMessage` envelope (HW2 §8.3.8 —
+inter-agent IPC is monitorable structured JSON); the legible §5.6 relay the model
+sees is RENDERED from the envelope via :func:`~agent_debate.core.agents.
+build_adversarial_relay` (the single source of the "«…». Rebut it." framing — never
+duplicated). So the opponent receives a FRAMED, sanitised message as a ``user`` turn
+in its OWN :class:`~agent_debate.core.agents.context.AgentContext` (5.4 isolation);
+it never sees the opponent's raw turn and the two debaters never share a thread.
+Anti-sycophancy (side anchoring + the adversarial frame) is unchanged.
 
 Routing is observable: each forward logs one ``system`` event tagged
 :data:`~agent_debate.core.constants.LOOP_RELAY_EVENT_TAG` carrying the ``from``/``to``
-sides and the round — the demonstrable evidence that the message passed through the
-father (the acceptance criterion). No model/network call is made here (the framing is
-pure text processing), so the API gatekeeper (Epic 13) does not apply.
+sides, the round, and the structured JSON envelope (under
+:data:`~agent_debate.core.constants.LOOP_RELAY_ENVELOPE_KEY`) — the demonstrable
+evidence that the message passed through the father (the acceptance criterion). No
+model/network call is made here (the framing is pure text processing), so the API
+gatekeeper (Epic 13) does not apply.
 """
 
 from __future__ import annotations
@@ -27,7 +31,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent_debate.core import constants
-from agent_debate.core.agents import build_adversarial_relay
+from agent_debate.core.engine.message import AgentMessage
 from agent_debate.core.engine.stream import EventSink, emit_event
 from agent_debate.core.skills import DebateSide
 
@@ -64,7 +68,8 @@ def forward_to_opponent(
     Returns:
         The adversarially framed, sanitised relay text the controller forwards.
     """
-    framed = build_adversarial_relay(message, run_id=run_id)
+    envelope = AgentMessage(round=round_, from_side=from_side, to_side=to_side, content=message)
+    framed = envelope.render(run_id=run_id)
     emit_event(
         sink,
         run_id=run_id,
@@ -75,10 +80,11 @@ def forward_to_opponent(
             "event": constants.LOOP_RELAY_EVENT_TAG,
             "from": from_side.value,
             "to": to_side.value,
+            constants.LOOP_RELAY_ENVELOPE_KEY: envelope.to_payload(),
         },
         runs_dir=runs_dir,
     )
     return framed
 
 
-__all__ = ["forward_to_opponent"]
+__all__ = ["AgentMessage", "forward_to_opponent"]

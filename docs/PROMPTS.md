@@ -2556,6 +2556,22 @@ fails → restore → green.
   timeout/retry are all preserved. TDD red-first
   (`packages/core/tests/test_controller_relay.py`).
 
+### Structured JSON envelope for inter-agent messages
+
+- **Prompt:** "Wrap inter-agent turns in a structured JSON schema (round, side,
+  content, etc.) while keeping prompts legible to the model. TDD; ≤150 lines/file;
+  ruff/mypy/coverage ≥85%." (HW2 §8.3.8)
+- **Outcome:** New `engine.message.AgentMessage` (pydantic) is the structured JSON
+  envelope for each inter-agent hop — `round`, `from_side`, `to_side`, `type`,
+  `content` — JSON-serialisable and lossless round-trip. The controller's forward
+  step builds the envelope, logs it on the existing
+  `message_routed_through_controller` routing event (additive `envelope` payload key,
+  no schema break), and *renders* the legible §5.6 adversarial relay from `content`
+  via the reused `build_adversarial_relay` — so the model still receives "Your
+  opponent argued: «…». Rebut it." (debate quality preserved). Envelope = monitorable
+  JSON transport/log; render = the legible prompt injected into the opponent. TDD
+  red-first (`packages/core/tests/test_agent_message.py`).
+
 ---
 
 _(add entries here as code is built — significant prompts that set a pattern,

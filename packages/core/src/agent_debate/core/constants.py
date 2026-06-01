@@ -151,6 +151,15 @@ LOOP_RELAY_LOG_AGENT = "controller"
 #: the demonstrable evidence the message passed through the father (HW2 §8.3.7).
 LOOP_RELAY_EVENT_TAG = "message_routed_through_controller"
 
+#: ``payload`` key under which the structured JSON inter-agent envelope (the
+#: :class:`~agent_debate.core.engine.message.AgentMessage` ``model_dump``) is logged
+#: on a controller-routed event (HW2 §8.3.8 — inter-agent IPC is structured JSON).
+LOOP_RELAY_ENVELOPE_KEY = "envelope"
+
+#: ``type`` recorded on the inter-agent :class:`~agent_debate.core.engine.message.
+#: AgentMessage` envelope — every forwarded debater turn is a relay hop (a name).
+LOOP_RELAY_MESSAGE_TYPE = "relay"
+
 #: Number of closing EXCHANGES in the closing-discussion phase (orchestration §3.3):
 #: each exchange is one closing statement per side (Pro then Con), so the phase
 #: produces ``CLOSING_EXCHANGES * 2`` turns. A single named constant — never an
@@ -302,9 +311,11 @@ __all__ = [
     "LOOP_MODEL_SERVICE",
     "LOOP_NUDGE_EVENT_TYPE",
     "LOOP_NUDGE_LOG_AGENT",
+    "LOOP_RELAY_ENVELOPE_KEY",
     "LOOP_RELAY_EVENT_TAG",
     "LOOP_RELAY_EVENT_TYPE",
     "LOOP_RELAY_LOG_AGENT",
+    "LOOP_RELAY_MESSAGE_TYPE",
     "LOOP_VERDICT_EVENT_TYPE",
     "LOOP_VERDICT_LOG_AGENT",
     "NUDGE_CORRECTION_TEMPLATE",
