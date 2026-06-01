@@ -44,16 +44,16 @@ def test_render_without_verdict() -> None:
     assert "Verdict: (none)" in text
 
 
-def test_render_winner_plain_string() -> None:
-    """A tie/plain-string winner (no ``.value``) renders verbatim."""
+def test_render_winner_uses_side_label() -> None:
+    """The decisive winner renders by its side label (issue #215: never a tie)."""
     result = DebateResult(
         topic="t",
         transcript=[_turn("p")],
         verdict=Verdict(
-            winner="tie",
-            rationale="evenly matched",
+            winner=DebateSide.PRO,
+            rationale="evenly matched on totals; decided on rebuttal quality",
             scores={DebateSide.PRO: 1.0, DebateSide.CON: 1.0},
         ),
     )
     text = render_result(result)
-    assert "winner=tie" in text
+    assert "winner=pro" in text

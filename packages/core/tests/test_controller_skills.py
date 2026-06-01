@@ -172,8 +172,12 @@ def test_render_verdict_con_wins_when_con_outscores_pro() -> None:
     assert result.winner is DebateSide.CON
 
 
-def test_render_verdict_ties_when_scores_equal() -> None:
-    """Equal per-side totals produce an explicit tie, never a controller preference."""
+def test_render_verdict_decides_winner_when_scores_equal() -> None:
+    """Equal per-side totals must STILL decide a winner (HW2 §8.4: tie forbidden).
+
+    With identical totals and identical criterion breakdowns the tie-breaker
+    cascade exhausts to its deterministic final fallback (PRO) — never a tie.
+    """
     transcript = [
         TranscriptTurn(side="pro", text="Pro.", score=2.0),  # type: ignore[arg-type]
         TranscriptTurn(side="con", text="Con.", score=2.0),  # type: ignore[arg-type]
@@ -181,14 +185,14 @@ def test_render_verdict_ties_when_scores_equal() -> None:
 
     result = render_verdict(transcript)
 
-    assert result.winner == "tie"
+    assert result.winner is DebateSide.PRO  # decisive fallback, never "tie" (issue #215)
 
 
 def test_render_verdict_accepts_explicit_request_with_winner() -> None:
     """The controller LLM may supply the winner directly via a ``VerdictRequest``."""
     request = VerdictRequest(
         turns=_transcript(),
-        winner="con",
+        winner=DebateSide.CON,
         rationale="Con's evidence outweighed pro's on balance.",
     )
 

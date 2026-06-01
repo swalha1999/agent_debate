@@ -53,7 +53,7 @@ def test_verdict_has_summary_converged_winner_reasoning_scores() -> None:
     assert isinstance(verdict, Verdict)
     assert verdict.summary
     assert isinstance(verdict.converged, bool)
-    assert verdict.winner in (DebateSide.PRO, DebateSide.CON, "tie")
+    assert verdict.winner in (DebateSide.PRO, DebateSide.CON)  # HW2 §8.4: never a tie
     assert verdict.rationale
     assert set(verdict.scores) == {DebateSide.PRO, DebateSide.CON}
     assert set(verdict.criteria_scores) == {DebateSide.PRO, DebateSide.CON}
@@ -88,8 +88,12 @@ def test_verdict_con_wins_when_con_out_argues_pro() -> None:
     assert verdict.winner is DebateSide.CON
 
 
-def test_verdict_balanced_debate_is_a_tie() -> None:
-    """Two symmetric sides within the tie margin produce an explicit tie."""
+def test_verdict_balanced_debate_never_ties_pro_default_fallback() -> None:
+    """A perfectly symmetric debate must STILL decide a winner (HW2 §8.4: no tie).
+
+    Both sides have identical totals AND identical per-criterion breakdowns, so the
+    whole tie-breaker cascade exhausts to the deterministic final fallback (PRO).
+    """
     transcript = [
         _turn("pro", "However that fails. I disagree and counter it directly."),
         _turn("con", "However that fails. I disagree and counter it directly."),
@@ -97,7 +101,44 @@ def test_verdict_balanced_debate_is_a_tie() -> None:
 
     verdict = render_verdict(transcript)
 
-    assert verdict.winner == "tie"
+    assert verdict.winner is DebateSide.PRO  # deterministic fallback, never "tie"
+
+
+def test_verdict_tiebreaker_prefers_higher_rebuttal_on_equal_totals() -> None:
+    """Equal weighted totals but a higher rebuttal criterion → that side wins.
+
+    Pro earns one rebuttal marker (weight 1.5); Con earns no rebuttal but an equal
+    total via engagement + a per-turn score, so the weighted totals match exactly.
+    The first tie-breaker (rebuttal quality) must then hand the win to Pro,
+    deterministically and never as a tie.
+    """
+    # Pro turn: argumentation 1.0 + one rebuttal marker "on the contrary" (1.5) = 2.5.
+    # Con turn: argumentation 1.0 + per-turn score 1.5, no markers = 2.5 total.
+    transcript = [
+        _turn("pro", "On the contrary, offices waste time."),
+        TranscriptTurn(side="con", text="Offices build culture.", score=1.5),  # type: ignore[arg-type]
+    ]
+
+    verdict = render_verdict(transcript)
+
+    # Totals match but Pro's rebuttal criterion is strictly higher → Pro wins.
+    assert verdict.scores[DebateSide.PRO] == verdict.scores[DebateSide.CON]
+    pro_rebuttal = verdict.criteria_scores[DebateSide.PRO]["rebuttal"]
+    con_rebuttal = verdict.criteria_scores[DebateSide.CON]["rebuttal"]
+    assert pro_rebuttal > con_rebuttal
+    assert verdict.winner is DebateSide.PRO
+
+
+def test_verdict_never_returns_tie_for_constructed_equal_scores() -> None:
+    """Explicit equal per-turn scores can no longer yield a tie (HW2 §8.4)."""
+    transcript = [
+        _turn("pro", "Pro."),
+        _turn("con", "Con."),
+    ]
+
+    verdict = render_verdict(transcript)
+
+    assert verdict.winner in (DebateSide.PRO, DebateSide.CON)  # decisive, never "tie"
 
 
 def test_verdict_does_not_fact_check() -> None:
@@ -175,8 +216,8 @@ def test_engine_populates_and_logs_verdict(tmp_path: Path) -> None:
 
     assert isinstance(result, DebateResult)
     assert result.verdict is not None
-    assert result.verdict.winner in (DebateSide.PRO, DebateSide.CON, "tie")
+    assert result.verdict.winner in (DebateSide.PRO, DebateSide.CON)  # HW2 §8.4: no tie
     assert result.verdict.summary
     verdict_events = [e for e in _events(runs_dir, "rv") if e["event_type"] == "verdict"]
     assert verdict_events, "expected a logged verdict event"
-    assert verdict_events[0]["payload"].get("winner") in ("pro", "con", "tie")
+    assert verdict_events[0]["payload"].get("winner") in ("pro", "con")

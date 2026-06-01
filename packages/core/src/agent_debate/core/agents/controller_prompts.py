@@ -65,6 +65,19 @@ MODERATION_TEMPLATE = (
     "- Render a verdict at the end: produce a single structured verdict for the debate."
 )
 
+#: The decisive-verdict rule block (HW2 §8.3.6/§8.4/§9, issue #215). A tie is
+#: forbidden — the judge MUST always pick a decisive winner. Differential scoring
+#: (e.g. 80% vs 70%) is explicitly permitted, so even close debates resolve.
+VERDICT_DECISION_TEMPLATE = (
+    "Verdict decision rule:\n"
+    "- A tie is forbidden: you MUST declare a decisive winner (Pro or Con) — never a "
+    "tie, never 'too close to call'.\n"
+    "- Use differential scoring (for example 80% vs 70%) so even a close debate yields "
+    "a decisive winner, and give the reasoning behind the margin.\n"
+    "- If the sides seem level, break the tie on rebuttal quality, then on which side "
+    "best stayed on its assigned side, then on direct engagement — but always decide."
+)
+
 #: Heading introducing the explicit controller-skill list.
 SKILLS_HEADER = "You have these skills (tools) — use each when noted:"
 
@@ -104,7 +117,14 @@ def build_controller_system_prompt(
     ]
     skills_block = "\n".join([SKILLS_HEADER, *skill_lines])
     return "\n\n".join(
-        [ROLE_LINE, sides_line, NEUTRALITY_TEMPLATE, MODERATION_TEMPLATE, skills_block]
+        [
+            ROLE_LINE,
+            sides_line,
+            NEUTRALITY_TEMPLATE,
+            MODERATION_TEMPLATE,
+            VERDICT_DECISION_TEMPLATE,
+            skills_block,
+        ]
     )
 
 

@@ -282,9 +282,10 @@ class VerdictRequest(BaseModel):
 
     Attributes:
         turns: The structured transcript; at least one turn is required.
-        winner: An optional controller-supplied outcome (``pro``/``con``/``tie``).
-            When given it is used verbatim; otherwise the winner is tallied from the
-            per-turn ``score`` totals. The controller never encodes a *pre-held*
+        winner: An optional controller-supplied outcome — ``pro`` or ``con`` ONLY.
+            A tie is forbidden (HW2 §8.4, issue #215): the judge MUST decide. When
+            given it is used verbatim; otherwise the winner is tallied (then tie-broken)
+            from the per-turn ``score`` totals. The controller never encodes a *pre-held*
             stance — only a debate-derived judgement (anti-sycophancy §4).
         rationale: An optional controller-supplied rationale; a tally-based rationale
             is generated when omitted.
@@ -293,7 +294,7 @@ class VerdictRequest(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     turns: list[TranscriptTurn] = Field(min_length=1)
-    winner: DebateSide | str | None = None
+    winner: DebateSide | None = None
     rationale: str | None = None
 
     @field_validator("rationale")
@@ -308,17 +309,19 @@ class Verdict(BaseModel):
     The controller **never reveals its own stance** (PRD §5.3): the verdict carries
     only debate-derived fields — never a pre-held controller opinion. Per PRD §3.2
     step 4 it states a SUMMARY of the debate, whether the agents CONVERGED/agreed,
-    the RESULT (winning side or a ``tie``), and the REASONING — judged on
-    ARGUMENTATION / REBUTTAL quality / ENGAGEMENT, explicitly **not** factual
-    correctness (PRD §3: no fact-checking).
+    the RESULT (the winning side — always ``pro`` or ``con``; a tie is forbidden,
+    HW2 §8.4 / issue #215), and the REASONING — judged on ARGUMENTATION / REBUTTAL
+    quality / ENGAGEMENT, explicitly **not** factual correctness (PRD §3: no
+    fact-checking).
 
     The ``summary`` / ``converged`` / ``criteria_scores`` fields are additive (8.3
     deepening) with backward-compatible defaults, so existing :class:`Verdict`
     usage keeps validating.
 
     Attributes:
-        winner: The winning :class:`DebateSide`, or the tie label when neither side
-            outscored the other.
+        winner: The winning :class:`DebateSide` — always ``pro`` or ``con``. A tie is
+            forbidden (HW2 §8.4 / issue #215): differential scoring plus a deterministic
+            tie-breaker cascade guarantee a decisive winner.
         rationale: The debate-derived reasoning for the outcome (argument quality).
         scores: The per-side aggregate score totals the outcome was derived from.
         summary: A short summary of the debate and its result.
@@ -329,7 +332,7 @@ class Verdict(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    winner: DebateSide | str
+    winner: DebateSide
     rationale: str = Field(min_length=1)
     scores: dict[DebateSide, float]
     summary: str = ""

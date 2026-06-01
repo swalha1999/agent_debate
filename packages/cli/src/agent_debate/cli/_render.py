@@ -29,8 +29,8 @@ def render_result(result: DebateResult) -> str:
     if verdict is None:
         lines.append("Verdict: (none)")
     else:
-        winner = verdict.winner.value if hasattr(verdict.winner, "value") else verdict.winner
-        lines.append(f"Verdict: winner={winner}")
+        # ``winner`` is always a decisive DebateSide — a tie is forbidden (issue #215).
+        lines.append(f"Verdict: winner={verdict.winner.value}")
         if verdict.summary:
             lines.append(f"Summary: {verdict.summary}")
         lines.append(f"Rationale: {verdict.rationale}")
