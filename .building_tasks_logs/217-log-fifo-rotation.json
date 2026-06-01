@@ -1,0 +1,13 @@
+{
+  "task_id": "217",
+  "title": "[HW2] Built-in log FIFO rotation (P1)",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Add config-driven FIFO log-file rotation (max files, max lines/file; oldest dropped first). TDD; <=150 lines/file; ruff/mypy/coverage >=85%; no hard-coded counts.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 82000
+  },
+  "note": "HW2 docs/hw2_requirements.pdf §8.6 — built-in logs must use FIFO file rotation (a capped number of files, each with a max line count; oldest dropped first). The LOG package previously wrote one unbounded JSONL per run (packages/log/) with no rotation/file-count/line cap. Added packages/log/src/agent_debate/log/_rotation.py: RotationConfig (frozen Pydantic, version + max_files>0 + max_lines_per_file>0), load_rotation_config() reading repo-root config/logging.json (mirrors config/rate_limits.json / config/watchdog.json), and RotatingJsonlSink (write/flush/close/closed duck-type for the per-run sink). Rotation scheme is logrotate-style: the live/current file is always runs/<run_id>.jsonl (backward compatible — every existing reader keeps that path); at max_lines_per_file it rolls over by shifting archives up (<stem>.1<suffix> = newest archive, higher index = older) and opening a fresh empty live file. FIFO: before each shift the OLDEST archive (highest index past the cap) is unlinked first, so total files (live + archives) never exceed max_files. Wired into _setup.py: _open_sink now returns a cached RotatingJsonlSink instead of a bare TextIO; _DualSinkRenderer/_build_processors retyped against a minimal _LineSink Protocol satisfied by both TextIO and the rotator. Shipped defaults DEFAULT_MAX_FILES=20 / DEFAULT_MAX_LINES_PER_FILE=500 follow the PDF example; 0 hard-coded counts (all from config). TDD red-first: packages/log/tests/test_log_rotation.py written first (ImportError), then implementation -> green. Tests cover rollover at max_lines, live file stays unsuffixed, file count <= max_files, oldest-dropped-first (FIFO), every file valid JSONL within line cap, no-rollover-below-cap, repo config load, bad-value rejection, PDF-example defaults. Gates green: ruff check + format clean (253 files), mypy clean (250 source files), check_line_limit.py exit 0, pytest --cov 99% total (_rotation.py 93%, >=85%). No new failures vs clean main: 6 pre-existing environmental failures unchanged (2 Unix file-permission branch-protection checks, 2 live-tree secret-scan/hygiene on the developer's real .env, 2 Windows missing-file path-regex in test_price_table/test_rate_limit_config) plus the 2 long-topic parametrized teardown errors. secret_scan.py flags only the developer's real local .env (pre-existing). docs/PRD.md NOT touched (PR #214 owns it)."
+}
