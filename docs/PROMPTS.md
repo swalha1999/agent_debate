@@ -2356,5 +2356,23 @@ fails → restore → green.
   leaves a labelled placeholder, the follow-up task's job is to make it true and
   wire it into the entry-point doc — not to regenerate the underlying artifacts.*
 
+## 12.7 — Final pass vs Improvements checklist
+
+> Go through docs/Improvements_to_keep_in_mind.md and verify/tick every item; fix any gaps. (Repo standards: TDD, ≤150 lines/file, ruff+mypy clean, no hard-coded values, external calls via the API gatekeeper, LOG for logging, coverage ≥85%.)
+
+- **Verification, not feature work:** all 13 Improvements items were already
+  satisfied by the mature Epics 0–15 codebase, so this task added **no product
+  code**. Each box was ticked only after confirming it against a real gate run or
+  the actual file (PRD §10 for cost, `.github/workflows/ci.yml` for tooling,
+  `core/security/sanitiser.py` + `core/gatekeeper/` for the trust-boundary item,
+  `.env`-ignored + `scripts/secret_scan.py` for secrets, etc.).
+- **Evidence inline:** every ticked box carries a one-line "— evidence" pointer
+  to the backing file/command, so the checklist is auditable from the doc alone.
+- **Honest scoping:** the "keep docs current" item notes ongoing upkeep is owned
+  by task D.6, and the lecturer-guidelines final pass remains task 12.8 — neither
+  was claimed here. *Pattern: a P0 "tick every box" pass is a verify-and-cite
+  task; tick only what a gate or file proves, and name the owning task for the
+  rest rather than faking a tick.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
