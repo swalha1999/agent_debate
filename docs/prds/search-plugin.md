@@ -1,6 +1,6 @@
 # Sub-PRD — Pluggable Search Provider
 
-**Parent:** `../PRD.md` · **Status:** Draft v0.1 · **Last updated:** 2026-05-30
+**Parent:** `../PRD.md` · **Status:** v1.0 — implemented · **Last updated:** 2026-06-01
 **Mechanism:** the swappable web-search plug-in (web search is a MUST).
 
 > Required by guideline §2.3 + §12 (plugin architecture / extension points).

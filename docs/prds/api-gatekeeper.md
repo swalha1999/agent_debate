@@ -1,6 +1,6 @@
 # Sub-PRD — API Gatekeeper (Rate Limiting & Overflow)
 
-**Parent:** `../PRD.md` · **Status:** Draft v0.1 · **Last updated:** 2026-05-30
+**Parent:** `../PRD.md` · **Status:** v1.0 — implemented · **Last updated:** 2026-06-01
 **Mechanism:** the centralized manager for all external API calls.
 
 > Required by guideline §5 (and §2.3). Distinct from the **security** gatekeeper

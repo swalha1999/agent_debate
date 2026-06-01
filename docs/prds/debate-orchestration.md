@@ -1,6 +1,6 @@
 # Sub-PRD — Debate Orchestration
 
-**Parent:** `../PRD.md` · **Status:** Draft v0.1 · **Last updated:** 2026-05-30
+**Parent:** `../PRD.md` · **Status:** v1.0 — implemented · **Last updated:** 2026-06-01
 **Mechanism:** the engine that runs a full Pro-vs-Con debate.
 
 > Required by guideline §2.3 (dedicated PRD per central mechanism).
@@ -19,7 +19,13 @@ by the Controller, producing a structured `DebateResult`.
 ## 3. Flow
 
 1. **Setup** — controller receives/sets the topic, privately assigns Pro = FOR and
-   Con = AGAINST, hides its own stance.
+   Con = AGAINST, hides its own stance. `setup_debate` builds each debater's full
+   system prompt (side + rules + named skills + **the topic**) and stores it on the
+   agent's isolated context. *As implemented:* because every turn runs with the
+   agent's `message_history` (and pydantic-ai drops a configured `system_prompt`
+   once a history is supplied), that prompt is embedded as the leading
+   `SystemPromptPart` of the first request so the side **and topic** reach the model
+   on every turn — see PRD §5.4 / `prds/anti-sycophancy.md` §2.
 2. **Debate loop** — `round = 1..ROUNDS` (default 10), alternating:
    - Pro turn → `assess_drift(Pro)` → nudge if captured (not a debate turn).
    - Con turn (must rebut Pro's latest) → `assess_drift(Con)` → nudge if captured.

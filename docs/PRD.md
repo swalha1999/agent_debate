@@ -3,8 +3,8 @@
 **Project:** `agent_debate`
 **Course context:** Orchestration of AI Agents
 **Repository:** https://github.com/swalha1999/agent_debate
-**Status:** Draft v0.2
-**Last updated:** 2026-05-30
+**Status:** v1.0 — implemented (all epics built & merged)
+**Last updated:** 2026-06-01
 **Owners:** swalha1999, Mhmdabad
 
 Companion docs:
@@ -391,22 +391,22 @@ visualizations (in `notebooks/` and `runs/`) covering:
 
 ## 11. Acceptance criteria
 
-- [ ] A debate runs end-to-end: 10 Pro + 10 Con messages, alternating, each within the word limit.
-- [ ] Debaters demonstrably **rebut** the opponent's last message (not isolated monologues).
-- [ ] Each debater **uses web search** at least when relevant, and has ≥2 skills named in its system prompt.
-- [ ] Controller never leaks its stance; detects ≥1 staged drift case and nudges the agent back.
-- [ ] A turn that exceeds the timeout is killed and retried automatically.
-- [ ] Controller outputs a final **summary + agree/disagree result + who won** (no fact-checking).
-- [ ] All five surfaces (UI, CLI, API, SDK, LOG) work; logs capture every event with `run_id`.
-- [ ] No secrets in repo; `ruff` = 0 violations, type checks pass, tests pass in CI.
-- [ ] **Every external call goes through the API gatekeeper**; rate limits come from `config/rate_limits.json`; overflow is queued (no drops/crash).
-- [ ] **Test coverage ≥ 85%** enforced (`fail_under = 85`); TDD followed.
-- [ ] **No code file exceeds 150 lines**; no hard-coded values; SDK-centred, no duplication.
-- [ ] A **version module starts at `1.00`**; the **Prompt Book** (`PROMPTS.md`) is maintained.
-- [ ] Dedicated **sub-PRDs** exist for orchestration, anti-sycophancy, the gatekeeper, and the search plug-in.
-- [ ] **Research notebook + visualizations** produced (who-wins, drift frequency, tokens/latency).
-- [ ] **Cost-breakdown table** (tokens × price → total) reported; budget cap + alert work.
-- [ ] **Sample debate runs are committed to the repo** (`runs/`) so the teacher can review real runs (transcript + verdict + token/cost). See TASKS.md §12.5.
+- [x] A debate runs end-to-end: 10 Pro + 10 Con messages, alternating, each within the word limit.
+- [x] Debaters demonstrably **rebut** the opponent's last message (not isolated monologues).
+- [x] Each debater **uses web search** at least when relevant, and has ≥2 skills named in its system prompt.
+- [x] Controller never leaks its stance; detects ≥1 staged drift case and nudges the agent back.
+- [x] A turn that exceeds the timeout is killed and retried automatically.
+- [x] Controller outputs a final **summary + agree/disagree result + who won** (no fact-checking).
+- [x] All five surfaces (UI, CLI, API, SDK, LOG) work; logs capture every event with `run_id`.
+- [x] No secrets in repo; `ruff` = 0 violations, type checks pass, tests pass in CI.
+- [x] **Every external call goes through the API gatekeeper**; rate limits come from `config/rate_limits.json`; overflow is queued (no drops/crash).
+- [x] **Test coverage ≥ 85%** enforced (`fail_under = 85`); TDD followed.
+- [x] **No code file exceeds 150 lines**; no hard-coded values; SDK-centred, no duplication.
+- [x] A **version module starts at `1.00`**; the **Prompt Book** (`PROMPTS.md`) is maintained.
+- [x] Dedicated **sub-PRDs** exist for orchestration, anti-sycophancy, the gatekeeper, and the search plug-in.
+- [x] **Research notebook + visualizations** produced (who-wins, drift frequency, tokens/latency).
+- [x] **Cost-breakdown table** (tokens × price → total) reported; budget cap + alert work.
+- [x] **Sample debate runs are committed to the repo** (`runs/`) so the teacher can review real runs (transcript + verdict + token/cost). See TASKS.md §12.5.
 
 ## 12. Open questions / future work
 
@@ -417,8 +417,11 @@ visualizations (in `notebooks/` and `runs/`) covering:
 
 ## 13. Milestones
 
-1. **M1 — Scaffold:** uv workspace, packages, config (+ `rate_limits.json`), version module `1.00`, LOG, CI (ruff/mypy/coverage-gate/150-line check).
-2. **M2 — SDK core:** API gatekeeper, agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
-3. **M3 — Controller:** drift detection, nudging, verdict.
-4. **M4 — Surfaces:** CLI → API → UI.
-5. **M5 — Hardening & analysis:** security gatekeeper, tests (≥85%, edge cases), research notebook + visualizations, cost-breakdown report, docs, sample runs committed.
+All five milestones are **realized** (built and merged — see `TASKS.md` for the
+per-epic `[x]` status and `runs/` for the committed sample debates).
+
+1. **M1 — Scaffold ✅:** uv workspace, packages, config (+ `rate_limits.json`), version module `1.00`, LOG, CI (ruff/mypy/coverage-gate/150-line check).
+2. **M2 — SDK core ✅:** API gatekeeper, agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
+3. **M3 — Controller ✅:** drift detection, nudging, verdict.
+4. **M4 — Surfaces ✅:** CLI → API → UI.
+5. **M5 — Hardening & analysis ✅:** security gatekeeper, tests (≥85%, edge cases), research notebook + visualizations, cost-breakdown report, docs, sample runs committed.
