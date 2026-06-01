@@ -28,6 +28,17 @@ from agent_debate.core.research.analysis import (
     tokens_latency_per_topic,
     who_wins,
 )
+from agent_debate.core.research.params import (
+    DEFAULT_OUTPUT_FRACTION,
+    EmpiricalPoint,
+    GridCell,
+    ModelCostChoice,
+    TokenModel,
+    empirical_points,
+    fit_token_model,
+    model_choice_table,
+    project_grid,
+)
 from agent_debate.core.research.viz import (
     save_agree_disagree_chart,
     save_all_figures,
@@ -38,16 +49,25 @@ from agent_debate.core.research.viz import (
 
 __all__ = [
     "DATASET_COLUMNS",
+    "DEFAULT_OUTPUT_FRACTION",
     "NO_VERDICT",
     "RUN_GLOB",
+    "EmpiricalPoint",
+    "GridCell",
+    "ModelCostChoice",
     "NudgeStats",
     "RoundMetric",
     "RunSummary",
+    "TokenModel",
     "TopicMetric",
     "aggregate_runs",
     "agree_vs_disagree",
+    "empirical_points",
+    "fit_token_model",
+    "model_choice_table",
     "nudges_per_side",
     "parse_run",
+    "project_grid",
     "round_metrics",
     "save_agree_disagree_chart",
     "save_all_figures",
