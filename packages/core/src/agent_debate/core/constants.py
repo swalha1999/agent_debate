@@ -137,6 +137,20 @@ LOOP_NUDGE_LOG_AGENT = "controller"
 #: model call — the gatekeeper falls back to ``default`` when unconfigured (§13).
 LOOP_MODEL_SERVICE = "anthropic"
 
+#: ``event_type`` recorded when the controller (the "father") forwards a debater's
+#: message to the opponent (HW2 §8.3.7 — every message flows child → father → child).
+#: The LOG schema has no dedicated "relay" kind, so it is a ``system`` event whose
+#: payload carries the ``from``/``to`` sides + the ``routed`` tag (the routing evidence).
+LOOP_RELAY_EVENT_TYPE = "system"
+
+#: ``agent`` label recorded on a controller forward/relay event — the controller (the
+#: father) is the hub every message is routed through. A name, not a stance.
+LOOP_RELAY_LOG_AGENT = "controller"
+
+#: ``payload["event"]`` tag identifying a controller-routed message in the run log —
+#: the demonstrable evidence the message passed through the father (HW2 §8.3.7).
+LOOP_RELAY_EVENT_TAG = "message_routed_through_controller"
+
 #: Number of closing EXCHANGES in the closing-discussion phase (orchestration §3.3):
 #: each exchange is one closing statement per side (Pro then Con), so the phase
 #: produces ``CLOSING_EXCHANGES * 2`` turns. A single named constant — never an
@@ -288,6 +302,9 @@ __all__ = [
     "LOOP_MODEL_SERVICE",
     "LOOP_NUDGE_EVENT_TYPE",
     "LOOP_NUDGE_LOG_AGENT",
+    "LOOP_RELAY_EVENT_TAG",
+    "LOOP_RELAY_EVENT_TYPE",
+    "LOOP_RELAY_LOG_AGENT",
     "LOOP_VERDICT_EVENT_TYPE",
     "LOOP_VERDICT_LOG_AGENT",
     "NUDGE_CORRECTION_TEMPLATE",

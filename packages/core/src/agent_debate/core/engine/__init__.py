@@ -18,6 +18,7 @@ from agent_debate.core.engine._call import (
 )
 from agent_debate.core.engine._usage import UsageBreakdown
 from agent_debate.core.engine.closing import run_closing_discussion
+from agent_debate.core.engine.forward import forward_to_opponent
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.loop import run_debate_loop
 from agent_debate.core.engine.models import DebateConfig
@@ -54,6 +55,7 @@ __all__ = [
     "TurnFailedError",
     "UsageBreakdown",
     "emit_event",
+    "forward_to_opponent",
     "generate_turn_output",
     "run_closing_discussion",
     "run_debate_loop",

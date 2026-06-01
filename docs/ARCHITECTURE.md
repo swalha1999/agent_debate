@@ -46,14 +46,16 @@ the other and to let the Controller nudge a captured agent back onto its side.
         ┌───────────┐   assigns sides (privately), never reveals own stance
         │ Controller│───────────────────────────────────────────────┐
         └───────────┘                                                 │
-              │ moderates each turn (drift-check + private nudge)      │
+              │ moderates + RELAYS each turn (drift-check, then        │
+              │ frames & forwards the message: child→father→child)     │
    ┌──────────┴───────────┐                                           │
    ▼                      ▼                                           ▼
-┌──────┐  adversarial   ┌──────┐                               ┌───────────┐
-│ Pro  │◀── relay ─────▶│ Con  │   round = 1..ROUNDS           │  Verdict  │
-│agent │   (separate    │agent │   Pro msg → drift-check        │ summary + │
-└──────┘    contexts)   └──────┘   Con msg → drift-check        │ winner +  │
-   │                       │       (each ≤ MAX_WORDS)           │ converged │
+┌──────┐  via Controller ┌──────┐                               ┌───────────┐
+│ Pro  │── adversarial ──│ Con  │   round = 1..ROUNDS           │  Verdict  │
+│agent │   relay through │agent │   Pro msg → drift → forward    │ summary + │
+└──────┘   the father    └──────┘   Con msg → drift → forward    │ winner +  │
+   │       (separate          │       (each ≤ MAX_WORDS)          │ converged │
+   │        contexts)         │                                   │           │
    └─── tools: web_search, build_argument, analyze_opponent ──▶ └───────────┘
               every external call ▼
                         ┌──────────────────┐
@@ -70,9 +72,14 @@ and `engine/loop.py`'s docstring):
    FOR and Con = AGAINST, and hides its own stance
    (`engine/setup.py::setup_debate`, topic validated by the security gatekeeper).
 2. **Debate loop** — for `round = 1..ROUNDS` (default 10), alternating:
-   Pro turn → Controller drift-check on Pro → Con turn (must rebut Pro's latest)
-   → Controller drift-check on Con. Each message is `≤ MAX_WORDS`; a captured
-   agent gets a private nudge that is **not** counted as a debate turn
+   Pro turn → Controller drift-check on Pro → **Controller forwards Pro → Con** →
+   Con turn (rebuts the controller-forwarded frame) → Controller drift-check on Con
+   → **Controller forwards Con → Pro** (next round). Every message flows
+   **child → father → child** (HW2 §8.3.7): the Controller is the explicit relay
+   hub — it frames + forwards each message (`engine/forward.py::forward_to_opponent`,
+   reusing the §5.6 adversarial relay) and logs a `message_routed_through_controller`
+   event, so the debaters never communicate directly. Each message is `≤ MAX_WORDS`;
+   a captured agent gets a private nudge that is **not** counted as a debate turn
    (`engine/loop.py::run_debate_loop`, `engine/turn.py`, `engine/drift.py`).
 3. **Closing discussion** — a freer exchange before judgement
    (`engine/closing.py`), stored separately from the main transcript.

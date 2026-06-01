@@ -2540,6 +2540,22 @@ fails → restore → green.
   newest archive, higher index = older) and the oldest archive is deleted first so total
   files never exceed `max_files`. TDD red-first (`packages/log/tests/test_log_rotation.py`).
 
+### Route every debate message through the controller (child → father → child)
+
+- **Prompt:** "Refactor so each message is explicitly routed through the controller
+  (father) before reaching the opponent. Keep context isolation + anti-sycophancy
+  intact; TDD; ≤150 lines/file; ruff/mypy/coverage ≥85%." (HW2 §8.3.7)
+- **Outcome:** New `engine.forward.forward_to_opponent` makes the controller the
+  explicit relay hub: it frames the message via the reused `build_adversarial_relay`
+  and logs a `system` routing event tagged `message_routed_through_controller`
+  (from/to side + round) — the demonstrable evidence the message passed through the
+  father. The loop forwards each produced message through the controller, and the
+  opponent's `run_debate_turn` rebuts the controller-forwarded frame (param renamed
+  `opponent_message` → `framed_opponent_message`; the turn no longer re-frames). 5.4
+  isolation, 5.6 adversarial framing, side-anchoring, drift-check/nudge, 10-vs-10 and
+  timeout/retry are all preserved. TDD red-first
+  (`packages/core/tests/test_controller_relay.py`).
+
 ---
 
 _(add entries here as code is built — significant prompts that set a pattern,

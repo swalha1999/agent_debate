@@ -5,14 +5,19 @@ Drives the debate between the Pro and Con agents prepared by
 into a :class:`DebateResult`. For ``round = 1..config.rounds`` (default 10) it runs,
 in order:
 
-1. **Pro turn** — inject the side anchor (and, from round 2+, the adversarial relay
-   of Con's last message) into Pro's OWN context, generate via the gatekeeper,
-   enforce the word limit, append + log a ``message`` event.
+1. **Pro turn** — inject the side anchor (and, from round 2+, the relay the
+   controller forwarded of Con's last message) into Pro's OWN context, generate via
+   the gatekeeper, enforce the word limit, append + log a ``message`` event.
 2. **Controller drift-check on Pro** — :func:`~agent_debate.core.engine.drift.
    run_drift_check`; on capture record a nudge (NOT a debate turn) + log it.
-3. **Con turn** — inject the anchor + the adversarial relay of Pro's *latest*
-   message (Con MUST rebut Pro), generate, enforce, append + log.
-4. **Controller drift-check on Con** — as for Pro.
+3. **Controller forwards Pro → Con** — every message flows child → father → child
+   (HW2 §8.3.7): the controller (:func:`~agent_debate.core.engine.forward.
+   forward_to_opponent`) frames Pro's message adversarially, logs the routing event,
+   and hands the frame to Con — the debaters never communicate directly.
+4. **Con turn** — inject the anchor + the controller-forwarded frame of Pro's
+   *latest* message (Con MUST rebut Pro), generate, enforce, append + log.
+5. **Controller drift-check on Con**, then **controller forwards Con → Pro** for the
+   next round — as for Pro.
 
 Result: exactly ``config.rounds`` Pro + ``config.rounds`` Con messages, alternating,
 each ≤ ``config.max_words``. After the main rounds — and before the verdict — a
@@ -37,6 +42,7 @@ from agent_debate.core.engine._cost import price_result
 from agent_debate.core.engine._verdict import render_loop_verdict
 from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.drift import run_drift_check
+from agent_debate.core.engine.forward import forward_to_opponent
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import CostTotals, DebateMessage, DebateResult
@@ -88,8 +94,11 @@ def run_debate_loop(
     keeper = gatekeeper or ApiGatekeeper(load_rate_limit_config(), run_id=run_id, runs_dir=runs_dir)
     transcript: list[DebateMessage] = []
     nudges: list[NudgeMessage] = []
-    last_pro: str | None = None
-    last_con: str | None = None
+    # The CONTROLLER-forwarded (framed) message each debater rebuts next — every
+    # message flows child → father → child (§8.3.7); a debater never receives the
+    # opponent's raw turn, only what the controller forwarded.
+    forwarded_to_pro: str | None = None
+    forwarded_to_con: str | None = None
     for round_ in range(1, config.rounds + 1):
         last_pro = _turn(
             setup,
@@ -99,11 +108,14 @@ def run_debate_loop(
             runs_dir,
             DebateSide.PRO,
             round_,
-            last_con,
+            forwarded_to_pro,
             transcript,
             sink,
         )
         _drift(setup, transcript[-1], DebateSide.PRO, round_, run_id, runs_dir, nudges, sink)
+        forwarded_to_con = _forward(
+            last_pro, DebateSide.PRO, DebateSide.CON, round_, run_id, runs_dir, sink
+        )
         last_con = _turn(
             setup,
             config,
@@ -112,11 +124,14 @@ def run_debate_loop(
             runs_dir,
             DebateSide.CON,
             round_,
-            last_pro,
+            forwarded_to_con,
             transcript,
             sink,
         )
         _drift(setup, transcript[-1], DebateSide.CON, round_, run_id, runs_dir, nudges, sink)
+        forwarded_to_pro = _forward(
+            last_con, DebateSide.CON, DebateSide.PRO, round_, run_id, runs_dir, sink
+        )
     closing = run_closing_discussion(
         setup, config, gatekeeper=keeper, run_id=run_id, runs_dir=runs_dir, sink=sink
     )
@@ -141,16 +156,18 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
     runs_dir: Path | str,
     side: DebateSide,
     round_: int,
-    opponent_message: str | None,
+    framed_opponent_message: str | None,
     transcript: list[DebateMessage],
     sink: EventSink | None,
 ) -> str | None:
     """Run one debater turn, append it to ``transcript`` and return its content.
 
-    A FAILED turn (its model call exhausted the timeout + retry budget) is still
+    ``framed_opponent_message`` is what the CONTROLLER forwarded (§8.3.7) — the
+    debater rebuts the father-forwarded frame, never the opponent's raw turn. A
+    FAILED turn (its model call exhausted the timeout + retry budget) is still
     recorded in the transcript (marked ``failed``) so the run does not crash, but
-    returns ``None`` — the opponent gets a fresh anchor rather than being asked to
-    rebut a failure marker (the §4 graceful-degradation policy).
+    returns ``None`` — nothing is forwarded onward (the §4 graceful-degradation
+    policy: the opponent gets a fresh anchor rather than a failure marker to rebut).
     """
     agent = setup.pro_agent if side is DebateSide.PRO else setup.con_agent
     message = run_debate_turn(
@@ -162,11 +179,39 @@ def _turn(  # noqa: PLR0913 — explicit per-turn dependencies (no shared mutabl
         gatekeeper=keeper,
         run_id=run_id,
         runs_dir=runs_dir,
-        opponent_message=opponent_message,
+        framed_opponent_message=framed_opponent_message,
         sink=sink,
     )
     transcript.append(message)
     return None if message.failed else message.content
+
+
+def _forward(  # noqa: PLR0913 — explicit per-forward dependencies (no shared mutable state).
+    message: str | None,
+    from_side: DebateSide,
+    to_side: DebateSide,
+    round_: int,
+    run_id: str,
+    runs_dir: Path | str,
+    sink: EventSink | None,
+) -> str | None:
+    """Route ``message`` from ``from_side`` to ``to_side`` THROUGH the controller (§8.3.7).
+
+    The hub step: the controller (father) frames + logs the routing and returns the
+    framed relay the opponent will rebut next. A FAILED turn produces no ``message``
+    (``None``) — nothing is forwarded, so the opponent gets a fresh anchor (§4).
+    """
+    if message is None:
+        return None
+    return forward_to_opponent(
+        message=message,
+        from_side=from_side,
+        to_side=to_side,
+        round_=round_,
+        run_id=run_id,
+        runs_dir=runs_dir,
+        sink=sink,
+    )
 
 
 def _drift(  # noqa: PLR0913 — explicit per-check dependencies (no shared mutable state).
