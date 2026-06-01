@@ -21,6 +21,7 @@ from agent_debate.core.engine.closing import run_closing_discussion
 from agent_debate.core.engine.forward import forward_to_opponent
 from agent_debate.core.engine.gatekeeper_proto import Gatekeeper
 from agent_debate.core.engine.loop import run_debate_loop
+from agent_debate.core.engine.message import AgentMessage
 from agent_debate.core.engine.models import DebateConfig
 from agent_debate.core.engine.result import (
     CostBreakdown,
@@ -39,6 +40,7 @@ from agent_debate.core.engine.stream import (
 )
 
 __all__ = [
+    "AgentMessage",
     "CollectingSink",
     "CostBreakdown",
     "CostTotals",

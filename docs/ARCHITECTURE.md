@@ -78,7 +78,12 @@ and `engine/loop.py`'s docstring):
    **child → father → child** (HW2 §8.3.7): the Controller is the explicit relay
    hub — it frames + forwards each message (`engine/forward.py::forward_to_opponent`,
    reusing the §5.6 adversarial relay) and logs a `message_routed_through_controller`
-   event, so the debaters never communicate directly. Each message is `≤ MAX_WORDS`;
+   event, so the debaters never communicate directly. Each inter-agent hop is wrapped
+   in a structured JSON `AgentMessage` envelope (`engine/message.py`,
+   round/from_side/to_side/type/content — HW2 §8.3.8 monitorable JSON IPC): the
+   envelope is the logged transport (under the routing event's `envelope` key) while
+   the legible adversarial prompt the model sees is *rendered* from its `content`, so
+   prompt legibility and debate quality are unchanged. Each message is `≤ MAX_WORDS`;
    a captured agent gets a private nudge that is **not** counted as a debate turn
    (`engine/loop.py::run_debate_loop`, `engine/turn.py`, `engine/drift.py`).
 3. **Closing discussion** — a freer exchange before judgement
