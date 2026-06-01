@@ -2399,5 +2399,76 @@ fails → restore → green.
   D.6. *Pattern: when the lecturer's checklist lives in an authoritative doc, ship
   a separate evidence-mapped checklist and cite a gate/file for every box.*
 
+## D.6 — Keep planning docs updated (doc-reconciliation pass, 2026-06-01)
+
+> As implementation progresses, keep docs/PRD.md, docs/prds/*, docs/TASKS.md, docs/PROMPTS.md, and docs/Improvements_to_keep_in_mind.md in sync with reality. Update the Prompt Book with significant prompts. (Repo standards: TDD, ≤150 lines/file, ruff+mypy clean, no hard-coded values, external calls via the API gatekeeper, LOG, coverage ≥85%.)
+
+- **The last open task, and a pure docs pass:** with every epic (0–15) built and
+  merged, D.6 reconciles the *planning* docs against the finished system — no product
+  code changed.
+- **The real drift found:** `docs/TASKS.md` still showed **every** task as `[ ]`
+  except the most-recent doc tasks — i.e. the entire implemented backlog (Epics 0–11,
+  13, 15.1/15.2, 12.3) read as "todo" despite being merged. Ticked all 91 task bullets
+  + the PRD §11 acceptance boxes to `[x]`, and moved both `Status:` lines from "Draft
+  v0.2 / 2026-05-30" to "v1.0 — implemented / 2026-06-01". The root README already
+  pointed at TASKS.md "for the per-epic status", so fixing the ticks was what made that
+  link honest.
+- **PRD:** §13 Milestones (M1–M5) were phrased as a future plan → marked **realized**;
+  §5/§6/§9/§10 already described what exists, so left intact.
+- **Sub-PRDs:** the four were content-accurate but stamped "Draft v0.1"; bumped to
+  "v1.0 — implemented". Added an explicit *delivery* note to `anti-sycophancy.md` §2 and
+  `debate-orchestration.md` §3 that the side **and topic** reach the model via the
+  leading `SystemPromptPart` on the `message_history` path (the #202/#203 fixes) — the
+  one place the specs lagged the engine.
+- **PROMPTS / Improvements / README:** promoted the #202/#203 lesson to a dedicated
+  Prompt-Book entry (it was embedded in the 12.5 entry); confirmed the Improvements
+  "keep docs current" item (its owner is D.6) is now honestly satisfied; README
+  project-status text was already accurate (finished system, no stale scaffold language).
+- *Pattern: a "keep docs current" task is mostly an audit — flip the stale state markers
+  (checkboxes, Status/Last-updated), reconcile only the specs that actually lag the code,
+  and resist rewriting docs that are already true.*
+
+---
+
+### Engine bug fixes #202 / #203 — the debaters were running WITHOUT their system prompt (2026-06-01)
+
+> Curated standalone lesson (first surfaced in the 12.5 sample-runs entry above).
+> Significant enough to stand on its own because it is the single most instructive
+> failure of the whole build.
+
+- **The symptom (caught by a human, not a test):** the first batch of paid sample
+  runs (task 12.5) read wrong — Pro and Con argued *generic* for/against positions
+  and never named the actual motion. Every unit test was green. Reading **one real
+  transcript end-to-end** is what exposed it.
+- **Two root causes, two merged fixes:**
+  - **#202 — the topic never reached the debater.** The debate topic was not injected
+    into the debater's system prompt, so the agent only knew "argue the FOR side" of
+    *some* unstated topic. Fix: `setup_debate` now builds each debater's prompt with
+    the validated topic baked in (`build_debater_system_prompt(side, topic=…, …)`).
+  - **#203 — the system prompt was silently dropped.** Even once a correct
+    `system_prompt` was configured on the pydantic-ai `Agent`, the engine **always**
+    runs debaters with a `message_history` (each agent's isolated `AgentContext`), and
+    **pydantic-ai does not re-inject a configured `system_prompt` once a
+    `message_history` is supplied.** So the model received *no* `SystemPromptPart` at
+    all — no side, no rules, no skills list, no topic. Fix: the agent's own prompt text
+    is stored on its `AgentContext` and `message_history()` embeds it as the leading
+    `SystemPromptPart` of the first request, **exactly once** per run, isolated to that
+    agent's thread (`core/agents/context.py`, `engine/setup.py::_attach_system_prompts`).
+- **TDD lock-in:** `packages/core/tests/test_system_prompt_delivery.py` drives the real
+  engine turn/closing path with a `FunctionModel` that captures the full `ModelMessage`
+  list and asserts the debater's full prompt (side label + topic + a skill name) reaches
+  the model as one leading `SystemPromptPart`, delivered once across a multi-turn run and
+  isolated per side (Con sees AGAINST, never FOR) — a regression guard against both bugs.
+- **Prompt-Book lesson (the durable one):** *the cheapest, highest-yield validation of an
+  LLM pipeline is to read one real transcript end-to-end.* Mocked-model unit tests happily
+  pass while the model silently receives an empty/incomplete prompt; a human reading a paid
+  run catches it in seconds. Two corollaries: (1) when you supply `message_history` to
+  pydantic-ai, you own system-prompt delivery — the framework will not do it for you; and
+  (2) a paid sample run is not just *evidence*, it is a *test* — budget for at least one
+  and actually read it. After both fixes merged, the runs were regenerated on the fixed
+  engine and the debaters now name and argue the exact motion (see `runs/` + the 12.5 entry).
+
+---
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

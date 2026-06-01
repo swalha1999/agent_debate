@@ -10,7 +10,7 @@ them as a standing checklist for the debate system.
 
 ## Planning & documentation
 - [x] Ship a **PRD up front** (see `PRD.md`): the problem, the goals, the design — written *before* the code, so a new team member understands the vision without asking us. — `docs/PRD.md` (committed before implementation; full goals/design/§8 standards); `docs/ARCHITECTURE.md` + `docs/prds/*.md` per-epic specs.
-- [x] Keep docs current as the design evolves; document the *why* behind technical decisions, not just the *what*. — Module docstrings cite the *why* + PRD section (e.g. `core/security/sanitiser.py`, `scripts/secret_scan.py`); `docs/PRD.md`/`TASKS.md`/`PROMPTS.md` kept in sync. (Ongoing upkeep owned by task D.6.)
+- [x] Keep docs current as the design evolves; document the *why* behind technical decisions, not just the *what*. — Module docstrings cite the *why* + PRD section (e.g. `core/security/sanitiser.py`, `scripts/secret_scan.py`); `docs/PRD.md`/`TASKS.md`/`PROMPTS.md` kept in sync. Task **D.6** ran the final reconciliation pass (2026-06-01): PRD/sub-PRD `Status` → "v1.0 — implemented", all TASKS boxes ticked to match the merged build, and the #202/#203 system-prompt-delivery lesson curated into the Prompt Book.
 - [x] README must let any developer install and run the project with zero prior knowledge. — `README.md` Installation + Usage/Quickstart for all five surfaces, prerequisites table, dev-gates section, config table.
 
 ## Configuration & security

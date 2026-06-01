@@ -1,6 +1,6 @@
 # Sub-PRD — Anti-Sycophancy & Drift Detection
 
-**Parent:** `../PRD.md` · **Status:** Draft v0.1 · **Last updated:** 2026-05-30
+**Parent:** `../PRD.md` · **Status:** v1.0 — implemented · **Last updated:** 2026-06-01
 **Mechanism:** preventing one agent from "controlling" the other.
 
 > Required by guideline §2.3. This is the project's core technical risk: LLMs are
@@ -19,6 +19,14 @@ sides without letting either capture the other.
    an agreeable peer turn.
 2. **Side anchoring every turn.** Re-inject the agent's side (FOR/AGAINST) + an
    explicit "do not concede merely because the opponent is convincing" instruction.
+   *Delivery (as implemented — see PRD §5.4):* the engine always runs each debater
+   with the agent's **own** `message_history`, and pydantic-ai does **not** re-inject
+   a configured `system_prompt` once a history is supplied. So the agent's full
+   system prompt — its side label, the rules, its named skills **and the topic** —
+   is stored on its isolated `AgentContext` and embedded as the leading
+   `SystemPromptPart` of the first request (exactly once), keeping each agent's
+   anchor isolated to its own thread. This is what guarantees side/topic anchoring
+   actually reaches the model on every turn rather than being silently dropped.
 3. **Controller drift detection.** After each message, `assess_drift` classifies:
    still defending its side, or starting to agree with / restate the opponent?
 4. **Private nudge.** If captured, the controller sends a private correction; it is
