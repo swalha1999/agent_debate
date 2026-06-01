@@ -77,6 +77,19 @@ class Settings(BaseSettings):
     #: Configurable USD budget cap per run; ``0.0`` (default) = unlimited (15.3).
     budget_usd: float = Field(default=constants.DEFAULT_BUDGET_USD, ge=0.0)
 
+    #: Watchdog keep-alive heartbeat interval in seconds (issue #216, HW2 §8.6).
+    watchdog_heartbeat_interval_s: float = Field(
+        default=constants.DEFAULT_WATCHDOG_HEARTBEAT_INTERVAL_S, gt=0.0
+    )
+
+    #: Watchdog liveness timeout in seconds: a heartbeat stale past this = fallen.
+    watchdog_liveness_timeout_s: float = Field(
+        default=constants.DEFAULT_WATCHDOG_LIVENESS_TIMEOUT_S, gt=0.0
+    )
+
+    #: Maximum times the Watchdog restarts a fallen worker before giving up.
+    watchdog_max_restarts: int = Field(default=constants.DEFAULT_WATCHDOG_MAX_RESTARTS, ge=0)
+
     @property
     def pro_model(self) -> str:
         """Resolved PRO-side model — ``PRO_MODEL`` or ``DEBATER_MODEL``."""

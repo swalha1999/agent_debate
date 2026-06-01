@@ -1,0 +1,13 @@
+{
+  "task_id": "216",
+  "title": "[HW2] Add Watchdog with keep-alive (P1)",
+  "date": "2026-06-01",
+  "model": "claude-opus-4-8",
+  "prompt": "Add a Watchdog component (config-driven) that monitors agent/process liveness via keep-alive and restarts on failure, distinct from the timeout/retry seam. TDD; <=150 lines/file; ruff/mypy/coverage >=85%; log via the LOG package.",
+  "tokens": {
+    "input": null,
+    "output": null,
+    "total": 78000
+  },
+  "note": "HW2 docs/hw2_requirements.pdf §8.6 — Watchdog with keep-alive: a fallen (hung/dead/stopped-beating) worker must be DETECTED, KILLED and RESTARTED, in addition to the existing per-turn timeout+retry seam (engine/_call.py) which only guards a single model call. Added packages/core/src/agent_debate/core/watchdog/ (__init__.py, _config.py, _watchdog.py). Config-driven via config/watchdog.json (mirrors config/rate_limits.json): version, heartbeat_interval_s, liveness_timeout_s, max_restarts — loaded by load_watchdog_config() into a frozen Pydantic WatchdogConfig (positive durations, non-negative max_restarts). Watchdog.run(max_ticks) monitors a worker via injected start/kill/heartbeat callables plus injected monotonic/sleep clock seams (deterministic, no real timing/threads). A keep-alive stale beyond liveness_timeout_s = fallen -> kill + restart up to max_restarts, then give up (WatchdogResult.fell=True). Each detect/kill/restart/give_up logs a `system` event via the LOG package (emit_event) tagged payload['watchdog'] = action, with constants WATCHDOG_* added to constants.py and watchdog_* fields added to Settings. Distinct from timeout/retry: that wrapper bounds/retries one execute() call and fails the turn; the Watchdog guards a longer-running unit of work by liveness. TDD red-first: tests/test_watchdog.py written first (ModuleNotFoundError), then implementation -> green. Tests cover healthy-not-restarted, fallen detected+killed+restarted, give-up after N, structured-event logging, repo-file config load, and validation rejection. Gates green: ruff check + format clean, mypy clean (248 files), check_line_limit.py exit 0, pytest --cov 99.10% (>=85%). Pre-existing environmental failures unchanged (live-tree secret-scan/hygiene on real .env, two Windows missing-file path-regex, long-topic parametrized teardown errors, Unix file-permission branch-protection checks). secret_scan.py flags only the developer's real local .env (pre-existing)."
+}

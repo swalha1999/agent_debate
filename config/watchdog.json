@@ -1,0 +1,8 @@
+{
+  "watchdog": {
+    "version": "1.00",
+    "heartbeat_interval_s": 1.0,
+    "liveness_timeout_s": 5.0,
+    "max_restarts": 3
+  }
+}
