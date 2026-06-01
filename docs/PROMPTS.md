@@ -2476,5 +2476,21 @@ fails → restore → green.
 
 ---
 
+## HW2 requirements PDF alignment (2026-06-01)
+
+### Align the PRD with the authoritative exercise spec
+- **Prompt:** "Align `docs/PRD.md` with the authoritative HW2 requirements PDF … fold in
+  the eight PDF-mandated requirements the PRD does not yet state (no-tie verdict,
+  child→father→child routing, JSON IPC format, watchdog+keep-alive, log FIFO rotation,
+  terminal menu, architecture class diagram, README screenshots). Be honest that several
+  are not yet implemented — spec-only; implementation tracked by separate issues."
+- **Outcome:** PRD updated to **v1.1 (HW2 compliance pass in progress)**. Added a
+  companion-doc reference to `hw2_requirements.pdf` as authoritative; folded the eight
+  requirements into §3, §5.4, §5.8, §6, §8, §11; added a §11.1 PDF-requirement→status
+  map; adjusted status/milestone wording so the doc does **not** claim the gaps are done.
+  Spec-only change — no code touched; the eight gaps are tracked by dedicated issues.
+
+---
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_
