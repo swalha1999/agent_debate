@@ -215,7 +215,7 @@ Priority: **P0** = must-have for a working debate · **P1** = required for submi
 - [x] **12.5** **Generate sample debate runs and commit them to the repo** so the teacher can see real runs: save each run's transcript + verdict + token/cost totals under `runs/` (e.g. `runs/<run_id>.jsonl` plus a readable `runs/<run_id>.md`). Aim for a few varied topics. · P0 · Owner: M · dep: 6.8, 8.3
 - [x] **12.6** Add an `examples/` or `runs/README.md` index listing the saved debates (topic, who won, link) and link it from the root README. · P1 · dep: 12.5
 - [x] **12.7** Final pass against `Improvements_to_keep_in_mind.md` — tick every box. · P0 · dep: all
-- [ ] **12.8** Final pass against the lecturer's `software_submission_guidelines-V3` PDF. · P0 · dep: all
+- [x] **12.8** Final pass against the lecturer's `software_submission_guidelines-V3` PDF. · P0 · dep: all — completed §17 checklist in [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md) (all 30 items satisfied, evidence-backed).
 
 **Epic 12 acceptance:** every PRD §11 box checked; CI green; both guideline docs satisfied; **sample debate runs are committed to the repo** and indexed.
 

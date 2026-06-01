@@ -2374,5 +2374,30 @@ fails → restore → green.
   task; tick only what a gate or file proves, and name the owning task for the
   rest rather than faking a tick.*
 
+## 12.8 — Final pass vs lecturer guidelines
+
+> Go through the lecturer's software_submission_guidelines-V3 and the §17 final checklist; verify each requirement is met and fix gaps. (Repo standards: TDD, ≤150 lines/file, ruff+mypy clean, no hard-coded values, external calls via the API gatekeeper, LOG, coverage ≥85%.)
+
+- **Deliverable = a completed, evidence-backed checklist, not a tick in the PDF.**
+  The guideline §17 list is the lecturer's authoritative doc and shouldn't be
+  edited; the cleaner home was a new [`docs/SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md)
+  that reproduces all 30 §17.1–§17.6 items and maps each to a **specific file or
+  gate** in the repo, linked from the README docs table and PRD companion-docs list.
+- **Verification, not feature work:** every §17 item was already satisfied by the
+  mature Epics 0–15 codebase, so this task added **no product code**. Each item was
+  marked ✅ only after confirming it against a real gate run (`ruff`=0, `mypy` clean,
+  `pytest --cov`=99.24%, `check_line_limit`=pass) or the actual artifact (sub-PRDs,
+  `config/*.json` versioned `1.00`, `notebooks/figures/`, ISO 25010 mapping in
+  ARCHITECTURE §8, etc.).
+- **PLAN/TODO naming:** the guideline names `PLAN.md`/`TODO.md`; the repo's
+  `ARCHITECTURE.md` (planning/architecture) and `TASKS.md` (task list) fill those
+  roles — recorded explicitly in the checklist rather than renaming mature docs.
+- **Honest scoping:** the known Windows test-env failures (live-tree secret scan
+  on the real local `.env`, two path-regex `test_missing_file` cases, long-topic
+  teardown env-var limit, Unix permission checks) are documented as TEST-ENV
+  artifacts that don't affect any §17 item; ongoing doc upkeep stays owned by task
+  D.6. *Pattern: when the lecturer's checklist lives in an authoritative doc, ship
+  a separate evidence-mapped checklist and cite a gate/file for every box.*
+
 _(add entries here as code is built — significant prompts that set a pattern,
 unblocked a step, or changed a decision.)_

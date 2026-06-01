@@ -180,6 +180,7 @@ env vars — they live in versioned `config/rate_limits.json` (PRD §5.6).
 | [`docs/prds/`](docs/prds/) | Dedicated sub-PRDs: [debate orchestration](docs/prds/debate-orchestration.md), [anti-sycophancy](docs/prds/anti-sycophancy.md), [API gatekeeper](docs/prds/api-gatekeeper.md), [search plug-in](docs/prds/search-plugin.md). |
 | [`docs/PROMPTS.md`](docs/PROMPTS.md) | The Prompt Book — significant prompts that shaped the project (guideline §8.3). |
 | [`docs/software_submission_guidelines-V3.en.md`](docs/software_submission_guidelines-V3.en.md) | The lecturer's submission guidelines (authoritative). |
+| [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | The completed **§17 final checklist** — every guideline item mapped to repo evidence (the submission-readiness proof). |
 | [`docs/Improvements_to_keep_in_mind.md`](docs/Improvements_to_keep_in_mind.md) | Standing quality/lessons checklist. |
 
 ## Contributing & quality gates
