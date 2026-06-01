@@ -120,6 +120,12 @@ class RotatingJsonlSink:
     def _rotate(self) -> None:
         """Close the full live file, shift archives up, drop the oldest (FIFO)."""
         self._handle.close()
+        if self._config.max_files == 1:
+            # Degenerate cap: no archives allowed, so reuse the single live file
+            # by truncating it (re-open in write mode) instead of creating ``.1``.
+            self._handle = self._base.open("w", encoding="utf-8")
+            self._line_count = 0
+            return
         self._evict_and_shift()
         self._base.replace(_archive_path(self._base, 1))
         self._handle = self._base.open("a", encoding="utf-8")

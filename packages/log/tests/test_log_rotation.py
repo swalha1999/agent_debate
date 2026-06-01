@@ -110,6 +110,26 @@ def test_oldest_file_dropped_first_fifo(tmp_path: Path) -> None:
     assert max(surviving) == 7
 
 
+def test_max_files_one_keeps_exactly_one_file(tmp_path: Path) -> None:
+    """With ``max_files=1`` only the live file survives every rollover (no ``.1``)."""
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    cfg = RotationConfig(version="t", max_files=1, max_lines_per_file=2)
+    sink = RotatingJsonlSink(runs_dir / "run-single.jsonl", cfg)
+
+    _write(sink, 7)  # several rollovers; only the live file may remain
+    sink.flush()
+
+    files = _files(runs_dir, "run-single")
+    assert files == [runs_dir / "run-single.jsonl"]
+
+    live = runs_dir / "run-single.jsonl"
+    lines = [ln for ln in live.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(lines) <= cfg.max_lines_per_file
+    values = [json.loads(line)["n"] for line in lines]  # valid JSONL
+    assert values[-1] == 6  # most-recent event retained
+
+
 def test_every_file_is_valid_jsonl_within_line_cap(tmp_path: Path) -> None:
     """Each retained file parses as JSONL and respects the per-file line cap."""
     runs_dir = tmp_path / "runs"
