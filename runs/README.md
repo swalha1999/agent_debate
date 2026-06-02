@@ -22,17 +22,18 @@ two fixes in #202 — inject the debate topic into the debater context — and #
 actually deliver the agent system prompt to the model on the `message_history`
 path). The debaters argue the stated motion and rebut each other's actual words.
 
-The repo keeps **a single full 10-round sample debate** (`capitalism`) so the
-teacher can review one complete end-to-end run at the system's PRD default. Three
-earlier reduced-round sample debates were removed to avoid presenting them as
-current evidence; only the full-length run is retained.
+The repo keeps **two committed sample debates**: a full 10-round `capitalism` run at
+the PRD default, and a 5-round `four-day-work-week` policy debate added to expand the
+dataset. Three earlier reduced-round sample debates were removed to avoid presenting
+them as current evidence.
 
 | Topic | Kind | Rounds | Winner | Total tokens | Cost (USD) | Read it |
 | --- | --- | --- | --- | --- | --- | --- |
 | Capitalism is, on balance, a force for good in society. | economics | 10 | Pro | 343,521 | $1.261 | [`capitalism/capitalism.md`](capitalism/capitalism.md) |
+| A four-day work week should become the global standard | policy | 5 | Pro | 146,555 | $0.566 | [`four-day-work-week/four-day-work-week.md`](four-day-work-week/four-day-work-week.md) |
 
 The **Read it** link opens the human-readable transcript + verdict + cost table; the
-matching machine-readable event log sits alongside it as `capitalism/capitalism.jsonl`. The
+matching machine-readable event log sits alongside it as `<run_id>/<run_id>.jsonl`. The
 **Total tokens** / **Cost** columns are the actual billed figures reported in the
 run's `## Cost & tokens` section. For the tidy one-row-per-run dataset
 (drift/nudge counts, latency, est. cost) see
