@@ -1,3 +1,3 @@
 run_id,topic,rounds,winner,converged,total_tokens,est_cost_usd,pro_messages,con_messages,pro_nudges,con_nudges,total_latency_ms,avg_latency_ms,timeouts,retries
-bf794a67defd44d1a4fec05b10df3bf8,,10,con,False,345290,1.03587,11,11,0,0,584766.0,29238.3,0,0
 capitalism,"Capitalism is, on balance, a force for good in society.",10,pro,False,343521,1.030563,11,11,0,0,573000.0,28650.0,0,0
+four-day-work-week,A four-day work week should become the global standard,5,pro,False,146555,0.439665,6,6,0,0,228391.0,22839.1,0,0
