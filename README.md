@@ -192,7 +192,7 @@ env vars — they live in versioned `config/rate_limits.json` (PRD §5.6).
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture & decisions doc — the system, the five packages, key mechanisms, and an ADR-style "decisions / rationale" table for a new team member. |
 | [`docs/UI.md`](docs/UI.md) | The web UI — annotated layout diagrams + UX walkthrough (understand the interface without running it). |
 | [`docs/TASKS.md`](docs/TASKS.md) | The full task breakdown by epic, with status and dependencies. |
-| [`runs/README.md`](runs/README.md) | Index of the committed **sample debate runs** — topic, who won, and a link to each readable transcript + verdict (the teacher's review evidence, PRD §11). |
+| [`runs/README.md`](runs/README.md) | Index of the committed **sample debate runs** — topic, who won, and a link to each readable transcript + verdict (the teacher's review evidence, PRD §11). **Note (HW2 §8.7):** one run (`capitalism`) uses the full **10 rounds**; the other four use **5 rounds to save API cost** (the explicitly-permitted budget reduction). |
 | [`docs/prds/`](docs/prds/) | Dedicated sub-PRDs: [debate orchestration](docs/prds/debate-orchestration.md), [anti-sycophancy](docs/prds/anti-sycophancy.md), [API gatekeeper](docs/prds/api-gatekeeper.md), [search plug-in](docs/prds/search-plugin.md). |
 | [`docs/PROMPTS.md`](docs/PROMPTS.md) | The Prompt Book — significant prompts that shaped the project (guideline §8.3). |
 | [`docs/software_submission_guidelines-V3.en.md`](docs/software_submission_guidelines-V3.en.md) | The lecturer's submission guidelines (authoritative). |

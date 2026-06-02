@@ -23,11 +23,20 @@ actually deliver the agent system prompt to the model on the `message_history`
 path). The debaters argue the stated motion and rebut each other's actual words.
 
 The repo keeps **five committed sample debates**: a full 10-round `capitalism` run at
-the PRD default, a 5-round `four-day-work-week` policy debate added to expand the
-dataset, a 5-round `online-education` debate on the education topic, a 5-round
-`nuclear-energy` debate on the energy/climate topic, and a 5-round `social-media-ban`
-debate on the society/tech topic. Three earlier
-reduced-round sample debates were removed to avoid presenting them as current evidence.
+the PRD default, plus four 5-round debates (`four-day-work-week`, `online-education`,
+`nuclear-energy`, and `social-media-ban`). Three earlier reduced-round sample debates
+were removed to avoid presenting them as current evidence.
+
+> **⚠️ Rounds & cost (HW2 requirements §8.7).** The exercise/PRD default is **10 rounds
+> per side**. The **`capitalism`** debate runs the **full 10 rounds** to demonstrate that
+> default end-to-end. The **other four debates use 5 rounds instead of 10 to save API
+> cost** — the budget reduction the HW2 requirements explicitly permit (§8.7: *reducing
+> from 10 pings to 5 is allowed provided it is stated explicitly in the README, and does
+> not reduce the grade*). The system still runs the full 10 rounds by default; the
+> reduction is a per-run CLI flag only (`--rounds 5`). A 5-round debate still exercises
+> the entire mechanism — Pro/Con alternation, mutual rebuttal, the controller
+> drift-check/nudge path, the closing discussion, the verdict, and the cost/token
+> breakdown.
 
 | Topic | Kind | Rounds | Winner | Total tokens | Cost (USD) | Read it |
 | --- | --- | --- | --- | --- | --- | --- |
