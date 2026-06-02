@@ -20,6 +20,7 @@ Design notes (issue #21):
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from agent_debate.core import constants
@@ -101,12 +102,28 @@ class Settings(BaseSettings):
         return self.con_model_override or self.debater_model
 
 
+#: Mapping of ``Settings`` field → canonical ``os.environ`` key name.
+#: Only fields whose value should be propagated to the OS environment are listed.
+_ENV_PROPAGATION_MAP: tuple[tuple[str, str], ...] = (
+    ("anthropic_api_key", "ANTHROPIC_API_KEY"),
+    ("search_api_key", "SEARCH_API_KEY"),
+)
+
+
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return the process-wide cached :class:`Settings` instance.
 
     Cached so the ``.env`` / environment is read once. Tests that mutate the
     environment call :pymeth:`get_settings.cache_clear` to force a reload.
+
+    Side-effect: after constructing :class:`Settings`, any field listed in
+    :data:`_ENV_PROPAGATION_MAP` whose value is non-``None`` is written to
+    ``os.environ`` via :func:`os.environ.setdefault` — i.e. **only if the key
+    is not already present in the OS environment**.  This ensures that
+    downstream libraries (e.g. pydantic-ai's Anthropic provider) which read
+    ``os.environ`` directly can find values that were loaded only from a
+    ``.env`` file, without silently overriding an explicit shell-level override.
     """
     settings = Settings()
     _LOG.debug(
@@ -115,6 +132,10 @@ def get_settings() -> Settings:
         max_words=settings.max_words,
         search_backend=settings.search_backend,
     )
+    for attr, env_key in _ENV_PROPAGATION_MAP:
+        value: str | None = getattr(settings, attr, None)
+        if value is not None:
+            os.environ.setdefault(env_key, value)
     return settings
 
 

@@ -11,6 +11,7 @@ Each test injects env via ``monkeypatch`` so the suite never needs a real
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -156,3 +157,75 @@ def test_get_settings_returns_cached_singleton() -> None:
     assert isinstance(first, Settings)
     assert first is second
     get_settings.cache_clear()
+
+
+def test_get_settings_exports_anthropic_key_to_os_environ(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``get_settings()`` sets ``ANTHROPIC_API_KEY`` in ``os.environ`` from ``.env``.
+
+    Downstream libraries (pydantic-ai Anthropic provider) read ``os.environ``
+    directly; this ensures the key is visible even when only in ``.env``.
+    """
+    (tmp_path / ".env").write_text("ANTHROPIC_API_KEY=sk-from-dotenv\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+    get_settings.cache_clear()
+
+    assert settings.anthropic_api_key == "sk-from-dotenv"
+    assert os.environ.get("ANTHROPIC_API_KEY") == "sk-from-dotenv"
+
+
+def test_get_settings_does_not_overwrite_existing_anthropic_key(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``get_settings()`` does NOT overwrite a shell-set ``ANTHROPIC_API_KEY``.
+
+    An explicit shell override must take precedence over the ``.env`` value.
+    """
+    (tmp_path / ".env").write_text("ANTHROPIC_API_KEY=sk-from-dotenv\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-from-shell")
+    get_settings.cache_clear()
+    get_settings()
+    get_settings.cache_clear()
+
+    assert os.environ.get("ANTHROPIC_API_KEY") == "sk-from-shell"
+
+
+def test_get_settings_exports_search_api_key_to_os_environ(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``get_settings()`` sets ``SEARCH_API_KEY`` in ``os.environ`` from ``.env``."""
+    (tmp_path / ".env").write_text("SEARCH_API_KEY=tvly-from-dotenv\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("SEARCH_API_KEY", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+    get_settings.cache_clear()
+
+    assert settings.search_api_key == "tvly-from-dotenv"
+    assert os.environ.get("SEARCH_API_KEY") == "tvly-from-dotenv"
+
+
+def test_get_settings_does_not_export_none_values(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``get_settings()`` does not inject ``None`` API keys into ``os.environ``."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("SEARCH_API_KEY", raising=False)
+    get_settings.cache_clear()
+    settings = get_settings()
+    get_settings.cache_clear()
+
+    assert settings.anthropic_api_key is None
+    assert "ANTHROPIC_API_KEY" not in os.environ
+    assert settings.search_api_key is None
+    assert "SEARCH_API_KEY" not in os.environ

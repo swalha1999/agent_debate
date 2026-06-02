@@ -1,0 +1,12 @@
+{
+  "task_id": "fix-env-propagation",
+  "title": "Fix .env → os.environ propagation",
+  "date": "2026-06-02",
+  "model": "claude-opus-4-8",
+  "prompt": "packages/core/src/agent_debate/core/settings.py loads .env into the pydantic-settings Settings model (via SettingsConfigDict(env_file=\".env\")). This correctly populates settings.anthropic_api_key, settings.rounds, etc. BUT: pydantic-ai's Anthropic provider reads the key from os.environ[\"ANTHROPIC_API_KEY\"] directly — not from the Settings object. So if the user only has the key in .env (not set as an OS env var), the Anthropic provider raises \"Set the ANTHROPIC_API_KEY environment variable\". Fix: in get_settings(), after constructing Settings, export non-None api key values back to os.environ via os.environ.setdefault() so downstream libraries that read os.environ directly can find them, without overwriting explicit shell-level overrides.",
+  "tokens": {
+    "input": 8500,
+    "output": 2200,
+    "total": 10700
+  }
+}
