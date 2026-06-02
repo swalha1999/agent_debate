@@ -202,3 +202,7 @@ _No nudges were needed — neither agent drifted._
 | --- | --- | --- | --- | --- | --- |
 | anthropic:claude-sonnet-4-6 | 136054 | 10501 | $0.408162 | $0.157515 | $0.565677 |
 | Overall | 136054 | 10501 | $0.408162 | $0.157515 | $0.565677 |
+
+## Round-by-round token usage
+
+![Round-by-round token usage](four-day-work-week-round-tokens.png)
