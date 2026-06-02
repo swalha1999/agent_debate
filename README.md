@@ -35,7 +35,7 @@ architecture, see [`docs/PRD.md`](docs/PRD.md).
 
 ![UI debate round 2](docs/screenshots/example2-of-ui-debate-run.jpg)
 
-A full readable session dialogue (transcript + moderator nudges + verdict + cost) is committed at [`runs/capitalism/capitalism.md`](runs/capitalism/capitalism.md).
+Full readable session dialogues (transcript + moderator nudges + verdict + cost) for every committed debate live under [`runs/`](runs/README.md).
 
 ---
 
@@ -46,7 +46,7 @@ A full readable session dialogue (transcript + moderator nudges + verdict + cost
 | **Python** | **>= 3.12** (pinned via `.python-version`). |
 | **[uv](https://docs.astral.sh/uv/)** | Package & workspace manager (replaces pip/venv). Install from the uv docs. |
 | **git** | To clone the repository. |
-| **OS** | Developed on macOS/Linux; Windows works via WSL2 (the helper scripts assume a POSIX shell). |
+| **OS** | Cross-platform — developed and run on Windows (cmd/PowerShell), macOS, and Linux. The Python entry points and scripts are cross-platform; only the optional `.sh` helpers (e.g. `setup_branch_protection.sh`) need a POSIX shell. |
 | **Anthropic API key** | Required to run debates against the default provider. Free local tasks (tests, lint) need no key. |
 
 `uv` manages the Python toolchain and a project-local virtual environment, so no

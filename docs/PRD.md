@@ -3,8 +3,8 @@
 **Project:** `agent_debate`
 **Course context:** Orchestration of AI Agents
 **Repository:** https://github.com/swalha1999/agent_debate
-**Status:** v1.1 — HW2 compliance pass in progress (v1.0 epics built & merged; a follow-up pass against the HW2 requirements PDF is open — see §11.1)
-**Last updated:** 2026-06-01
+**Status:** v1.2 — HW2 compliance complete (all §8 requirements implemented & merged; see §11.1 map)
+**Last updated:** 2026-06-02
 **Owners:** swalha1999, Mhmdabad
 
 Companion docs:
@@ -72,9 +72,9 @@ controller must detect and **nudge a captured agent back onto its assigned side.
 - **No ties.** A tie is **forbidden** as a verdict outcome (HW2 PDF §8.3.6, §8.4, §9):
   the controller **MUST** decide a winner. The PDF explicitly permits **differential
   scoring** (e.g. PRO 80% / CON 70%) to break closeness, but the result must be
-  **decisive** — `winner` is **PRO or CON only, never "tie"**. *(Compliance gap: the
-  current implementation still allows a "tie" verdict — to be addressed, tracked by a
-  dedicated issue.)*
+  **decisive** — `winner` is **PRO or CON only, never "tie"**. *(Implemented: the
+  verdict is now decisive — PRO/CON only, via differential scoring plus a deterministic
+  tie-breaker, #215.)*
 
 ## 4. Tech stack & key decisions
 
@@ -197,16 +197,15 @@ This is a first-class requirement. Mechanisms:
      argumentation, rebuttal quality, and engagement.
    - **The verdict MUST name a winner — PRO or CON, never a tie** (HW2 PDF §8.3.6,
      §8.4, §9; see §3). Differential scoring (e.g. 80% / 70%) is the sanctioned way
-     to resolve a close call into a decisive result. *(Compliance gap — see §3/§11.1.)*
+     to resolve a close call into a decisive result. *(Implemented: PRO/CON only, #215 — see §3/§11.1.)*
 ```
 
 **Message routing — child → father → child (HW2 PDF §8.3.7).** Every debate message
 flows **through the controller** ("father"): a debater (child) emits a message → it
 goes to the controller → the controller passes it to the other debater. **Debaters
 never communicate directly** with each other; all inter-debater traffic is mediated by
-the controller. *(Partial gap to reconcile: the current design relays messages
-engine-side while the controller only **inspects** them for drift, rather than acting
-as the explicit message router — to be reconciled, tracked by a dedicated issue.)*
+the controller. *(Implemented: the controller is the explicit relay hub — every message
+flows child → father → child through `engine/forward.py`, #219.)*
 
 Every model call is wrapped with a **timeout**; on timeout the call is **cancelled
 and retried** up to N times (then that turn is marked failed and the controller is
@@ -216,8 +215,8 @@ informed). This satisfies "add a timeout that kills and recalls the process."
 timeout/retry above, the system **MUST** run a **Watchdog** that issues **keep-alive**
 checks to detect a **fallen agent/process** and **restart** it. This is distinct from
 the per-call timeout (which guards a single in-flight model call): the watchdog guards
-the **liveness of the agents/processes themselves** across the run. *(Status: not yet
-implemented — tracked by a dedicated issue.)*
+the **liveness of the agents/processes themselves** across the run. *(Implemented: the
+Watchdog + keep-alive lives in `core/watchdog/`, #216.)*
 
 ### 5.5 Pluggable search providers (web search is a plug-in)
 
@@ -302,16 +301,15 @@ class ApiGatekeeper:
 - **JSON inter-agent communication format (HW2 PDF §8.3.8).** Inter-agent / IPC
   messages (the child↔father↔child relay of §5.4) **MUST** use a structured **JSON**
   message format — monitorable and token-saving — rather than free-form prose.
-  *(Partial gap: run **logging** is already JSONL, but the **agent relay** itself is
-  currently plain text — to be moved to a structured JSON message envelope, tracked by
-  a dedicated issue.)*
+  *(Implemented: the agent relay uses a structured JSON message envelope —
+  `engine/message.py` `AgentMessage`, #220.)*
 - **Log FIFO rotation (HW2 PDF §8.6).** The built-in logs **MUST** use **FIFO file
   rotation**: a **capped number of log files** (config example: 20), each with a **max
   line count** (config example: 500); when full, the oldest file is dropped (FIFO). The
   caps are **config-driven**, not hard-coded. This is **distinct** from the API
   gatekeeper's FIFO **request** queue (§5.6) — it concerns **log files on disk**.
-  *(Status: not yet implemented — the LOG package currently writes one JSONL per run
-  with no rotation — tracked by a dedicated issue.)*
+  *(Implemented: config-driven FIFO log-file rotation — `log/_rotation.py`, config
+  `logging.json`, #217.)*
 
 ## 6. Surfaces (deliverables)
 
@@ -322,8 +320,8 @@ class ApiGatekeeper:
   - **Terminal menu operation (HW2 PDF §8.6, §8.7).** The project **MUST** also be
     operable from a basic, keyboard-driven **terminal MENU** (numbered choices), not
     only via CLI arguments. §8.7 permits **driving the SDK directly** as an alternative
-    for testing. *(Status: not yet implemented — the current CLI is argument-based only
-    — tracked by a dedicated issue.)*
+    for testing. *(Implemented: keyboard-driven terminal menu — `cli/_menu.py`,
+    `agent-debate menu`, #218.)*
 - **API** — `POST /debates` to start, `GET /debates/{id}` for status/result,
   `GET /debates/{id}/stream` (SSE) for live events.
 - **UI** — web page: enter a topic → watch Pro/Con messages stream round by round,
@@ -333,9 +331,9 @@ class ApiGatekeeper:
 
 **README screenshots & session evidence (HW2 PDF §8.7).** The README **MUST** include
 **screenshots** of the UI / terminal states, the **prompts** used, and a **full
-session dialogue** of a debate. *(Status: not yet satisfied — the docs currently
-describe the UI via DOM/figure descriptions in `UI.md` but lack actual captured
-screenshots and an embedded full session dialogue — tracked by a dedicated issue.)*
+session dialogue** of a debate. *(Implemented: README embeds captured screenshots
+(`docs/screenshots/`) and links the full session dialogues in the runs `.md`
+transcripts, #222.)*
 
 ## 7. Configuration (env)
 
@@ -384,12 +382,12 @@ These are hard requirements from the lecturer's guidelines; we adopt them explic
   check, and secret scan run on every push **before** feature work — see TASKS Epic 0.
 - **Architecture class diagram** (HW2 PDF §8.6): the documentation **MUST** include an
   architecture diagram of the **CLASS layout and relationships** (classes, attributes,
-  and associations), not only package/flow diagrams. *(Status: not yet satisfied —
-  `ARCHITECTURE.md` currently has package and flow diagrams but no formal class diagram
-  — tracked by a dedicated issue.)*
+  and associations), not only package/flow diagrams. *(Implemented: a mermaid
+  `classDiagram` was added to `docs/ARCHITECTURE.md`, #221.)*
 - **README screenshots & full session dialogue** (HW2 PDF §8.7): see §6 — the README
   must embed real screenshots, the prompts used, and a complete session dialogue.
-  *(Status: not yet satisfied — tracked by a dedicated issue.)*
+  *(Implemented: screenshots in `docs/screenshots/` and full session dialogues in the
+  runs `.md` transcripts, #222.)*
 
 ## 9. Research & results analysis (guideline §9)
 
@@ -454,7 +452,7 @@ visualizations (in `notebooks/` and `runs/`) covering:
 - [x] Controller never leaks its stance; detects ≥1 staged drift case and nudges the agent back.
 - [x] A turn that exceeds the timeout is killed and retried automatically.
 - [x] Controller outputs a final **summary + agree/disagree result + who won** (no fact-checking).
-- [ ] **No-tie rule:** the verdict's `winner` is **PRO or CON only — never "tie"** (HW2 PDF §8.3.6/§8.4/§9); differential scoring resolves close calls. *(not yet satisfied — current impl allows "tie")*
+- [x] **No-tie rule:** the verdict's `winner` is **PRO or CON only — never "tie"** (HW2 PDF §8.3.6/§8.4/§9); differential scoring resolves close calls. *(done, #215)*
 - [x] All five surfaces (UI, CLI, API, SDK, LOG) work; logs capture every event with `run_id`.
 - [x] No secrets in repo; `ruff` = 0 violations, type checks pass, tests pass in CI.
 - [x] **Every external call goes through the API gatekeeper**; rate limits come from `config/rate_limits.json`; overflow is queued (no drops/crash).
@@ -465,31 +463,31 @@ visualizations (in `notebooks/` and `runs/`) covering:
 - [x] **Research notebook + visualizations** produced (who-wins, drift frequency, tokens/latency).
 - [x] **Cost-breakdown table** (tokens × price → total) reported; budget cap + alert work.
 - [x] **A sample debate run is committed to the repo** (`runs/`) so the teacher can review a real run (transcript + verdict + token/cost). The repo keeps **one full 10-round `capitalism` run**; three earlier reduced-round sample runs were removed (see `runs/README.md`). See TASKS.md §12.5.
-- [ ] **Watchdog + keep-alive** (HW2 PDF §8.6) detects a fallen agent/process and restarts it, in addition to per-turn timeout/retry. *(not yet implemented)*
-- [ ] **Log FIFO rotation** (HW2 PDF §8.6): capped file count × max lines per file, config-driven. *(not yet implemented)*
-- [ ] **Terminal menu** operation (HW2 PDF §8.6/§8.7), not only CLI args. *(not yet implemented)*
-- [ ] **Child→father→child routing** (HW2 PDF §8.3.7): all messages flow through the controller; debaters never talk directly. *(partial — to reconcile)*
-- [ ] **JSON inter-agent message format** (HW2 PDF §8.3.8) for the agent relay. *(partial — logging is JSONL; relay is plain text)*
-- [ ] **Architecture class diagram** (HW2 PDF §8.6). *(not yet satisfied)*
-- [ ] **README screenshots + prompts + full session dialogue** (HW2 PDF §8.7). *(not yet satisfied)*
+- [x] **Watchdog + keep-alive** (HW2 PDF §8.6) detects a fallen agent/process and restarts it, in addition to per-turn timeout/retry. *(done, #216)*
+- [x] **Log FIFO rotation** (HW2 PDF §8.6): capped file count × max lines per file, config-driven. *(done, #217)*
+- [x] **Terminal menu** operation (HW2 PDF §8.6/§8.7), not only CLI args. *(done, #218)*
+- [x] **Child→father→child routing** (HW2 PDF §8.3.7): all messages flow through the controller; debaters never talk directly. *(done, #219)*
+- [x] **JSON inter-agent message format** (HW2 PDF §8.3.8) for the agent relay. *(done, #220)*
+- [x] **Architecture class diagram** (HW2 PDF §8.6). *(done, #221)*
+- [x] **README screenshots + prompts + full session dialogue** (HW2 PDF §8.7). *(done, #222)*
 
 ### 11.1 HW2 PDF compliance status
 
 The v1.0 build predates a line-by-line audit against `hw2_requirements.pdf`. The audit
-surfaced the items below; each is being addressed in a dedicated follow-up issue. This
+surfaced the items below; **all have since been implemented and merged**. This
 table is the canonical PDF-requirement → status map (the PDF itself remains
 authoritative; this does not duplicate it).
 
 | HW2 PDF req | PDF §§ | PRD §§ | Status |
 |---|---|---|---|
-| No-tie verdict (winner = PRO/CON; differential scoring OK) | §8.3.6, §8.4, §9 | §3, §5.4, §11 | Gap — impl allows "tie" |
-| Child→father→child message routing | §8.3.7 | §5.4 | Partial — engine relays; controller only inspects |
-| JSON inter-agent communication format | §8.3.8 | §5.8 | Partial — logs JSONL; relay plain text |
-| Watchdog + keep-alive (restart fallen agent) | §8.6 | §5.4 | Not implemented |
-| Log FIFO rotation (capped files × max lines) | §8.6 | §5.8 | Not implemented |
-| Terminal menu operation (SDK-direct allowed) | §8.6, §8.7 | §6 | Not implemented — CLI args only |
-| Architecture class diagram | §8.6 | §8 | Not satisfied — package/flow only |
-| README screenshots + prompts + session dialogue | §8.7 | §6, §8 | Not satisfied |
+| No-tie verdict (winner = PRO/CON; differential scoring OK) | §8.3.6, §8.4, §9 | §3, §5.4, §11 | **Done (#215)** |
+| Child→father→child message routing | §8.3.7 | §5.4 | **Done (#219)** |
+| JSON inter-agent communication format | §8.3.8 | §5.8 | **Done (#220)** |
+| Watchdog + keep-alive (restart fallen agent) | §8.6 | §5.4 | **Done (#216)** |
+| Log FIFO rotation (capped files × max lines) | §8.6 | §5.8 | **Done (#217)** |
+| Terminal menu operation (SDK-direct allowed) | §8.6, §8.7 | §6 | **Done (#218)** |
+| Architecture class diagram | §8.6 | §8 | **Done (#221)** |
+| README screenshots + prompts + session dialogue | §8.7 | §6, §8 | **Done (#222)** |
 
 ## 12. Open questions / future work
 
@@ -501,9 +499,9 @@ authoritative; this does not duplicate it).
 ## 13. Milestones
 
 All five v1.0 milestones are **realized** (built and merged — see `TASKS.md` for the
-per-epic `[x]` status and `runs/` for the committed sample debate). A **v1.1 HW2
-compliance pass** (§11.1) is now **in progress** to close the eight PDF-audit gaps
-above; those are tracked by dedicated follow-up issues and are **not** yet complete.
+per-epic `[x]` status and `runs/` for the committed sample debate). The **v1.2 HW2
+compliance pass** (§11.1) is now **complete** — all eight PDF-audit items have been
+implemented and merged (#215–#222).
 
 1. **M1 — Scaffold ✅:** uv workspace, packages, config (+ `rate_limits.json`), version module `1.00`, LOG, CI (ruff/mypy/coverage-gate/150-line check).
 2. **M2 — SDK core ✅:** API gatekeeper, agents, skills (web_search/build_argument/analyze), relay-based orchestration, timeout+retry.
