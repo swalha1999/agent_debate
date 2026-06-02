@@ -213,3 +213,7 @@ _No nudges were needed — neither agent drifted._
 | --- | --- | --- | --- | --- | --- |
 | anthropic:claude-sonnet-4-6 | 130780 | 10118 | $0.392340 | $0.151770 | $0.544110 |
 | Overall | 130780 | 10118 | $0.392340 | $0.151770 | $0.544110 |
+
+## Round-by-round token usage
+
+![Round-by-round token usage](online-education-round-tokens.png)

@@ -8,6 +8,8 @@ PNG figures — it reuses those pure functions rather than re-aggregating:
 * :func:`save_agree_disagree_chart` — converged (agree) vs not (disagree).
 * :func:`save_nudges_chart` — per-side drift/nudge totals (anti-sycophancy).
 * :func:`save_round_tokens_chart` — tokens & latency per round for one run.
+* :func:`save_run_round_tokens_chart` — grouped pro/con tokens per round, to an
+  exact path so it can live beside that run's transcript.
 * :func:`save_all_figures` — convenience wrapper writing every chart.
 
 No hard-coded paths (the out dir is always a caller argument) and no hard-coded
@@ -128,6 +130,41 @@ def save_round_tokens_chart(
     return _save(fig, out_dir, f"round_tokens_{run_id}")
 
 
+def save_run_round_tokens_chart(
+    rounds: list[RoundMetric], out_path: Path | str, run_id: str
+) -> Path:
+    """Save grouped pro/con tokens-per-round bars for one run to ``out_path``.
+
+    Unlike :func:`save_round_tokens_chart` (which writes ``<dir>/round_tokens_<id>.png``
+    and overlays latency), this renders a self-contained per-run chart at an exact
+    caller-supplied path so it can live beside the run's transcript.
+
+    :param rounds: Per-round metrics from
+        :func:`~agent_debate.core.research.analysis.round_metrics`.
+    :param out_path: Exact PNG path to write (its parent dir is created).
+    :param run_id: Run identifier, used in the chart title.
+    :returns: The written PNG path (``out_path``).
+    """
+    plt = _pyplot()
+    path = Path(out_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    nums = [r.round for r in rounds]
+    width = 0.4
+    left = [n - width / 2 for n in nums]
+    right = [n + width / 2 for n in nums]
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.bar(left, [r.pro_tokens for r in rounds], width, label="pro", color="#4c72b0")
+    ax.bar(right, [r.con_tokens for r in rounds], width, label="con", color="#c44e52")
+    ax.set_xlabel("Round")
+    ax.set_ylabel("Tokens")
+    ax.set_xticks(nums)
+    ax.set_title(f"Tokens per round (pro vs con) — {run_id}")
+    ax.legend()
+    fig.savefig(path, dpi=_DPI, bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
 def save_all_figures(
     summaries: Iterable[RunSummary],
     out_dir: Path | str,
@@ -157,5 +194,6 @@ __all__ = [
     "save_all_figures",
     "save_nudges_chart",
     "save_round_tokens_chart",
+    "save_run_round_tokens_chart",
     "save_who_wins_chart",
 ]

@@ -16,6 +16,11 @@ from agent_debate.core.research._dataset import (
     summary_to_row,
     write_dataset,
 )
+from agent_debate.core.research._embed import (
+    SECTION_HEADING,
+    embed_round_chart_section,
+    round_chart_section,
+)
 from agent_debate.core.research._parse import parse_run
 from agent_debate.core.research._summary import NO_VERDICT, RunSummary
 from agent_debate.core.research.analysis import (
@@ -44,6 +49,7 @@ from agent_debate.core.research.viz import (
     save_all_figures,
     save_nudges_chart,
     save_round_tokens_chart,
+    save_run_round_tokens_chart,
     save_who_wins_chart,
 )
 
@@ -55,6 +61,7 @@ __all__ = [
     "EmpiricalPoint",
     "GridCell",
     "ModelCostChoice",
+    "SECTION_HEADING",
     "NudgeStats",
     "RoundMetric",
     "RunSummary",
@@ -62,17 +69,20 @@ __all__ = [
     "TopicMetric",
     "aggregate_runs",
     "agree_vs_disagree",
+    "embed_round_chart_section",
     "empirical_points",
     "fit_token_model",
     "model_choice_table",
     "nudges_per_side",
     "parse_run",
     "project_grid",
+    "round_chart_section",
     "round_metrics",
     "save_agree_disagree_chart",
     "save_all_figures",
     "save_nudges_chart",
     "save_round_tokens_chart",
+    "save_run_round_tokens_chart",
     "save_who_wins_chart",
     "summary_to_row",
     "tokens_latency_per_topic",
