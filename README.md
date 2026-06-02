@@ -23,6 +23,22 @@ architecture, see [`docs/PRD.md`](docs/PRD.md).
 > per-epic status). Each surface has its own README — linked from the
 > [Quickstart](#usage--quickstart) below.
 
+## Screenshots
+
+**Topic input** — enter any motion and click Start:
+
+![UI topic input](docs/screenshots/ui-topic-input.jpg)
+
+**Live debate transcript** — Pro and Con argue in real time, round by round:
+
+![UI debate round 1](docs/screenshots/example1-of-ui-debate-run.jpg)
+
+![UI debate round 2](docs/screenshots/example2-of-ui-debate-run.jpg)
+
+A full readable session dialogue (transcript + moderator nudges + verdict + cost) is committed at [`runs/capitalism/capitalism.md`](runs/capitalism/capitalism.md).
+
+---
+
 ## System requirements
 
 | Requirement | Version / notes |
