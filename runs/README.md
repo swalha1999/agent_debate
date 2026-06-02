@@ -22,9 +22,10 @@ two fixes in #202 — inject the debate topic into the debater context — and #
 actually deliver the agent system prompt to the model on the `message_history`
 path). The debaters argue the stated motion and rebut each other's actual words.
 
-The repo keeps **three committed sample debates**: a full 10-round `capitalism` run at
+The repo keeps **four committed sample debates**: a full 10-round `capitalism` run at
 the PRD default, a 5-round `four-day-work-week` policy debate added to expand the
-dataset, and a 5-round `online-education` debate on the education topic. Three earlier
+dataset, a 5-round `online-education` debate on the education topic, and a 5-round
+`nuclear-energy` debate on the energy/climate topic. Three earlier
 reduced-round sample debates were removed to avoid presenting them as current evidence.
 
 | Topic | Kind | Rounds | Winner | Total tokens | Cost (USD) | Read it |
@@ -32,6 +33,7 @@ reduced-round sample debates were removed to avoid presenting them as current ev
 | Capitalism is, on balance, a force for good in society. | economics | 10 | Pro | 343,521 | $1.261 | [`capitalism/capitalism.md`](capitalism/capitalism.md) |
 | A four-day work week should become the global standard | policy | 5 | Pro | 146,555 | $0.566 | [`four-day-work-week/four-day-work-week.md`](four-day-work-week/four-day-work-week.md) |
 | Online education is superior to traditional classroom learning | education | 5 | Con | 140,898 | $0.544 | [`online-education/online-education.md`](online-education/online-education.md) |
+| Nuclear energy is essential for solving the climate crisis | energy | 5 | Con | 170,851 | $0.652 | [`nuclear-energy/nuclear-energy.md`](nuclear-energy/nuclear-energy.md) |
 
 The **Read it** link opens the human-readable transcript + verdict + cost table; the
 matching machine-readable event log sits alongside it as `<run_id>/<run_id>.jsonl`. The

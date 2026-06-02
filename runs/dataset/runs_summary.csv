@@ -1,4 +1,5 @@
 run_id,topic,rounds,winner,converged,total_tokens,est_cost_usd,pro_messages,con_messages,pro_nudges,con_nudges,total_latency_ms,avg_latency_ms,timeouts,retries
 capitalism,"Capitalism is, on balance, a force for good in society.",10,pro,False,343521,1.030563,11,11,0,0,573000.0,28650.0,0,0
 four-day-work-week,A four-day work week should become the global standard,5,pro,False,146555,0.439665,6,6,0,0,228391.0,22839.1,0,0
+nuclear-energy,Nuclear energy is essential for solving the climate crisis,5,con,False,170851,0.512553,6,6,0,0,261812.0,26181.2,0,0
 online-education,Online education is superior to traditional classroom learning,5,con,False,140898,0.422694,6,6,0,0,204937.0,20493.7,0,0
