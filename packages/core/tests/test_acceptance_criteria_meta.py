@@ -155,5 +155,5 @@ def test_c15_completed_run_is_reviewable_evidence(tmp_path: Path) -> None:
     # The saved run carries everything a reviewer/notebook needs (PRD §9/§10/§12.5).
     assert result.transcript and result.verdict is not None
     assert result.cost_breakdown is not None and result.totals.total_tokens >= 0
-    assert (tmp_path / "c15.jsonl").is_file()  # persisted as runs/<run_id>.jsonl
+    assert (tmp_path / "c15" / "c15.jsonl").is_file()  # persisted as runs/<run_id>/<run_id>.jsonl
     assert (REPO_ROOT / "runs").is_dir()  # the runs/ dir is committed for review

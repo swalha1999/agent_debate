@@ -4,8 +4,8 @@ These exercise the three acceptance areas end-to-end through the **public API**
 (``agent_debate.log``) — proving the integrated behaviour rather than
 re-testing module internals (which the 1.1–1.4 unit suites already cover):
 
-* (a) an event is written to ``runs/<run_id>.jsonl`` and round-trips back into
-  a :class:`~agent_debate.log.LogEvent`,
+* (a) an event is written to ``runs/<run_id>/<run_id>.jsonl`` and round-trips
+  back into a :class:`~agent_debate.log.LogEvent`,
 * (b) an invalid ``event_type`` is rejected before anything reaches the sink,
 * (c) redaction hides a fake key in the on-disk JSONL.
 
@@ -62,7 +62,7 @@ def _to_log_event(record: dict[str, object]) -> LogEvent:
 
 
 def test_event_written_to_run_jsonl_and_round_trips(tmp_path: Path) -> None:
-    """(a) A logged event lands in ``<runs>/<run_id>.jsonl`` and round-trips."""
+    """(a) A logged event lands in ``<runs>/<run_id>/<run_id>.jsonl`` and round-trips."""
     runs_dir = tmp_path / DEFAULT_RUNS_DIR
     emitted = log_event(
         run_id="acc-1",
@@ -75,7 +75,7 @@ def test_event_written_to_run_jsonl_and_round_trips(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    jsonl_path = runs_dir / "acc-1.jsonl"
+    jsonl_path = runs_dir / "acc-1" / "acc-1.jsonl"
     assert jsonl_path.exists()
     records = _read_lines(jsonl_path)
     assert len(records) == 1
@@ -101,7 +101,7 @@ def test_invalid_event_type_rejected_and_nothing_written(tmp_path: Path) -> None
             event_type="not-a-real-type",
             runs_dir=runs_dir,
         )
-    assert not (runs_dir / "acc-2.jsonl").exists()
+    assert not (runs_dir / "acc-2" / "acc-2.jsonl").exists()
 
 
 def test_redaction_hides_fake_key_in_jsonl(tmp_path: Path) -> None:
@@ -116,9 +116,9 @@ def test_redaction_hides_fake_key_in_jsonl(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    raw = (runs_dir / "acc-3.jsonl").read_text(encoding="utf-8")
+    raw = (runs_dir / "acc-3" / "acc-3.jsonl").read_text(encoding="utf-8")
     assert _FAKE_KEY not in raw
     assert REDACTED in raw
 
-    record = _read_lines(runs_dir / "acc-3.jsonl")[0]
+    record = _read_lines(runs_dir / "acc-3" / "acc-3.jsonl")[0]
     assert record["payload"]["api_key"] == REDACTED  # type: ignore[index]

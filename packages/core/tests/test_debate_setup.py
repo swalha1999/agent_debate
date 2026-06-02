@@ -126,7 +126,8 @@ def test_setup_logs_system_event_with_topic_and_assignment(tmp_path: Path) -> No
     """Setup emits one ``system`` event carrying the topic + side assignment."""
     runs_dir = Path(str(tmp_path))
     _setup(run_id="run-6-2", runs_dir=runs_dir)
-    events = [json.loads(line) for line in (runs_dir / "run-6-2.jsonl").read_text().splitlines()]
+    log_path = runs_dir / "run-6-2" / "run-6-2.jsonl"
+    events = [json.loads(line) for line in log_path.read_text().splitlines()]
     setups = [
         e
         for e in events
@@ -142,7 +143,7 @@ def test_setup_event_logs_no_controller_stance(tmp_path: Path) -> None:
     """The setup event must never carry a controller stance/opinion (neutrality)."""
     runs_dir = Path(str(tmp_path))
     _setup(run_id="run-6-2-neutral", runs_dir=runs_dir)
-    text = (runs_dir / "run-6-2-neutral.jsonl").read_text().lower()
+    text = (runs_dir / "run-6-2-neutral" / "run-6-2-neutral.jsonl").read_text().lower()
     for leak in ("stance", "opinion", '"winner"', "i think", "is right"):
         assert leak not in text, f"controller stance leaked in log: {leak!r}"
 

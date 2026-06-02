@@ -132,7 +132,7 @@ def test_web_search_logs_tool_call_event(monkeypatch: pytest.MonkeyPatch, tmp_pa
         runs_dir=tmp_path,
     )
 
-    events = _read_jsonl(tmp_path / "run-42.jsonl")
+    events = _read_jsonl(tmp_path / "run-42" / "run-42.jsonl")
     tool_calls = [e for e in events if e["event_type"] == "tool_call"]
     assert len(tool_calls) == 1
     payload = tool_calls[0]["payload"]

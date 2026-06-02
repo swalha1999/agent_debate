@@ -1,4 +1,4 @@
-"""Render a completed :class:`DebateResult` as a readable ``runs/<run_id>.md`` (12.5).
+"""Render a completed :class:`DebateResult` as a readable ``runs/<run_id>/<run_id>.md`` (12.5).
 
 PRD §10/§11 + TASKS.md 12.5: the teacher reviews a human-readable markdown document
 per sample run — the topic, the full transcript (grouped by round), the closing
@@ -66,23 +66,23 @@ def render_run_markdown(result: DebateResult, *, run_id: str) -> str:
 def write_run_markdown(
     result: DebateResult, *, run_id: str, runs_dir: Path | str = DEFAULT_RUNS_DIR
 ) -> Path:
-    """Render ``result`` and write it to ``<runs_dir>/<run_id>.md`` (UTF-8).
+    """Render ``result`` and write it to ``<runs_dir>/<run_id>/<run_id>.md`` (UTF-8).
 
-    The companion to the LOG package's ``<runs_dir>/<run_id>.jsonl`` sink: same
-    ``run_id`` and directory, the readable ``.md`` view next to the machine log.
-    Creates ``runs_dir`` if absent.
+    Each run lives in its own subfolder so the readable ``.md`` is co-located
+    with the LOG package's ``<run_id>.jsonl`` machine log. The per-run
+    subdirectory is created when absent.
 
     Args:
         result: The completed debate result to render.
-        run_id: The run id (file stem and document header).
-        runs_dir: Directory the document is written into (default the LOG runs dir).
+        run_id: The run id (file stem, subfolder name, and document header).
+        runs_dir: Parent runs directory (default the LOG runs dir).
 
     Returns:
         The path of the written ``<run_id>.md`` file.
     """
-    directory = Path(runs_dir)
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"{run_id}{_MARKDOWN_SUFFIX}"
+    run_dir = Path(runs_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    path = run_dir / f"{run_id}{_MARKDOWN_SUFFIX}"
     path.write_text(render_run_markdown(result, run_id=run_id), encoding="utf-8")
     return path
 

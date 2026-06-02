@@ -79,7 +79,7 @@ def test_transient_failure_retried_then_succeeds(tmp_path: Path) -> None:
     # Exponential backoff derived from retry_after_seconds=2: 2, then 4.
     assert sleeps == [2.0, 4.0]
 
-    events = _read_jsonl(tmp_path / "run-retry.jsonl")
+    events = _read_jsonl(tmp_path / "run-retry" / "run-retry.jsonl")
     retries = [e for e in events if e["event_type"] == "retry"]
     assert len(retries) == 2
     assert all(e["payload"]["service"] == "default" for e in retries)
@@ -103,7 +103,7 @@ def test_retries_exhausted_reraises_last_error(tmp_path: Path) -> None:
     assert flaky.calls == 3
     assert sleeps == [1.0, 2.0]
 
-    events = _read_jsonl(tmp_path / "run-exhaust.jsonl")
+    events = _read_jsonl(tmp_path / "run-exhaust" / "run-exhaust.jsonl")
     assert len([e for e in events if e["event_type"] == "retry"]) == 2
     assert any(e["payload"].get("outcome") == "error" for e in events)
 
@@ -124,7 +124,7 @@ def test_non_transient_error_not_retried(tmp_path: Path) -> None:
 
     assert flaky.calls == 1  # no retries
     assert sleeps == []
-    events = _read_jsonl(tmp_path / "run-perm.jsonl")
+    events = _read_jsonl(tmp_path / "run-perm" / "run-perm.jsonl")
     assert not [e for e in events if e["event_type"] == "retry"]
 
 

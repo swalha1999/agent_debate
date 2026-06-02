@@ -56,7 +56,7 @@ def test_multiple_events_append_to_same_jsonl(tmp_path: Path) -> None:
             runs_dir=runs_dir,
         )
 
-    records = _read_lines(runs_dir / "multi.jsonl")
+    records = _read_lines(runs_dir / "multi" / "multi.jsonl")
     assert [r["round"] for r in records] == [0, 1, 2]
     assert [r["payload"]["i"] for r in records] == [0, 1, 2]  # type: ignore[index]
 
@@ -86,7 +86,7 @@ def test_empty_payload_round_trips_through_public_api(tmp_path: Path) -> None:
     )
     assert event.payload == {}
 
-    record = _read_lines(runs_dir / "empty.jsonl")[0]
+    record = _read_lines(runs_dir / "empty" / "empty.jsonl")[0]
     assert record["payload"] == {}
 
 
@@ -97,14 +97,14 @@ def test_bound_round_then_cleared_in_one_disk_flow(tmp_path: Path) -> None:
 
     bind_round(5)
     log_event(run_id="ctx", agent="pro", event_type="message", runs_dir=runs_dir)
-    record = _read_lines(runs_dir / "ctx.jsonl")[0]
+    record = _read_lines(runs_dir / "ctx" / "ctx.jsonl")[0]
     assert record["round"] == 5
 
     clear_context()
     with pytest.raises(ValidationError):
         log_event(run_id="ctx", agent="pro", event_type="message", runs_dir=runs_dir)
     # The failed (unbound-round) emit added no further line.
-    assert len(_read_lines(runs_dir / "ctx.jsonl")) == 1
+    assert len(_read_lines(runs_dir / "ctx" / "ctx.jsonl")) == 1
 
 
 def test_idempotent_get_logger_keeps_single_sink(tmp_path: Path) -> None:
@@ -114,5 +114,5 @@ def test_idempotent_get_logger_keeps_single_sink(tmp_path: Path) -> None:
     get_logger("idem", runs_dir=runs_dir)
     log_event(run_id="idem", round=2, agent="pro", event_type="system", runs_dir=runs_dir)
 
-    records = _read_lines(runs_dir / "idem.jsonl")
+    records = _read_lines(runs_dir / "idem" / "idem.jsonl")
     assert [r["round"] for r in records] == [1, 2]

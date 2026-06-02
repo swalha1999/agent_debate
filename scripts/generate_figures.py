@@ -65,7 +65,8 @@ def main() -> None:
     if summaries:
         largest = max(summaries, key=lambda s: s.rounds)
         run_id = largest.run_id
-        lines = (Path(args.runs_dir) / f"{run_id}.jsonl").read_text(encoding="utf-8").splitlines()
+        run_log = Path(args.runs_dir) / run_id / f"{run_id}.jsonl"
+        lines = run_log.read_text(encoding="utf-8").splitlines()
         rounds = round_metrics(lines)
     paths = save_all_figures(summaries, args.out, rounds=rounds, run_id=run_id)
     _LOG.info("Wrote %d figure(s) to %s", len(paths), args.out)

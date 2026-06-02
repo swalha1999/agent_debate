@@ -104,7 +104,7 @@ def test_transient_failures_then_success_returns_results(tmp_path: Path) -> None
     assert inner.calls == 3  # 2 failures + 1 success
     assert sleeps == [2.0, 4.0]  # exponential backoff from retry_after_seconds=2
 
-    events = _read_jsonl(tmp_path / "run-search.jsonl")
+    events = _read_jsonl(tmp_path / "run-search" / "run-search.jsonl")
     assert len([e for e in events if e["event_type"] == "retry"]) == 2
 
 
@@ -123,7 +123,7 @@ def test_persistent_failure_returns_empty_and_logs(tmp_path: Path) -> None:
     assert inner.calls == 3  # 1 initial + 2 retries
     assert sleeps == [1.0, 2.0]
 
-    events = _read_jsonl(tmp_path / "run-search.jsonl")
+    events = _read_jsonl(tmp_path / "run-search" / "run-search.jsonl")
     failures = [e for e in events if e["event_type"] == "timeout"]
     assert len(failures) == 1
     assert failures[0]["payload"]["error"] == "ConnectionError"
@@ -139,7 +139,7 @@ def test_timeout_returns_empty_and_logs(tmp_path: Path) -> None:
     assert inner.calls == 1  # max_retries=0 -> no retries
     assert sleeps == []
 
-    events = _read_jsonl(tmp_path / "run-search.jsonl")
+    events = _read_jsonl(tmp_path / "run-search" / "run-search.jsonl")
     failures = [e for e in events if e["event_type"] == "timeout"]
     assert len(failures) == 1
     assert failures[0]["payload"]["error"] == "TimeoutError"
@@ -155,7 +155,7 @@ def test_empty_results_pass_through(tmp_path: Path) -> None:
     assert inner.calls == 1
     assert sleeps == []
 
-    events = _read_jsonl(tmp_path / "run-search.jsonl")
+    events = _read_jsonl(tmp_path / "run-search" / "run-search.jsonl")
     assert not [e for e in events if e["event_type"] in {"retry", "timeout"}]
 
 
@@ -181,7 +181,7 @@ def test_real_timeout_is_caught_and_returns_empty(tmp_path: Path) -> None:
     )
 
     assert wrapper.search("q") == []
-    events = _read_jsonl(tmp_path / "run-hang.jsonl")
+    events = _read_jsonl(tmp_path / "run-hang" / "run-hang.jsonl")
     assert [e for e in events if e["event_type"] == "timeout"]
 
 

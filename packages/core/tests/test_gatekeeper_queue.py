@@ -158,7 +158,7 @@ def test_enqueue_is_logged(tmp_path: Path) -> None:
 
     lines = [
         json.loads(line)
-        for line in (tmp_path / "run-q.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (tmp_path / "run-q" / "run-q.jsonl").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
     enqueue_events = [e for e in lines if e["payload"].get("queue_event") == "enqueue"]

@@ -1,12 +1,13 @@
 """Tests for the readable run markdown exporter (task 12.5, PRD §10/§11, issue #86).
 
-TDD-first: these assert the 12.5 contract — a readable ``runs/<run_id>.md`` rendered
-from a completed :class:`DebateResult` carrying the transcript, the controller nudges,
-the verdict and the cost-breakdown table. The cost table MUST reuse the existing
+TDD-first: these assert the 12.5 contract — a readable
+``runs/<run_id>/<run_id>.md`` rendered from a completed :class:`DebateResult`
+carrying the transcript, the controller nudges, the verdict and the
+cost-breakdown table. The cost table MUST reuse the existing
 :func:`format_cost_table` renderer (no duplicated pricing/markdown), so a priced
 result's table appears verbatim in the document. ``write_run_markdown`` writes the
-document to ``<runs_dir>/<run_id>.md`` and returns the path. Rendering is pure (no
-network, no key): the result is built in-memory.
+document to ``<runs_dir>/<run_id>/<run_id>.md`` and returns the path. Rendering
+is pure (no network, no key): the result is built in-memory.
 """
 
 from __future__ import annotations
@@ -116,8 +117,16 @@ def test_markdown_handles_missing_verdict_and_cost() -> None:
 
 
 def test_write_run_markdown_writes_file(tmp_path: Path) -> None:
+    """The markdown is written to ``<runs_dir>/<run_id>/<run_id>.md``."""
     path = write_run_markdown(_result(), run_id=_RUN_ID, runs_dir=tmp_path)
-    assert path == tmp_path / f"{_RUN_ID}.md"
+    assert path == tmp_path / _RUN_ID / f"{_RUN_ID}.md"
     text = path.read_text(encoding="utf-8")
     assert "## Transcript" in text
     assert "Cars waste scarce space." in text
+
+
+def test_write_run_markdown_creates_run_subdir(tmp_path: Path) -> None:
+    """``write_run_markdown`` creates the per-run subdirectory when absent."""
+    runs_dir = tmp_path / "runs"
+    write_run_markdown(_result(), run_id=_RUN_ID, runs_dir=runs_dir)
+    assert (runs_dir / _RUN_ID).is_dir()

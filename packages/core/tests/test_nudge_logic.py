@@ -56,7 +56,8 @@ def _models(*, pro: Model, con: Model) -> dict[object, Model]:
 
 
 def _events(runs_dir: Path, run_id: str) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in (runs_dir / f"{run_id}.jsonl").read_text().splitlines()]
+    path = runs_dir / run_id / f"{run_id}.jsonl"
+    return [json.loads(line) for line in path.read_text().splitlines()]
 
 
 def _gatekeeper(run_id: str, runs_dir: Path) -> ApiGatekeeper:

@@ -77,7 +77,7 @@ def test_violation_logged_as_chosen_event_type(tmp_path: Path) -> None:
         run_id="run-5-7",
         runs_dir=runs_dir,
     )
-    lines = (runs_dir / "run-5-7.jsonl").read_text().splitlines()
+    lines = (runs_dir / "run-5-7" / "run-5-7.jsonl").read_text().splitlines()
     events = [json.loads(line) for line in lines]
     violations = [e for e in events if e["event_type"] == WORD_LIMIT_LOG_EVENT_TYPE]
     assert violations, "expected a word-limit violation event"
@@ -97,7 +97,7 @@ def test_within_limit_logs_no_violation(tmp_path: Path) -> None:
         run_id="run-5-7-clean",
         runs_dir=runs_dir,
     )
-    log_file = runs_dir / "run-5-7-clean.jsonl"
+    log_file = runs_dir / "run-5-7-clean" / "run-5-7-clean.jsonl"
     if not log_file.exists():
         return
     events = [json.loads(line) for line in log_file.read_text().splitlines()]

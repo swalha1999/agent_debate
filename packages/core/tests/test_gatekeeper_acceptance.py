@@ -74,7 +74,8 @@ def test_retries_stop_at_max_retries_then_raise(tmp_path: Path) -> None:
         gk.execute(always_fail, service="default")
 
     assert sleeps == [1.0, 2.0]  # 2 retries, exponential backoff from config base 1
-    retries = [e for e in read_jsonl(tmp_path / "run-retry.jsonl") if e["event_type"] == "retry"]
+    all_events = read_jsonl(tmp_path / "run-retry" / "run-retry.jsonl")
+    retries = [e for e in all_events if e["event_type"] == "retry"]
     assert len(retries) == 2
 
 

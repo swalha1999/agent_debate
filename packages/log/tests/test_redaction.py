@@ -146,7 +146,7 @@ def test_pipeline_jsonl_on_disk_has_no_secret(tmp_path: Path) -> None:
         payload={"api_key": _ANTHROPIC_SECRET, "text": f"token {_OPENAI_SECRET}"},
         runs_dir=runs_dir,
     )
-    raw = (runs_dir / "run-secret.jsonl").read_text(encoding="utf-8")
+    raw = (runs_dir / "run-secret" / "run-secret.jsonl").read_text(encoding="utf-8")
     assert _ANTHROPIC_SECRET not in raw
     assert _OPENAI_SECRET not in raw
     assert REDACTED in raw

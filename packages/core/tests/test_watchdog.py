@@ -170,7 +170,7 @@ def test_events_are_logged_for_detect_and_restart(tmp_path: Path) -> None:
 
     watchdog.run(max_ticks=10)
 
-    events = _read_jsonl(tmp_path / "wd-test.jsonl")
+    events = _read_jsonl(tmp_path / "wd-test" / "wd-test.jsonl")
     watchdog_events = [e for e in events if e.get("payload", {}).get("watchdog")]
     assert watchdog_events  # at least one watchdog event was logged
     assert all(e["event_type"] == "system" for e in watchdog_events)

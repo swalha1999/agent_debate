@@ -1,13 +1,18 @@
 """Tests for the runs-dataset aggregator (issue #97, task 14.1, PRD §9).
 
-TDD-first: these pin the 14.1 contract — read ``runs/<run_id>.jsonl`` LOG event
-lines and fold them into one tidy :class:`RunSummary` per run (topic, rounds,
-winner, converged, total tokens, estimated cost, per-side message + nudge counts,
-latency, timeout/retry counts), then a stdlib-CSV dataset writer with a documented
-column header. Synthetic in-memory JSONL fixtures (not the committed sample runs)
-so the assertions never depend on those files staying fixed. Cost is priced from a
-tmp :class:`PriceTable` (distinctive numbers → expected cost) so it pins to config,
-never to hard-coded prices. No network, no key, no real run files.
+TDD-first: these pin the 14.1 contract — read ``runs/<run_id>/<run_id>.jsonl``
+LOG event lines and fold them into one tidy :class:`RunSummary` per run (topic,
+rounds, winner, converged, total tokens, estimated cost, per-side message +
+nudge counts, latency, timeout/retry counts), then a stdlib-CSV dataset writer
+with a documented column header. Synthetic in-memory JSONL fixtures (not the
+committed sample runs) so the assertions never depend on those files staying
+fixed. Cost is priced from a tmp :class:`PriceTable` (distinctive numbers →
+expected cost) so it pins to config, never to hard-coded prices. No network, no
+key, no real run files.
+
+Runs now live in per-run subdirectories: ``<runs_dir>/<run_id>/<run_id>.jsonl``.
+The ``*/*.jsonl`` glob discovers them; tests that previously used a flat layout
+have been updated to match.
 """
 
 from __future__ import annotations
@@ -105,12 +110,19 @@ def test_parse_run_cost_priced_from_config() -> None:
     assert summary.est_cost_usd == 1000 / 1_000_000 * 2.0
 
 
+def _write_run(base: Path, run_id: str, lines: list[str]) -> None:
+    """Write ``lines`` to ``<base>/<run_id>/<run_id>.jsonl`` (per-run subdir)."""
+    run_dir = base / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / f"{run_id}.jsonl").write_text("\n".join(lines), encoding="utf-8")
+
+
 def test_aggregate_runs_reads_jsonl_dir(tmp_path: Path) -> None:
-    """``aggregate_runs`` discovers every ``*.jsonl`` and returns sorted rows."""
-    (tmp_path / "b-run.jsonl").write_text("\n".join(_sample_lines()), encoding="utf-8")
+    """``aggregate_runs`` discovers ``*/*.jsonl`` subdirs and returns sorted rows."""
+    _write_run(tmp_path, "b-run", _sample_lines())
     a_lines = _sample_lines()
     a_lines[-1] = _event(event_type="verdict", payload={"winner": "tie", "converged": True})
-    (tmp_path / "a-run.jsonl").write_text("\n".join(a_lines), encoding="utf-8")
+    _write_run(tmp_path, "a-run", a_lines)
     summaries = aggregate_runs(tmp_path, price_table=_PRICES)
     assert [s.run_id for s in summaries] == ["a-run", "b-run"]
     assert summaries[0].winner == "tie"
@@ -119,9 +131,11 @@ def test_aggregate_runs_reads_jsonl_dir(tmp_path: Path) -> None:
 
 def test_aggregate_skips_non_debate_logs(tmp_path: Path) -> None:
     """Package LOG chatter files (no setup/verdict) are excluded from the dataset."""
-    (tmp_path / "debate.jsonl").write_text("\n".join(_sample_lines()), encoding="utf-8")
+    _write_run(tmp_path, "debate", _sample_lines())
+    # A chatter file at top-level is not picked up by */*.jsonl glob at all.
+    # Also test that a chatter file inside a subdir is filtered by is_debate_run.
     chatter = json.dumps({"run_id": "api.app", "event": "started", "level": "info"})
-    (tmp_path / "api.jsonl").write_text(chatter, encoding="utf-8")
+    _write_run(tmp_path, "api", [chatter])
     summaries = aggregate_runs(tmp_path, price_table=_PRICES)
     assert [s.run_id for s in summaries] == ["debate"]
 

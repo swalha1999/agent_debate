@@ -436,7 +436,7 @@ LOG is the single source of truth for observability (`packages/log`). Every
 event is a validated `LogEvent` carrying `run_id`, `round`, `agent`,
 `event_type` (`message | tool_call | nudge | timeout | retry | verdict |
 system`), `tokens`, `latency_ms`. Two sinks: a pretty console renderer (dev) and
-a per-run JSONL file at `runs/<run_id>.jsonl`. A redaction processor strips
+a per-run JSONL file at `runs/<run_id>/<run_id>.jsonl`. A redaction processor strips
 secret-like values before either sink. The engine's `.stream()` fans the same
 events through live `EventSink`s for the CLI/API/UI.
 
