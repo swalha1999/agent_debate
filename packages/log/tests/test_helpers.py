@@ -50,7 +50,7 @@ def test_get_logger_binds_run_id(tmp_path: Path) -> None:
     logger = get_logger("run-1", runs_dir=runs_dir)
     logger.info("hi", event_type="system")
 
-    records = _read_jsonl(runs_dir / "run-1.jsonl")
+    records = _read_jsonl(runs_dir / "run-1" / "run-1.jsonl")
     assert records[0]["run_id"] == "run-1"
 
 
@@ -66,7 +66,7 @@ def test_log_event_writes_validated_json_line(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    records = _read_jsonl(runs_dir / "run-2.jsonl")
+    records = _read_jsonl(runs_dir / "run-2" / "run-2.jsonl")
     assert len(records) == 1
     record = records[0]
     assert record["run_id"] == "run-2"
@@ -88,7 +88,7 @@ def test_log_event_invalid_event_type_raises_before_write(tmp_path: Path) -> Non
             runs_dir=runs_dir,
         )
 
-    assert not (runs_dir / "run-3.jsonl").exists()
+    assert not (runs_dir / "run-3" / "run-3.jsonl").exists()
 
 
 def test_log_event_missing_field_raises(tmp_path: Path) -> None:
@@ -115,7 +115,7 @@ def test_bound_round_propagates_to_events(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    records = _read_jsonl(runs_dir / "run-5.jsonl")
+    records = _read_jsonl(runs_dir / "run-5" / "run-5.jsonl")
     assert records[0]["round"] == 7
 
 
@@ -131,7 +131,7 @@ def test_explicit_round_overrides_bound_round(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    records = _read_jsonl(runs_dir / "run-6.jsonl")
+    records = _read_jsonl(runs_dir / "run-6" / "run-6.jsonl")
     assert records[0]["round"] == 9
 
 
@@ -156,7 +156,7 @@ def test_get_logger_is_idempotent(tmp_path: Path) -> None:
     logger = get_logger("run-8", runs_dir=runs_dir)
     logger.info("once", event_type="system")
 
-    records = _read_jsonl(runs_dir / "run-8.jsonl")
+    records = _read_jsonl(runs_dir / "run-8" / "run-8.jsonl")
     assert len(records) == 1
 
 
@@ -173,6 +173,6 @@ def test_log_event_carries_optional_cost_fields(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    record = _read_jsonl(runs_dir / "run-9.jsonl")[0]
+    record = _read_jsonl(runs_dir / "run-9" / "run-9.jsonl")[0]
     assert record["tokens"] == 128
     assert record["latency_ms"] == 42.5

@@ -3,7 +3,7 @@
 :func:`configure` wires structlog with the two sinks mandated by PRD §5.8:
 
 * a **human-readable console renderer** (pretty, dev-facing) on stdout, and
-* a **per-run JSONL file** at ``<runs_dir>/<run_id>.jsonl`` (machine-readable).
+* a **per-run JSONL file** at ``<runs_dir>/<run_id>/<run_id>.jsonl`` (machine-readable).
 
 The factory is **idempotent** — repeat calls for the same run reuse the open
 file handle and re-apply the same configuration without duplicating sinks or
@@ -52,10 +52,15 @@ _OPEN_SINKS: dict[Path, RotatingJsonlSink] = {}
 
 
 def _resolve_jsonl_path(run_id: str, runs_dir: Path | str) -> Path:
-    """Return the resolved ``<runs_dir>/<run_id>.jsonl`` path, dir created."""
-    directory = Path(runs_dir)
-    directory.mkdir(parents=True, exist_ok=True)
-    return (directory / run_id).with_suffix(_JSONL_SUFFIX)
+    """Return the resolved ``<runs_dir>/<run_id>/<run_id>.jsonl`` path.
+
+    Each run lives in its own subfolder (``<runs_dir>/<run_id>/``) so the JSONL
+    and the companion ``.md`` are co-located. The directory is created when
+    absent.
+    """
+    run_dir = Path(runs_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return (run_dir / run_id).with_suffix(_JSONL_SUFFIX)
 
 
 def _open_sink(path: Path) -> RotatingJsonlSink:
@@ -82,9 +87,10 @@ def configure(
     """Configure structlog and return a logger bound to ``run_id``.
 
     The returned logger writes to **both** sinks: a pretty console renderer on
-    stdout and a JSONL file at ``<runs_dir>/<run_id>.jsonl``. The runs directory
-    is created when absent. Calling this again for the same ``run_id`` is a
-    no-op for the sinks (idempotent) and simply returns a freshly bound logger.
+    stdout and a JSONL file at ``<runs_dir>/<run_id>/<run_id>.jsonl``. The
+    per-run subdirectory is created when absent. Calling this again for the
+    same ``run_id`` is a no-op for the sinks (idempotent) and simply returns a
+    freshly bound logger.
 
     Args:
         run_id: Identifier of the debate run; names the JSONL file.

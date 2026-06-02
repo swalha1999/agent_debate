@@ -2,9 +2,9 @@
 
 These are written TDD-first: ``configure(run_id, runs_dir=...)`` must wire
 structlog with two sinks — a human-readable console renderer AND a per-run JSONL
-file at ``<runs_dir>/<run_id>.jsonl`` — and be idempotent. The acceptance
-criteria (issue #16): a configured logger writes both sinks, and calling
-``configure`` twice neither errors nor duplicates output.
+file at ``<runs_dir>/<run_id>/<run_id>.jsonl`` — and be idempotent. The
+acceptance criteria (issue #16): a configured logger writes both sinks, and
+calling ``configure`` twice neither errors nor duplicates output.
 """
 
 from __future__ import annotations
@@ -25,13 +25,20 @@ def _read_jsonl(path: Path) -> list[dict[str, object]]:
 
 
 def test_configure_creates_jsonl_file(tmp_path: Path) -> None:
-    """The JSONL sink file is created under the given runs dir for the run id."""
+    """The JSONL sink is created at ``<runs_dir>/<run_id>/<run_id>.jsonl``."""
     runs_dir = tmp_path / "runs"
     logger = configure("run-abc", runs_dir=runs_dir)
     logger.info("hello", event_type="system")
 
-    jsonl_path = runs_dir / "run-abc.jsonl"
+    jsonl_path = runs_dir / "run-abc" / "run-abc.jsonl"
     assert jsonl_path.exists()
+
+
+def test_configure_creates_run_subdir(tmp_path: Path) -> None:
+    """A per-run subdirectory ``<runs_dir>/<run_id>/`` is created automatically."""
+    runs_dir = tmp_path / "runs"
+    configure("run-xyz", runs_dir=runs_dir)
+    assert (runs_dir / "run-xyz").is_dir()
 
 
 def test_configure_creates_missing_runs_dir(tmp_path: Path) -> None:
@@ -47,7 +54,7 @@ def test_emitted_event_is_valid_json_line(tmp_path: Path) -> None:
     logger = configure("run-1", runs_dir=runs_dir)
     logger.info("a message", event_type="message", round=2)
 
-    records = _read_jsonl(runs_dir / "run-1.jsonl")
+    records = _read_jsonl(runs_dir / "run-1" / "run-1.jsonl")
     assert len(records) == 1
     record = records[0]
     assert record["event"] == "a message"
@@ -71,7 +78,7 @@ def test_configure_is_idempotent_no_duplicate_lines(tmp_path: Path) -> None:
     logger = configure("run-dup", runs_dir=runs_dir)
     logger.info("once", event_type="system")
 
-    records = _read_jsonl(runs_dir / "run-dup.jsonl")
+    records = _read_jsonl(runs_dir / "run-dup" / "run-dup.jsonl")
     assert len(records) == 1
 
 
@@ -90,4 +97,5 @@ def test_configure_default_runs_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     """With no runs_dir the default ('runs/') is used, relative to cwd."""
     monkeypatch.chdir(tmp_path)
     configure("run-default")
-    assert (tmp_path / "runs" / "run-default.jsonl").exists() or (tmp_path / "runs").is_dir()
+    # The per-run subdir is created; the JSONL sits inside it.
+    assert (tmp_path / "runs" / "run-default").is_dir()
