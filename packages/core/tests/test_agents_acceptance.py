@@ -108,7 +108,8 @@ def test_over_limit_output_is_trimmed_and_logged(tmp_path: Path) -> None:
     result = enforce_word_limit(text, max_words=max_words, run_id="run-5-8", runs_dir=runs_dir)
     assert result.violated is True
     assert count_words(result.text) == max_words
-    events = [json.loads(line) for line in (runs_dir / "run-5-8.jsonl").read_text().splitlines()]
+    log_path = runs_dir / "run-5-8" / "run-5-8.jsonl"
+    events = [json.loads(line) for line in log_path.read_text().splitlines()]
     violations = [e for e in events if e["event_type"] == WORD_LIMIT_LOG_EVENT_TYPE]
     assert violations and violations[0]["payload"]["violation"] == "word_limit"
     assert violations[0]["payload"]["limit"] == max_words

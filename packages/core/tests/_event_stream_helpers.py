@@ -65,7 +65,7 @@ def spy_gatekeeper(run_id: str, runs_dir: Path) -> ApiGatekeeper:
 
 def logged_events(runs_dir: Path, run_id: str) -> list[dict[str, Any]]:
     """Read the run's JSONL log, excluding the gatekeeper's own infra events."""
-    path = runs_dir / f"{run_id}.jsonl"
+    path = runs_dir / run_id / f"{run_id}.jsonl"
     events = [json.loads(line) for line in path.read_text().splitlines()]
     return [e for e in events if e["agent"] != GATEKEEPER_AGENT]
 

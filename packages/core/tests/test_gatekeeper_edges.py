@@ -66,7 +66,7 @@ def test_repeated_transient_failures_log_each_retry_and_terminal_error(tmp_path:
         gk.execute(always_timeout, service="default")
 
     assert sleeps == [2.0, 4.0, 8.0]  # 3 retries, exponential backoff from config
-    events = read_jsonl(tmp_path / "run-edge-retry.jsonl")
+    events = read_jsonl(tmp_path / "run-edge-retry" / "run-edge-retry.jsonl")
     assert len([e for e in events if e["event_type"] == "retry"]) == 3
     assert any(e["payload"].get("outcome") == "error" for e in events)
 

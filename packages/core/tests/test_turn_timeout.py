@@ -43,8 +43,8 @@ class _InlineGatekeeper:
         return api_call(*args, **kwargs)
 
 
-def _events(runs_dir: Path, run_id: str) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in (runs_dir / f"{run_id}.jsonl").read_text().splitlines()]
+def _events(d: Path, r: str) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in (d / r / f"{r}.jsonl").read_text().splitlines()]
 
 
 def _call(

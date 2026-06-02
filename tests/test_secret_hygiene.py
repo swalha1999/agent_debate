@@ -62,7 +62,7 @@ def test_redaction_keeps_planted_key_out_of_jsonl(tmp_path: Path) -> None:
         runs_dir=runs_dir,
     )
 
-    raw = (runs_dir / "hygiene-1.jsonl").read_text(encoding="utf-8")
+    raw = (runs_dir / "hygiene-1" / "hygiene-1.jsonl").read_text(encoding="utf-8")
     assert FAKE_KEY not in raw, "redaction must keep the secret out of the JSONL"
     assert REDACTED in raw
 
@@ -106,7 +106,7 @@ def test_scan_and_redaction_share_the_key_detector(tmp_path: Path) -> None:
         payload={"text": FAKE_KEY},
         runs_dir=runs_dir,
     )
-    raw = (runs_dir / "hygiene-2.jsonl").read_text(encoding="utf-8")
+    raw = (runs_dir / "hygiene-2" / "hygiene-2.jsonl").read_text(encoding="utf-8")
     assert FAKE_KEY not in raw and REDACTED in raw
 
 

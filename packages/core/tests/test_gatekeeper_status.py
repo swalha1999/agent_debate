@@ -176,7 +176,7 @@ def test_log_queue_status_writes_observable_event(tmp_path: Path) -> None:
 
     lines = [
         json.loads(line)
-        for line in (tmp_path / "run-s.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (tmp_path / "run-s" / "run-s.jsonl").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
     status_events = [e for e in lines if e["payload"].get("queue_event") == "status"]

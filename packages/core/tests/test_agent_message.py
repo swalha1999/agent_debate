@@ -68,7 +68,7 @@ def _gatekeeper(run_id: str, runs_dir: Path) -> ApiGatekeeper:
 
 
 def _events(runs_dir: Path, run_id: str) -> list[dict[str, Any]]:
-    path = runs_dir / f"{run_id}.jsonl"
+    path = runs_dir / run_id / f"{run_id}.jsonl"
     return [json.loads(line) for line in path.read_text().splitlines()]
 
 

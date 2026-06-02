@@ -82,7 +82,7 @@ def test_alert_logs_event_when_over_budget(tmp_path: Path) -> None:
     status = check_budget(spent_usd=20.0, budget_usd=10.0)
     fired = alert_over_budget(status, run_id="b1", runs_dir=tmp_path)
     assert fired is True
-    line = (tmp_path / "b1.jsonl").read_text(encoding="utf-8").strip()
+    line = (tmp_path / "b1" / "b1.jsonl").read_text(encoding="utf-8").strip()
     record = json.loads(line)
     assert record["event_type"] == "system"
     assert record["payload"]["budget_alert"] is True
@@ -95,7 +95,7 @@ def test_alert_silent_when_under_budget(tmp_path: Path) -> None:
     status = check_budget(spent_usd=2.0, budget_usd=10.0)
     fired = alert_over_budget(status, run_id="b2", runs_dir=tmp_path)
     assert fired is False
-    assert not (tmp_path / "b2.jsonl").exists()
+    assert not (tmp_path / "b2" / "b2.jsonl").exists()
 
 
 def test_budget_status_serialisable() -> None:
@@ -122,7 +122,7 @@ def test_engine_fires_alert_when_run_exceeds_cap(tmp_path: Path) -> None:
         setup, config, gatekeeper=gk, run_id="be", runs_dir=tmp_path, price_table=_price_table()
     )
     assert result.totals.cost_usd > config.budget_usd
-    log_text = (tmp_path / "be.jsonl").read_text(encoding="utf-8")
+    log_text = (tmp_path / "be" / "be.jsonl").read_text(encoding="utf-8")
     assert '"budget_alert": true' in log_text or '"budget_alert":true' in log_text
 
 
@@ -142,5 +142,5 @@ def test_engine_no_alert_when_unlimited(tmp_path: Path) -> None:
     run_debate_loop(
         setup, config, gatekeeper=gk, run_id="bn", runs_dir=tmp_path, price_table=_price_table()
     )
-    log_text = (tmp_path / "bn.jsonl").read_text(encoding="utf-8")
+    log_text = (tmp_path / "bn" / "bn.jsonl").read_text(encoding="utf-8")
     assert "budget_alert" not in log_text

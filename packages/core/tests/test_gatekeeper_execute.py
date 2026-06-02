@@ -78,7 +78,7 @@ def test_successful_call_logs_service_latency_outcome(tmp_path: Path) -> None:
     gk = ApiGatekeeper(_config(), run_id="run-ok", runs_dir=tmp_path)
     gk.execute(lambda: "ok", service="search")
 
-    records = _read_jsonl(tmp_path / "run-ok.jsonl")
+    records = _read_jsonl(tmp_path / "run-ok" / "run-ok.jsonl")
     assert len(records) == 1
     event = records[0]
     assert event["payload"]["service"] == "search"
@@ -97,7 +97,7 @@ def test_raising_call_logs_error_and_propagates(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="nope"):
         gk.execute(boom, service="default")
 
-    records = _read_jsonl(tmp_path / "run-err.jsonl")
+    records = _read_jsonl(tmp_path / "run-err" / "run-err.jsonl")
     assert len(records) == 1
     assert records[0]["payload"]["outcome"] == "error"
     assert records[0]["payload"]["service"] == "default"
